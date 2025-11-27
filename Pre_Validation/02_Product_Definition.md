@@ -14,7 +14,7 @@ A **personal study tool** that:
 
 ### Must-Have Features
 - ✅ Accepts PDF uploads (up to 10 pages or 10MB)
-- ✅ Generates 10-20 multiple choice questions using AI
+- ✅ Generates 20-50 multiple choice questions using AI
 - ✅ Provides immediate feedback with explanations
 - ✅ Tracks quiz results locally on user's device
 - ✅ Works offline after quiz generation
@@ -102,7 +102,7 @@ A **personal study tool** that:
 
 ### Must-Have (Blocks Launch)
 1. PDF upload and validation
-2. AI quiz generation (10-15 questions)
+2. AI quiz generation (20-50 questions)
 3. Quiz-taking interface (one question at a time)
 4. Immediate feedback with explanations
 5. Score summary screen

@@ -1,4 +1,48 @@
+'use client';
+
+import { useState } from 'react';
+import FileUploadZone from '@/components/FileUploadZone';
+
 export default function Home() {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleFileSelect = (file: File) => {
+    setSelectedFile(file);
+  };
+
+  const handleGenerateQuiz = async () => {
+    if (!selectedFile) return;
+
+    setIsGenerating(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('pdf_file', selectedFile);
+      formData.append('num_questions', '15');
+      formData.append('difficulty', 'medium');
+
+      const response = await fetch('/api/generate-quiz', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert('Quiz generated successfully! (Feature in progress)');
+        console.log('Quiz data:', data);
+      } else {
+        alert(`Error: ${data.error || 'Failed to generate quiz'}`);
+      }
+    } catch (error) {
+      console.error('Quiz generation error:', error);
+      alert('Failed to generate quiz. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-16">
@@ -14,35 +58,51 @@ export default function Home() {
 
         {/* Upload Zone */}
         <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-primary transition-colors cursor-pointer">
-            <div className="mb-4">
-              <svg
-                className="mx-auto h-12 w-12 text-gray-400"
-                stroke="currentColor"
-                fill="none"
-                viewBox="0 0 48 48"
-                aria-hidden="true"
+          <FileUploadZone onFileSelect={handleFileSelect} />
+
+          {/* Generate Button */}
+          {selectedFile && (
+            <div className="mt-6 text-center">
+              <button
+                onClick={handleGenerateQuiz}
+                disabled={isGenerating}
+                className={`px-8 py-3 rounded-lg font-semibold text-white transition-all ${
+                  isGenerating
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg'
+                }`}
               >
-                <path
-                  d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+                {isGenerating ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    Generating Quiz...
+                  </span>
+                ) : (
+                  'Generate Quiz'
+                )}
+              </button>
             </div>
-            <p className="text-lg text-gray-700 mb-2">
-              Drop your PDF here or click to browse
-            </p>
-            <p className="text-sm text-gray-500">
-              Max 10MB, .pdf only
-            </p>
-          </div>
+          )}
 
           {/* Coming Soon Badge */}
           <div className="mt-8 text-center">
             <span className="inline-block bg-blue-100 text-blue-800 text-sm font-semibold px-4 py-2 rounded-full">
-              🚧 Under Development - Coming Soon!
+              🚧 Quiz generation endpoint in progress (Week 3-4)
             </span>
           </div>
         </div>
