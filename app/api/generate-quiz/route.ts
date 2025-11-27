@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     // Parse form data
     const formData = await request.formData();
     const file = formData.get('pdf_file') as File;
-    const numQuestions = parseInt(formData.get('num_questions') as string) || 15;
+    const numQuestions = parseInt(formData.get('num_questions') as string) || 5;  // Reduced to 5 for reliability
     const difficulty = (formData.get('difficulty') as string) || 'medium';
 
     // Validate file

@@ -1,11 +1,12 @@
 // @ts-ignore - pdfjs-dist types are not perfect for Node.js usage
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.js';
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 
-// pdfjs-dist doesn't need worker in Node.js environment
+// Configure worker for different environments
 if (typeof window === 'undefined') {
-  // Server-side (Node.js) - no worker needed
+  // Server-side (Node.js) - point to the actual worker file in node_modules
+  (pdfjsLib as any).GlobalWorkerOptions.workerSrc = 'pdfjs-dist/legacy/build/pdf.worker.mjs';
 } else {
-  // Client-side - set worker source
+  // Client-side - set worker source from CDN
   (pdfjsLib as any).GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 }
 
@@ -27,6 +28,8 @@ export async function extractTextFromPDF(file: File): Promise<string> {
       standardFontDataUrl: undefined,
       cMapUrl: undefined,
       cMapPacked: false,
+      useWorkerFetch: false,
+      isEvalSupported: false,
     });
     const pdf = await loadingTask.promise;
 
@@ -52,9 +55,14 @@ export async function extractTextFromPDF(file: File): Promise<string> {
     }
 
     return fullText;
-  } catch (error) {
+  } catch (error: any) {
     console.error('PDF parsing error:', error);
-    throw new Error('Failed to extract text from PDF');
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    throw new Error(`Failed to extract text from PDF: ${error.message}`);
   }
 }
 

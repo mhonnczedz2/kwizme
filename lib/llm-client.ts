@@ -1,6 +1,5 @@
 import { QuizGenerationResponse } from '@/lib/db/types';
-
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 /**
  * Build the prompt for quiz generation
@@ -26,7 +25,10 @@ Each question must have:
 - Optional hint (helpful clue without giving away the answer)
 - Difficulty rating based on cognitive complexity
 
-Return ONLY valid JSON in this exact format (no markdown, no extra text):
+IMPORTANT: Return ONLY valid JSON. Do not include any markdown formatting, code blocks, or extra text.
+All strings must be properly escaped. Use double quotes for all strings.
+
+Expected JSON format:
 {
   "questions": [
     {
@@ -59,35 +61,31 @@ export async function generateQuizWithGemini(
   }
 
   try {
+    // Initialize the Google Generative AI SDK
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
     const prompt = buildPrompt(pdfText, numQuestions, difficulty);
 
-    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 4096,
-        }
-      }),
+    // Generate content using the SDK
+    const result = await model.generateContent({
+      contents: [{
+        role: 'user',
+        parts: [{ text: prompt }]
+      }],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 16384,  // Significantly increased to prevent truncation
+        responseMimeType: 'application/json',
+      }
     });
 
-    if (!response.ok) {
-      const errorData = await response.text();
-      throw new Error(`Gemini API error: ${response.status} - ${errorData}`);
-    }
+    const response = result.response;
 
-    const data = await response.json();
+    // Debug: log the response structure
+    console.log('Gemini response candidates:', JSON.stringify(response.candidates?.slice(0, 1), null, 2));
 
-    // Extract text from Gemini response
-    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const generatedText = response.text();
 
     if (!generatedText) {
       throw new Error('No text generated from Gemini API');
@@ -104,8 +102,15 @@ export async function generateQuizWithGemini(
     if (jsonText.endsWith('```')) {
       jsonText = jsonText.substring(0, jsonText.length - 3);
     }
+    jsonText = jsonText.trim();
 
-    const quizData = JSON.parse(jsonText.trim());
+    let quizData;
+    try {
+      quizData = JSON.parse(jsonText);
+    } catch (parseError: any) {
+      console.error('JSON parsing failed. Raw response:', jsonText.substring(0, 500));
+      throw new Error(`Failed to parse quiz JSON: ${parseError.message}`);
+    }
 
     // Validate response
     if (!quizData.questions || !Array.isArray(quizData.questions)) {
