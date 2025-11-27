@@ -66,10 +66,10 @@ See `/lib/db/schema.ts` for complete database schema including:
 - [x] Database schema implementation
 - [x] Basic file upload component
 
-### Week 3-4: Core Features (In Progress)
-- [ ] PDF text extraction
-- [ ] LLM API integration (Gemini Flash)
-- [ ] Quiz generation endpoint
+### Week 3-4: Core Features ✅
+- [x] PDF text extraction
+- [x] LLM API integration (Gemini 2.5 Flash)
+- [x] Quiz generation endpoint
 - [ ] Quiz display interface
 - [ ] Answer checking logic
 
@@ -171,6 +171,6 @@ For questions or issues, create an issue in the GitHub repository.
 
 **Status**: 🚧 Under Active Development
 
-**Current Phase**: Week 1-2 (Project Setup) ✅ → Week 3-4 (Core Features) ⏳
+**Current Phase**: Week 3-4 (Core Features) ✅ → Week 5-6 (Polish & PWA) ⏳
 
-**Next Milestone**: Implement PDF text extraction and LLM integration
+**Next Milestone**: Build quiz display interface and answer validation
