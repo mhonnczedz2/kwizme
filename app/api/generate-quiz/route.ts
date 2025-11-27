@@ -1,55 +1,98 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { extractTextFromPDF } from '@/lib/pdf-parser';
+import { generateQuizWithGemini, validateQuizResponse } from '@/lib/llm-client';
 
 export async function POST(request: NextRequest) {
   try {
-    // TODO: Implement quiz generation
-    // This is a placeholder that will be implemented in Week 2
-
-    return NextResponse.json(
-      {
-        error: 'Quiz generation not yet implemented',
-        message: 'This endpoint will be implemented in Week 2 of development',
-      },
-      { status: 501 }
-    );
-
-    /*
-    Implementation plan:
-    1. Parse FormData to extract PDF file
-    2. Extract text from PDF using pdf-parse
-    3. Send text to LLM API (Gemini Flash or GPT-4o-mini)
-    4. Validate response schema
-    5. Return quiz JSON to client
-
-    Example implementation:
-
+    // Parse form data
     const formData = await request.formData();
     const file = formData.get('pdf_file') as File;
-    const numQuestions = parseInt(formData.get('num_questions') as string);
+    const numQuestions = parseInt(formData.get('num_questions') as string) || 15;
+    const difficulty = (formData.get('difficulty') as string) || 'medium';
 
-    // Extract PDF text
-    const arrayBuffer = await file.arrayBuffer();
-    const pdfData = await pdfParse(Buffer.from(arrayBuffer));
-    const pdfText = pdfData.text;
+    // Validate file
+    if (!file) {
+      return NextResponse.json(
+        { error: 'No PDF file provided' },
+        { status: 400 }
+      );
+    }
 
-    // Call LLM API
-    const response = await fetch(LLM_API_URL, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${process.env.GEMINI_API_KEY}` },
-      body: JSON.stringify({
-        prompt: generatePrompt(pdfText, numQuestions),
-      }),
-    });
+    if (file.type !== 'application/pdf') {
+      return NextResponse.json(
+        { error: 'File must be a PDF' },
+        { status: 400 }
+      );
+    }
 
-    const quizData = await response.json();
+    if (file.size > 10 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: 'File size must be less than 10MB' },
+        { status: 400 }
+      );
+    }
 
-    // Validate and return
+    console.log('📄 Processing PDF:', file.name);
+
+    // Step 1: Extract text from PDF
+    const pdfText = await extractTextFromPDF(file);
+    console.log('✅ Extracted text length:', pdfText.length, 'characters');
+
+    if (pdfText.length < 100) {
+      return NextResponse.json(
+        { error: 'PDF contains insufficient text for quiz generation' },
+        { status: 400 }
+      );
+    }
+
+    // Step 2: Generate quiz using LLM
+    console.log('🤖 Generating quiz with Gemini Flash...');
+    const quizData = await generateQuizWithGemini(pdfText, numQuestions, difficulty);
+
+    // Step 3: Validate response
+    if (!validateQuizResponse(quizData)) {
+      console.error('❌ Quiz validation failed');
+      return NextResponse.json(
+        { error: 'Generated quiz failed validation. Please try again.' },
+        { status: 500 }
+      );
+    }
+
+    // Add filename to response
+    quizData.pdf_filename = file.name;
+
+    console.log('✅ Quiz generated successfully:', quizData.questions.length, 'questions');
+
+    // Return quiz data
     return NextResponse.json(quizData);
-    */
-  } catch (error) {
-    console.error('Quiz generation error:', error);
+
+  } catch (error: any) {
+    console.error('❌ Quiz generation error:', error);
+
+    // Handle specific error types
+    if (error.message?.includes('GEMINI_API_KEY')) {
+      return NextResponse.json(
+        { error: 'API key not configured. Please add GEMINI_API_KEY to .env.local' },
+        { status: 500 }
+      );
+    }
+
+    if (error.message?.includes('Gemini API error')) {
+      return NextResponse.json(
+        { error: 'Failed to connect to AI service. Please try again.' },
+        { status: 503 }
+      );
+    }
+
+    if (error.message?.includes('Failed to extract text')) {
+      return NextResponse.json(
+        { error: 'Could not read PDF file. Please try a different file.' },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error.message || 'Internal server error' },
       { status: 500 }
     );
   }
