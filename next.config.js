@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {},
+  // Empty turbopack config to acknowledge we're using Turbopack
+  // SQL.js should work fine with Turbopack without special configuration
+  turbopack: {},
+
+  // Keep webpack config for when explicitly using --webpack flag
   webpack: (config, { isServer }) => {
     // SQL.js needs to load wasm files
     config.resolve.fallback = {
