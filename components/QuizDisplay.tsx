@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { QuizGenerationResponse } from '@/lib/db/types';
+import { createSession, saveAnswer, completeSession } from '@/lib/db/session-storage';
+import { getQuizById } from '@/lib/db/quiz-storage';
 
 interface QuizDisplayProps {
   quizData: QuizGenerationResponse;
@@ -17,6 +19,34 @@ export default function QuizDisplay({ quizData, onComplete, onBack }: QuizDispla
   const [showHint, setShowHint] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [answers, setAnswers] = useState<{ questionIndex: number; selected: string; correct: string; isCorrect: boolean }[]>([]);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [questionIds, setQuestionIds] = useState<number[]>([]);
+
+  // Initialize session and get question IDs when component mounts
+  useEffect(() => {
+    const initSession = async () => {
+      try {
+        // Create a new session
+        const newSessionId = await createSession(
+          quizData.quiz_id,
+          quizData.questions.length
+        );
+        setSessionId(newSessionId);
+
+        // Fetch the full quiz with question IDs from database
+        const fullQuiz = await getQuizById(quizData.quiz_id);
+        if (fullQuiz) {
+          // Extract question IDs (they should be in order from the database)
+          const ids = Array.from({ length: fullQuiz.questions.length }, (_, i) => i + 1);
+          setQuestionIds(ids);
+        }
+      } catch (error) {
+        console.error('Failed to initialize session:', error);
+      }
+    };
+
+    initSession();
+  }, [quizData.quiz_id, quizData.questions.length]);
 
   const currentQuestion = quizData.questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === quizData.questions.length - 1;
@@ -26,8 +56,8 @@ export default function QuizDisplay({ quizData, onComplete, onBack }: QuizDispla
     setSelectedAnswer(option);
   };
 
-  const handleSubmitAnswer = () => {
-    if (!selectedAnswer) return;
+  const handleSubmitAnswer = async () => {
+    if (!selectedAnswer || !sessionId) return;
 
     const isCorrect = selectedAnswer === currentQuestion.correct_answer;
     setIsAnswered(true);
@@ -43,10 +73,40 @@ export default function QuizDisplay({ quizData, onComplete, onBack }: QuizDispla
       correct: currentQuestion.correct_answer,
       isCorrect
     }]);
+
+    // Save answer to database
+    try {
+      const selectedAnswerIndex = currentQuestion.options.indexOf(selectedAnswer);
+      const questionId = questionIds[currentQuestionIndex];
+
+      if (questionId) {
+        await saveAnswer(
+          sessionId,
+          questionId,
+          selectedAnswerIndex,
+          isCorrect
+        );
+      }
+    } catch (error) {
+      console.error('Failed to save answer:', error);
+    }
   };
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
     if (isLastQuestion) {
+      // Complete the session in database
+      if (sessionId) {
+        try {
+          await completeSession(
+            sessionId,
+            correctCount,
+            quizData.questions.length
+          );
+        } catch (error) {
+          console.error('Failed to complete session:', error);
+        }
+      }
+
       // Quiz completed
       onComplete(correctCount, quizData.questions.length);
     } else {
@@ -103,8 +163,13 @@ export default function QuizDisplay({ quizData, onComplete, onBack }: QuizDispla
         >
           ← Back
         </button>
-        <div className="text-sm text-gray-600">
-          Question {currentQuestionIndex + 1} of {quizData.questions.length}
+        <div className="flex items-center gap-6">
+          <div className="text-sm text-gray-600">
+            Question {currentQuestionIndex + 1} of {quizData.questions.length}
+          </div>
+          <div className="text-sm font-semibold text-gray-700">
+            Score: {correctCount} / {quizData.questions.length}
+          </div>
         </div>
       </div>
 
@@ -186,10 +251,7 @@ export default function QuizDisplay({ quizData, onComplete, onBack }: QuizDispla
         )}
 
         {/* Action Buttons */}
-        <div className="flex justify-between items-center">
-          <div className="text-sm text-gray-600">
-            Score: {correctCount} / {currentQuestionIndex + (isAnswered ? 1 : 0)}
-          </div>
+        <div className="flex justify-end items-center">
           <div className="flex gap-3">
             {!isAnswered ? (
               <button

@@ -1,21 +1,28 @@
 'use client';
 
 import { useState } from 'react';
-import FileUploadZone from '@/components/FileUploadZone';
+import FileUploadZone, { OrganizationMetadata } from '@/components/FileUploadZone';
 import QuizDisplay from '@/components/QuizDisplay';
 import QuizResults from '@/components/QuizResults';
+import QuizBrowser from '@/components/QuizBrowser';
 import QuizHistory from '@/components/QuizHistory';
-import { QuizGenerationResponse } from '@/lib/db/types';
-import { saveQuizToDatabase } from '@/lib/db/quiz-storage';
+import QuizReview from '@/components/QuizReview';
+import { QuizGenerationResponse, AnswerRecord } from '@/lib/db/types';
+import { saveQuizToDatabase, getQuizById } from '@/lib/db/quiz-storage';
 
-type AppState = 'upload' | 'quiz' | 'results' | 'history';
+type AppState = 'home' | 'generate' | 'quizzes' | 'history' | 'taking-quiz' | 'reviewing-quiz' | 'results';
 
 export default function Home() {
-  const [appState, setAppState] = useState<AppState>('upload');
+  const [appState, setAppState] = useState<AppState>('home');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [organizationMetadata, setOrganizationMetadata] = useState<OrganizationMetadata>({});
   const [isGenerating, setIsGenerating] = useState(false);
   const [quizData, setQuizData] = useState<QuizGenerationResponse | null>(null);
   const [finalScore, setFinalScore] = useState<{ score: number; total: number } | null>(null);
+  const [reviewData, setReviewData] = useState<{
+    answers: AnswerRecord[];
+    sessionScore: { correct: number; total: number };
+  } | null>(null);
 
   const handleFileSelect = (file: File) => {
     setSelectedFile(file);
@@ -29,8 +36,29 @@ export default function Home() {
     try {
       const formData = new FormData();
       formData.append('pdf_file', selectedFile);
-      formData.append('num_questions', '15');
+
+      // Add number of questions (default to 15 if not specified)
+      const numQuestions = organizationMetadata.num_questions || 15;
+      formData.append('num_questions', numQuestions.toString());
       formData.append('difficulty', 'medium');
+
+      // Add quiz_title (use filename if not provided)
+      const quizTitle = organizationMetadata.quiz_title || selectedFile.name.replace('.pdf', '');
+      formData.append('quiz_title', quizTitle);
+
+      // Add organization metadata if provided
+      if (organizationMetadata.institution) {
+        formData.append('institution', organizationMetadata.institution);
+      }
+      if (organizationMetadata.program) {
+        formData.append('program', organizationMetadata.program);
+      }
+      if (organizationMetadata.course_code) {
+        formData.append('course_code', organizationMetadata.course_code);
+      }
+      if (organizationMetadata.topic) {
+        formData.append('topic', organizationMetadata.topic);
+      }
 
       const response = await fetch('/api/generate-quiz', {
         method: 'POST',
@@ -52,7 +80,7 @@ export default function Home() {
           // Don't block the user experience if database save fails
         }
 
-        setAppState('quiz');
+        setAppState('taking-quiz');
       } else {
         alert(`Error: ${data.error || 'Failed to generate quiz'}`);
       }
@@ -69,15 +97,24 @@ export default function Home() {
     setAppState('results');
   };
 
+  const handleBackToHome = () => {
+    setAppState('home');
+    setSelectedFile(null);
+    setOrganizationMetadata({});
+    setQuizData(null);
+    setFinalScore(null);
+    setReviewData(null);
+  };
+
   const handleBackToUpload = () => {
-    setAppState('upload');
+    setAppState('generate');
     setSelectedFile(null);
     setQuizData(null);
     setFinalScore(null);
   };
 
   const handleTryAgain = () => {
-    setAppState('quiz');
+    setAppState('taking-quiz');
     setFinalScore(null);
   };
 
@@ -85,20 +122,56 @@ export default function Home() {
     setAppState('history');
   };
 
-  const handleSelectQuizFromHistory = (quiz: QuizGenerationResponse) => {
+  const handleViewQuizzes = () => {
+    setAppState('quizzes');
+  };
+
+  const handleSelectQuizFromHistory = (
+    quiz: QuizGenerationResponse,
+    answers?: AnswerRecord[],
+    sessionScore?: { correct: number; total: number }
+  ) => {
     setQuizData(quiz);
-    setAppState('quiz');
+
+    if (answers && sessionScore) {
+      // Review mode - show past attempt
+      setReviewData({ answers, sessionScore });
+      setAppState('reviewing-quiz');
+    } else {
+      // No past attempt - take quiz fresh
+      setReviewData(null);
+      setAppState('taking-quiz');
+    }
+  };
+
+  const handleSelectQuizFromBrowser = async (quizId: string) => {
+    try {
+      const quiz = await getQuizById(quizId);
+      if (quiz) {
+        setQuizData(quiz);
+        setReviewData(null); // Always start fresh from quiz browser
+        setAppState('taking-quiz');
+      }
+    } catch (error) {
+      console.error('Failed to load quiz:', error);
+      alert('Failed to load quiz. Please try again.');
+    }
+  };
+
+  const handleRetakeQuiz = () => {
+    setReviewData(null);
+    setAppState('taking-quiz');
   };
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-16">
-        {/* Upload State */}
-        {appState === 'upload' && (
-          <>
+        {/* Home Screen - 3 Buttons */}
+        {appState === 'home' && (
+          <div className="max-w-4xl mx-auto">
             {/* Header */}
-            <div className="text-center mb-12">
-              <h1 className="text-5xl font-bold text-gray-900 mb-4">
+            <div className="text-center mb-16">
+              <h1 className="text-6xl font-bold text-gray-900 mb-4">
                 QuizMe
               </h1>
               <p className="text-xl text-gray-600">
@@ -106,9 +179,89 @@ export default function Home() {
               </p>
             </div>
 
+            {/* 3 Main Buttons */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Generate Quiz Button */}
+              <button
+                onClick={() => setAppState('generate')}
+                className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-all hover:-translate-y-1 text-center group"
+              >
+                <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition-colors">
+                  <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Generate Quiz</h3>
+                <p className="text-sm text-gray-600">
+                  Upload a PDF and create a new quiz
+                </p>
+              </button>
+
+              {/* Quizzes Button */}
+              <button
+                onClick={() => setAppState('quizzes')}
+                className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-all hover:-translate-y-1 text-center group"
+              >
+                <div className="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-indigo-200 transition-colors">
+                  <svg className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Quizzes</h3>
+                <p className="text-sm text-gray-600">
+                  Browse and take available quizzes
+                </p>
+              </button>
+
+              {/* Quiz History Button */}
+              <button
+                onClick={() => setAppState('history')}
+                className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-all hover:-translate-y-1 text-center group"
+              >
+                <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-200 transition-colors">
+                  <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Quiz History</h3>
+                <p className="text-sm text-gray-600">
+                  View past quiz attempts and scores
+                </p>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Generate Quiz Screen */}
+        {appState === 'generate' && (
+          <div className="max-w-2xl mx-auto">
+            {/* Back Button */}
+            <button
+              onClick={handleBackToHome}
+              className="mb-6 text-blue-600 hover:text-blue-700 flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Home
+            </button>
+
+            {/* Header */}
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                Generate a Quiz
+              </h2>
+              <p className="text-gray-600">
+                Upload a PDF and we'll create practice questions for you
+              </p>
+            </div>
+
             {/* Upload Zone */}
-            <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
-              <FileUploadZone onFileSelect={handleFileSelect} />
+            <div className="bg-white rounded-lg shadow-lg p-8">
+              <FileUploadZone
+                onFileSelect={handleFileSelect}
+                onMetadataChange={setOrganizationMetadata}
+              />
 
               {/* Generate Button */}
               {selectedFile && (
@@ -148,70 +301,90 @@ export default function Home() {
                   </button>
                 </div>
               )}
-
-              {/* View History Button */}
-              <div className="mt-4 text-center">
-                <button
-                  onClick={handleViewHistory}
-                  className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-2 mx-auto"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  View Quiz History
-                </button>
-              </div>
             </div>
-
-            {/* Features Preview */}
-            <div className="max-w-4xl mx-auto mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">📄</span>
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">Upload PDF</h3>
-                <p className="text-sm text-gray-600">
-                  Upload any study material or lecture notes
-                </p>
-              </div>
-
-              <div className="text-center">
-                <div className="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">🤖</span>
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">AI Generation</h3>
-                <p className="text-sm text-gray-600">
-                  AI creates personalized practice questions
-                </p>
-              </div>
-
-              <div className="text-center">
-                <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">✅</span>
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">Practice & Learn</h3>
-                <p className="text-sm text-gray-600">
-                  Take quizzes anytime, track your progress
-                </p>
-              </div>
-            </div>
-          </>
+          </div>
         )}
 
-        {/* Quiz State */}
-        {appState === 'quiz' && quizData && (
+        {/* Quizzes Screen - Browse available quizzes */}
+        {appState === 'quizzes' && (
+          <div className="max-w-4xl mx-auto">
+            {/* Back Button */}
+            <button
+              onClick={handleBackToHome}
+              className="mb-6 text-blue-600 hover:text-blue-700 flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Home
+            </button>
+
+            {/* Header */}
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                Available Quizzes
+              </h2>
+              <p className="text-gray-600">
+                Browse and take your generated quizzes
+              </p>
+            </div>
+
+            {/* Quiz Browser Component */}
+            <QuizBrowser
+              onSelectQuiz={handleSelectQuizFromBrowser}
+              onBack={handleBackToHome}
+            />
+          </div>
+        )}
+
+        {/* Taking Quiz State */}
+        {appState === 'taking-quiz' && quizData && (
           <QuizDisplay
             quizData={quizData}
             onComplete={handleQuizComplete}
-            onBack={handleBackToUpload}
+            onBack={handleBackToHome}
           />
         )}
 
         {/* History State */}
         {appState === 'history' && (
-          <QuizHistory
-            onSelectQuiz={handleSelectQuizFromHistory}
-            onBack={handleBackToUpload}
+          <div className="max-w-4xl mx-auto">
+            {/* Back Button */}
+            <button
+              onClick={handleBackToHome}
+              className="mb-6 text-blue-600 hover:text-blue-700 flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Home
+            </button>
+
+            {/* Header */}
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                Quiz History
+              </h2>
+              <p className="text-gray-600">
+                Review your past quiz attempts and scores
+              </p>
+            </div>
+
+            <QuizHistory
+              onSelectQuiz={handleSelectQuizFromHistory}
+              onBack={handleBackToHome}
+            />
+          </div>
+        )}
+
+        {/* Reviewing Quiz State - Show past attempt */}
+        {appState === 'reviewing-quiz' && quizData && reviewData && (
+          <QuizReview
+            quizData={quizData}
+            answers={reviewData.answers}
+            sessionScore={reviewData.sessionScore}
+            onRetake={handleRetakeQuiz}
+            onBack={handleBackToHome}
           />
         )}
 
@@ -220,9 +393,9 @@ export default function Home() {
           <QuizResults
             score={finalScore.score}
             total={finalScore.total}
-            quizTitle={quizData.pdf_filename || 'Generated Quiz'}
+            quizTitle={quizData.quiz_title || quizData.file_name || 'Generated Quiz'}
             onTryAgain={handleTryAgain}
-            onBackHome={handleBackToUpload}
+            onBackHome={handleBackToHome}
           />
         )}
       </div>

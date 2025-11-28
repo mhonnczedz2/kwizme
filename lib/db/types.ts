@@ -2,7 +2,8 @@
 
 export interface Quiz {
   quiz_id: string;
-  pdf_filename: string;
+  quiz_title: string;
+  file_name: string;
   institution?: string;
   program?: string;
   course?: string;
@@ -59,7 +60,8 @@ export interface AnswerRecord {
 
 export interface QuizGenerationResponse {
   quiz_id: string;
-  pdf_filename: string;
+  quiz_title: string;
+  file_name: string;
   topic: string;
   difficulty_level: string;
   institution?: string;

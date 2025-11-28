@@ -7,8 +7,24 @@ export async function POST(request: NextRequest) {
     // Parse form data
     const formData = await request.formData();
     const file = formData.get('pdf_file') as File;
-    const numQuestions = parseInt(formData.get('num_questions') as string) || 5;  // Reduced to 5 for reliability
+    const numQuestions = parseInt(formData.get('num_questions') as string) || 15;
     const difficulty = (formData.get('difficulty') as string) || 'medium';
+
+    // Validate number of questions
+    if (numQuestions < 10 || numQuestions > 50) {
+      return NextResponse.json(
+        { error: 'Number of questions must be between 10 and 50' },
+        { status: 400 }
+      );
+    }
+
+    // Extract organization metadata (optional fields)
+    const quiz_title = formData.get('quiz_title') as string | null;
+    const institution = formData.get('institution') as string | null;
+    const program = formData.get('program') as string | null;
+    const course = formData.get('course') as string | null;
+    const course_code = formData.get('course_code') as string | null;
+    const topic = formData.get('topic') as string | null;
 
     // Validate file
     if (!file) {
@@ -58,8 +74,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Add filename to response
-    quizData.pdf_filename = file.name;
+    // Add quiz metadata to response
+    quizData.quiz_title = quiz_title || file.name.replace('.pdf', '');
+    quizData.file_name = file.name;
+    quizData.institution = institution || undefined;
+    quizData.program = program || undefined;
+    quizData.course = course || undefined;
+    quizData.course_code = course_code || undefined;
+    quizData.topic = topic || undefined;
 
     console.log('✅ Quiz generated successfully:', quizData.questions.length, 'questions');
 

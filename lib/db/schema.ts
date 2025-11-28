@@ -4,7 +4,8 @@ export const SCHEMA_SQL = `
 -- Stores generated quizzes
 CREATE TABLE IF NOT EXISTS quizzes (
     quiz_id TEXT PRIMARY KEY,
-    pdf_filename TEXT NOT NULL,
+    quiz_title TEXT NOT NULL,
+    file_name TEXT NOT NULL,
 
     -- Organizational metadata (optional fields)
     institution TEXT,

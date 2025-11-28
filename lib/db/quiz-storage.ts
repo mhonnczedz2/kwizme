@@ -13,19 +13,21 @@ export async function saveQuizToDatabase(quizData: QuizGenerationResponse): Prom
     const insertQuizSQL = `
       INSERT INTO quizzes (
         quiz_id,
-        pdf_filename,
+        quiz_title,
+        file_name,
         institution,
         program,
         course,
         course_code,
         topic,
         difficulty_level
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     executeUpdate(db, insertQuizSQL, [
       quizData.quiz_id,
-      quizData.pdf_filename,
+      quizData.quiz_title,
+      quizData.file_name,
       quizData.institution || null,
       quizData.program || null,
       quizData.course || null,
@@ -116,7 +118,8 @@ export async function getQuizById(quizId: string): Promise<QuizGenerationRespons
   // Transform to QuizGenerationResponse format
   return {
     quiz_id: quiz.quiz_id,
-    pdf_filename: quiz.pdf_filename,
+    quiz_title: quiz.quiz_title,
+    file_name: quiz.file_name,
     topic: quiz.topic || 'Generated Quiz',
     difficulty_level: quiz.difficulty_level,
     institution: quiz.institution,
@@ -133,6 +136,51 @@ export async function getQuizById(quizId: string): Promise<QuizGenerationRespons
       difficulty: q.difficulty
     }))
   };
+}
+
+/**
+ * Update quiz metadata (categorization details)
+ */
+export async function updateQuizMetadata(
+  quizId: string,
+  updates: {
+    quiz_title?: string;
+    institution?: string;
+    program?: string;
+    course_code?: string;
+    topic?: string;
+    difficulty_level?: string;
+  }
+): Promise<void> {
+  const db = await initDatabase();
+
+  try {
+    const sql = `
+      UPDATE quizzes
+      SET quiz_title = ?,
+          institution = ?,
+          program = ?,
+          course_code = ?,
+          topic = ?,
+          difficulty_level = ?
+      WHERE quiz_id = ?
+    `;
+
+    executeUpdate(db, sql, [
+      updates.quiz_title,
+      updates.institution || null,
+      updates.program || null,
+      updates.course_code || null,
+      updates.topic || null,
+      updates.difficulty_level,
+      quizId
+    ]);
+
+    console.log(`✅ Updated quiz metadata: ${quizId}`);
+  } catch (error) {
+    console.error('❌ Error updating quiz metadata:', error);
+    throw error;
+  }
 }
 
 /**
