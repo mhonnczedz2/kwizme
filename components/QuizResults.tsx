@@ -35,7 +35,7 @@ export default function QuizResults({ score, total, quizTitle, onTryAgain, onBac
         </div>
 
         {/* Message */}
-        <h2 className="text-3xl font-semibold mb-4 text-gray-800">
+        <h2 className="text-3xl font-semibold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
           {grade.message}
         </h2>
 

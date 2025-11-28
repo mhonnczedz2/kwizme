@@ -25,6 +25,7 @@ export default function Home() {
     answers: AnswerRecord[];
     sessionScore: { correct: number; total: number };
   } | null>(null);
+  const [showInfoBubble, setShowInfoBubble] = useState(false);
 
   const handleFileSelect = (file: File) => {
     setSelectedFile(file);
@@ -165,17 +166,64 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Info Bubble - Always visible in upper right */}
+      <div className="fixed top-4 right-4 z-50">
+        <div className="relative">
+          {/* Info Icon Button */}
+          <button
+            onClick={() => setShowInfoBubble(!showInfoBubble)}
+            className="bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg hover:bg-blue-700 transition-colors"
+            aria-label="Information"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
+
+          {/* Info Popup */}
+          {showInfoBubble && (
+            <div className="absolute top-14 right-0 w-80 bg-white rounded-lg shadow-xl p-6 border-2 border-blue-200">
+              {/* Close button */}
+              <button
+                onClick={() => setShowInfoBubble(false)}
+                className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                Feedback & Support
+              </h3>
+              <p className="text-sm text-gray-700 mb-4">
+                Have feedback or a feature request? We'd love to hear from you!
+              </p>
+              <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                <p className="text-xs text-gray-600 mb-1">Contact the developer:</p>
+                <a
+                  href="mailto:my.stationptot@gmail.com"
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium break-all"
+                >
+                  my.stationptot@gmail.com
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="container mx-auto px-4 py-16">
         {/* Home Screen - 3 Buttons */}
         {appState === 'home' && (
           <div className="max-w-4xl mx-auto">
             {/* Header */}
             <div className="text-center mb-16">
-              <h1 className="text-6xl font-bold text-gray-900 mb-4">
+              <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 QuizMe
               </h1>
               <p className="text-xl text-gray-600">
-                Generate practice quizzes from your PDFs using AI
+                Generate practice quizzes from your PDF learning materials using AI
               </p>
             </div>
 
@@ -248,7 +296,7 @@ export default function Home() {
 
             {/* Header */}
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                 Generate a Quiz
               </h2>
               <p className="text-gray-600">
@@ -321,7 +369,7 @@ export default function Home() {
 
             {/* Header */}
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Available Quizzes
               </h2>
               <p className="text-gray-600">
@@ -363,7 +411,7 @@ export default function Home() {
 
             {/* Header */}
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                 Quiz History
               </h2>
               <p className="text-gray-600">

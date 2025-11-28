@@ -45,7 +45,7 @@ export default function QuizReview({
 
       {/* Quiz Title */}
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
           {quizData.quiz_title}
         </h1>
         <p className="text-gray-600">Review Your Answers</p>
