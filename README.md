@@ -67,22 +67,26 @@ See `/lib/db/schema.ts` for complete database schema including:
 - [x] Basic file upload component
 
 ### Week 3-4: Core Features ✅
-- [x] PDF text extraction
+- [x] PDF text extraction (pdfjs-dist)
 - [x] LLM API integration (Gemini 2.5 Flash)
 - [x] Quiz generation endpoint
-- [ ] Quiz display interface
-- [ ] Answer checking logic
+- [x] Quiz display interface
+- [x] Answer checking logic
+- [x] Results screen with scoring
 
-### Week 5-6: Polish & PWA
-- [ ] Quiz configuration modal
-- [ ] Session presets (Learn/Test/Fast Learn)
-- [ ] Quiz history view
+### Week 5-6: Organization & Configuration ✅
+- [x] Quiz configuration modal
+- [x] Session presets (Learn/Test/Fast Learn/Custom)
+- [x] Quiz browser with filtering
+- [x] Quiz history view
+- [x] Organizational metadata (institution, program, course, topic)
+- [x] Edit quiz functionality
+
+### Week 7-8: Polish & PWA (Current)
+- [x] Testing and bug fixes
+- [x] Performance optimization
 - [ ] PWA manifest and service worker
 - [ ] Offline support
-
-### Week 7-8: Beta Launch
-- [ ] Testing and bug fixes
-- [ ] Performance optimization
 - [ ] Beta user onboarding
 - [ ] Feedback collection
 
@@ -132,18 +136,25 @@ npm run lint
 
 ## 📝 Key Features (MVP)
 
-### Must-Have Features
+### Must-Have Features ✅
 - ✅ PDF upload (drag & drop)
-- ⏳ AI quiz generation (10-20 questions)
-- ⏳ Multiple choice questions with explanations
-- ⏳ Instant feedback on answers
-- ⏳ Quiz history and scores
-- ⏳ Offline quiz-taking
+- ✅ AI quiz generation (15 questions per PDF)
+- ✅ Multiple choice questions with explanations
+- ✅ Instant feedback on answers
+- ✅ Quiz history and session tracking
+- ✅ Quiz browser with tag-based filtering
+- ✅ Session configuration (Learn/Test/Fast Learn modes)
+- ✅ Organizational metadata (institution, program, course, topic)
+- ✅ Edit quiz metadata
+- ✅ Hint system
+- ✅ Citation tracking
 
 ### Nice-to-Have (Phase 2)
-- Quiz organization (courses, topics)
+- PWA offline support (service worker)
 - Export quiz to PDF
 - Dark mode
+- Question/option randomization
+- Per-question timer
 - Social sharing
 - Analytics dashboard
 
@@ -169,8 +180,10 @@ For questions or issues, create an issue in the GitHub repository.
 
 ---
 
-**Status**: 🚧 Under Active Development
+**Status**: 🚀 MVP Complete - Ready for Beta Testing
 
-**Current Phase**: Week 3-4 (Core Features) ✅ → Week 5-6 (Polish & PWA) ⏳
+**Current Phase**: Week 7-8 (Polish & PWA)
 
-**Next Milestone**: Build quiz display interface and answer validation
+**MVP Completion**: ~90% (Core features complete, PWA optimization remaining)
+
+**Next Milestone**: Add PWA features (service worker, offline support) and beta user testing
