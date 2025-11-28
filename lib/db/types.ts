@@ -20,6 +20,7 @@ export interface Question {
   correct_answer: string;
   correct_answer_index?: number; // Deprecated, for backward compatibility
   explanation: string;
+  citation?: string;
   hint?: string;
   difficulty: 'easy' | 'medium' | 'hard';
 }
@@ -70,6 +71,7 @@ export interface QuizGenerationResponse {
     options: string[];
     correct_answer: string;
     explanation: string;
+    citation?: string;
     hint?: string;
     difficulty: string;
   }[];

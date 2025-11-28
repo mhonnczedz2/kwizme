@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS questions (
 
     -- Question metadata
     explanation TEXT,
+    citation TEXT,
     hint TEXT,
     difficulty TEXT,
 

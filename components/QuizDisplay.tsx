@@ -176,7 +176,12 @@ export default function QuizDisplay({ quizData, onComplete, onBack }: QuizDispla
         {showExplanation && (
           <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
             <h3 className="font-semibold mb-2 text-gray-800">Explanation:</h3>
-            <p className="text-gray-700">{currentQuestion.explanation}</p>
+            <p className="text-gray-700 mb-3">{currentQuestion.explanation}</p>
+            {currentQuestion.citation && (
+              <p className="text-xs text-gray-500 italic border-t border-gray-300 pt-2 mt-2">
+                📄 Source: {currentQuestion.citation}
+              </p>
+            )}
           </div>
         )}
 

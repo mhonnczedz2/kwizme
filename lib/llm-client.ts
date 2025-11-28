@@ -22,22 +22,27 @@ Each question must have:
 - 1 correct answer (provide the actual answer text)
 - 3 plausible distractors (wrong answers that seem reasonable)
 - Brief explanation of why the answer is correct
+- Citation showing where the answer can be found in the source (e.g., "Page 1, paragraph 2" or "Introduction section")
 - Optional hint (helpful clue without giving away the answer)
 - Difficulty rating based on cognitive complexity
 
-IMPORTANT: Return ONLY valid JSON. Do not include any markdown formatting, code blocks, or extra text.
-All strings must be properly escaped. Use double quotes for all strings.
+IMPORTANT FORMATTING RULES:
+- Return ONLY valid JSON. Do not include any markdown formatting, code blocks, or extra text.
+- All strings must be properly escaped. Use double quotes for all strings.
+- DO NOT prefix answers with letters like "A.", "B.", "C.", "D." - use plain text only
+- The correct_answer must exactly match one of the options (case-sensitive)
 
 Expected JSON format:
 {
   "questions": [
     {
-      "question": "Question text here?",
-      "options": ["Answer A", "Answer B", "Answer C", "Answer D"],
-      "correct_answer": "Answer B",
-      "explanation": "Explanation here.",
-      "hint": "Think about the relationship between X and Y.",
-      "difficulty": "medium"
+      "question": "What is the capital of France?",
+      "options": ["Paris", "London", "Berlin", "Madrid"],
+      "correct_answer": "Paris",
+      "explanation": "Paris is the capital and largest city of France.",
+      "citation": "page 1, paragraph 3",
+      "hint": "Think about the most famous city in France.",
+      "difficulty": "easy"
     }
   ]
 }
