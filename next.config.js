@@ -1,27 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Empty turbopack config to acknowledge we're using Turbopack
-  // SQL.js should work fine with Turbopack without special configuration
-  turbopack: {},
+  transpilePackages: ['sql.js'],
 
-  // Keep webpack config for when explicitly using --webpack flag
-  webpack: (config, { isServer }) => {
-    // SQL.js needs to load wasm files
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      fs: false,
-      path: false,
-      crypto: false,
-    };
-
-    if (!isServer) {
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        'sql.js': 'sql.js/dist/sql-wasm.js',
-      };
-    }
-
-    return config;
+  // Turbopack configuration to handle Node.js modules in browser
+  turbopack: {
+    resolveAlias: {
+      fs: './lib/empty.js',
+      path: './lib/empty.js',
+      crypto: './lib/empty.js',
+    },
   },
 };
 

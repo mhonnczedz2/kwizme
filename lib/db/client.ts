@@ -1,3 +1,5 @@
+'use client';
+
 import initSqlJs, { Database } from 'sql.js';
 import { SCHEMA_SQL } from './schema';
 
@@ -9,6 +11,10 @@ let dbInstance: Database | null = null;
  * Initialize SQL.js and create/load database
  */
 export async function initDatabase(): Promise<Database> {
+  if (typeof window === 'undefined') {
+    throw new Error('Database can only be initialized in the browser');
+  }
+
   if (dbInstance) {
     return dbInstance;
   }
