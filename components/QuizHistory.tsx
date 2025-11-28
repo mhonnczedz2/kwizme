@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { Quiz, ReviewSession } from '@/lib/db/types';
-import { getAllQuizzes, getQuizById, deleteQuiz } from '@/lib/db/quiz-storage';
+import { getAllQuizzes, getQuizById, deleteQuiz, getQuizQuestionCount } from '@/lib/db/quiz-storage';
 import { getSessionsForQuiz, getAnswersForSession, deleteSessionsForQuiz } from '@/lib/db/session-storage';
 import { initDatabase, executeUpdate } from '@/lib/db/client';
 import { QuizGenerationResponse, AnswerRecord } from '@/lib/db/types';
+import QuizConfigModal, { SessionConfig } from './QuizConfigModal';
 
 interface QuizHistoryProps {
-  onSelectQuiz: (quiz: QuizGenerationResponse, answers?: AnswerRecord[], sessionScore?: { correct: number; total: number }) => void;
+  onSelectQuiz: (quiz: QuizGenerationResponse, config?: SessionConfig, answers?: AnswerRecord[], sessionScore?: { correct: number; total: number }) => void;
   onBack: () => void;
 }
 
@@ -21,6 +22,8 @@ export default function QuizHistory({ onSelectQuiz, onBack }: QuizHistoryProps) 
   const [quizzesWithSessions, setQuizzesWithSessions] = useState<QuizWithSessions[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedQuizId, setExpandedQuizId] = useState<string | null>(null);
+  const [configuringQuizId, setConfiguringQuizId] = useState<string | null>(null);
+  const [questionCount, setQuestionCount] = useState<number>(15);
 
   useEffect(() => {
     loadQuizzesWithSessions();
@@ -62,8 +65,8 @@ export default function QuizHistory({ onSelectQuiz, onBack }: QuizHistoryProps) 
       const session = quizWithSessions?.sessions.find(s => s.session_id === sessionId);
 
       if (session) {
-        // Review mode with this specific session
-        onSelectQuiz(quiz, answers, {
+        // Review mode with this specific session (no config needed for review)
+        onSelectQuiz(quiz, undefined, answers, {
           correct: session.correct_answers || 0,
           total: session.total_questions
         });
@@ -76,14 +79,10 @@ export default function QuizHistory({ onSelectQuiz, onBack }: QuizHistoryProps) 
 
   const handleTakeQuiz = async (quizId: string) => {
     try {
-      const quiz = await getQuizById(quizId);
-      if (!quiz) {
-        alert('Quiz not found');
-        return;
-      }
-
-      // Take quiz fresh (no session data)
-      onSelectQuiz(quiz);
+      // Show config modal
+      const count = await getQuizQuestionCount(quizId);
+      setQuestionCount(count);
+      setConfiguringQuizId(quizId);
     } catch (error) {
       console.error('Failed to load quiz:', error);
       alert('Failed to load quiz. Please try again.');
@@ -366,6 +365,26 @@ export default function QuizHistory({ onSelectQuiz, onBack }: QuizHistoryProps) 
             );
           })}
         </div>
+      )}
+
+      {/* Quiz Config Modal */}
+      {configuringQuizId && (
+        <QuizConfigModal
+          totalQuestions={questionCount}
+          onStart={async (config) => {
+            try {
+              const quiz = await getQuizById(configuringQuizId);
+              if (quiz) {
+                onSelectQuiz(quiz, config);
+                setConfiguringQuizId(null);
+              }
+            } catch (error) {
+              console.error('Failed to load quiz:', error);
+              alert('Failed to load quiz. Please try again.');
+            }
+          }}
+          onCancel={() => setConfiguringQuizId(null)}
+        />
       )}
     </div>
   );

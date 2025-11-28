@@ -227,3 +227,18 @@ export async function getQuizStats(): Promise<{
     totalQuestions: questionCountResult[0]?.count || 0
   };
 }
+
+/**
+ * Get total question count for a specific quiz
+ */
+export async function getQuizQuestionCount(quizId: string): Promise<number> {
+  const db = await initDatabase();
+
+  const result = executeQuery<{ count: number }>(
+    db,
+    'SELECT COUNT(*) as count FROM questions WHERE quiz_id = ?',
+    [quizId]
+  );
+
+  return result[0]?.count || 0;
+}

@@ -68,7 +68,6 @@ CREATE TABLE review_sessions (
 **1. Learn (Default)**
 - Quick Submit: OFF
 - Show Explanation: ON
-- Time Limit: 120 seconds
 - Randomize Options: OFF
 - Randomize Questions: OFF
 - Number of Questions: All
@@ -78,7 +77,6 @@ CREATE TABLE review_sessions (
 **2. Test**
 - Quick Submit: OFF
 - Show Explanation: OFF
-- Time Limit: 300 seconds
 - Randomize Options: OFF
 - Randomize Questions: OFF
 - Number of Questions: All
@@ -88,7 +86,6 @@ CREATE TABLE review_sessions (
 **3. Fast Learn**
 - Quick Submit: ON
 - Show Explanation: OFF
-- Time Limit: 20 seconds
 - Randomize Options: OFF
 - Randomize Questions: OFF
 - Number of Questions: All

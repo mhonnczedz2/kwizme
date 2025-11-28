@@ -4,14 +4,16 @@ import { useState, useEffect } from 'react';
 import { QuizGenerationResponse } from '@/lib/db/types';
 import { createSession, saveAnswer, completeSession } from '@/lib/db/session-storage';
 import { getQuizById } from '@/lib/db/quiz-storage';
+import { SessionConfig } from './QuizConfigModal';
 
 interface QuizDisplayProps {
   quizData: QuizGenerationResponse;
+  config?: SessionConfig;
   onComplete: (score: number, total: number) => void;
   onBack: () => void;
 }
 
-export default function QuizDisplay({ quizData, onComplete, onBack }: QuizDisplayProps) {
+export default function QuizDisplay({ quizData, config, onComplete, onBack }: QuizDisplayProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
@@ -21,6 +23,11 @@ export default function QuizDisplay({ quizData, onComplete, onBack }: QuizDispla
   const [answers, setAnswers] = useState<{ questionIndex: number; selected: string; correct: string; isCorrect: boolean }[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [questionIds, setQuestionIds] = useState<number[]>([]);
+
+  // Test mode: track answers but don't show results until end
+  const isTestMode = config?.preset_name === 'test';
+  const quickSubmit = config?.quick_submit ?? false;
+  const showExplanationSetting = config?.show_explanation ?? true;
 
   // Initialize session and get question IDs when component mounts
   useEffect(() => {
@@ -51,17 +58,125 @@ export default function QuizDisplay({ quizData, onComplete, onBack }: QuizDispla
   const currentQuestion = quizData.questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === quizData.questions.length - 1;
 
-  const handleAnswerSelect = (option: string) => {
+  const handleAnswerSelect = async (option: string) => {
     if (isAnswered) return;
     setSelectedAnswer(option);
+
+    // Quick submit: automatically submit when answer is selected
+    if (quickSubmit) {
+      const isCorrect = option === currentQuestion.correct_answer;
+      setIsAnswered(true);
+
+      // Only show explanation if configured to do so
+      if (showExplanationSetting && !isTestMode) {
+        setShowExplanation(true);
+      }
+
+      if (isCorrect) {
+        setCorrectCount(correctCount + 1);
+      }
+
+      setAnswers([...answers, {
+        questionIndex: currentQuestionIndex,
+        selected: option,
+        correct: currentQuestion.correct_answer,
+        isCorrect
+      }]);
+
+      // Save answer to database
+      try {
+        const selectedAnswerIndex = currentQuestion.options.indexOf(option);
+        const questionId = questionIds[currentQuestionIndex];
+
+        if (questionId && sessionId) {
+          await saveAnswer(
+            sessionId,
+            questionId,
+            selectedAnswerIndex,
+            isCorrect
+          );
+        }
+      } catch (error) {
+        console.error('Failed to save answer:', error);
+      }
+    }
   };
 
   const handleSubmitAnswer = async () => {
-    if (!selectedAnswer || !sessionId) return;
+    if (!sessionId) return;
 
+    // In test mode, submit means finish the entire quiz
+    if (isTestMode) {
+      // Save the current answer if one is selected
+      if (selectedAnswer) {
+        const isCorrect = selectedAnswer === currentQuestion.correct_answer;
+        const tempCorrectCount = isCorrect ? correctCount + 1 : correctCount;
+
+        const tempAnswers = [...answers, {
+          questionIndex: currentQuestionIndex,
+          selected: selectedAnswer,
+          correct: currentQuestion.correct_answer,
+          isCorrect
+        }];
+
+        // Save answer to database
+        try {
+          const selectedAnswerIndex = currentQuestion.options.indexOf(selectedAnswer);
+          const questionId = questionIds[currentQuestionIndex];
+
+          if (questionId) {
+            await saveAnswer(
+              sessionId,
+              questionId,
+              selectedAnswerIndex,
+              isCorrect
+            );
+          }
+        } catch (error) {
+          console.error('Failed to save answer:', error);
+        }
+
+        // Complete the session
+        try {
+          await completeSession(
+            sessionId,
+            tempCorrectCount,
+            quizData.questions.length
+          );
+        } catch (error) {
+          console.error('Failed to complete session:', error);
+        }
+
+        // Finish quiz
+        onComplete(tempCorrectCount, quizData.questions.length);
+      } else {
+        // No answer selected for current question, just complete with existing answers
+        try {
+          await completeSession(
+            sessionId,
+            correctCount,
+            quizData.questions.length
+          );
+        } catch (error) {
+          console.error('Failed to complete session:', error);
+        }
+
+        onComplete(correctCount, quizData.questions.length);
+      }
+      return;
+    }
+
+    // Non-test mode requires an answer
+    if (!selectedAnswer) return;
+
+    // Non-test mode: show results for current question
     const isCorrect = selectedAnswer === currentQuestion.correct_answer;
     setIsAnswered(true);
-    setShowExplanation(true);
+
+    // Show explanation based on settings (not in test mode)
+    if (showExplanationSetting && !isTestMode) {
+      setShowExplanation(true);
+    }
 
     if (isCorrect) {
       setCorrectCount(correctCount + 1);
@@ -93,6 +208,59 @@ export default function QuizDisplay({ quizData, onComplete, onBack }: QuizDispla
   };
 
   const handleNextQuestion = async () => {
+    // In test mode, save answer when moving to next question
+    if (isTestMode && !isLastQuestion && selectedAnswer) {
+      const isCorrect = selectedAnswer === currentQuestion.correct_answer;
+
+      if (isCorrect) {
+        setCorrectCount(correctCount + 1);
+      }
+
+      setAnswers([...answers, {
+        questionIndex: currentQuestionIndex,
+        selected: selectedAnswer,
+        correct: currentQuestion.correct_answer,
+        isCorrect
+      }]);
+
+      // Save answer to database
+      try {
+        const selectedAnswerIndex = currentQuestion.options.indexOf(selectedAnswer);
+        const questionId = questionIds[currentQuestionIndex];
+
+        if (questionId && sessionId) {
+          await saveAnswer(
+            sessionId,
+            questionId,
+            selectedAnswerIndex,
+            isCorrect
+          );
+        }
+      } catch (error) {
+        console.error('Failed to save answer:', error);
+      }
+
+      // Move to next question - check if it was already answered
+      const nextIndex = currentQuestionIndex + 1;
+      const nextAnswer = answers.find(a => a.questionIndex === nextIndex);
+
+      setCurrentQuestionIndex(nextIndex);
+
+      if (nextAnswer) {
+        // Restore the answered state
+        setSelectedAnswer(nextAnswer.selected);
+        setIsAnswered(true);
+        setShowExplanation(false); // Test mode never shows explanation
+      } else {
+        setSelectedAnswer(null);
+        setIsAnswered(false);
+        setShowExplanation(false);
+      }
+
+      setShowHint(false);
+      return;
+    }
+
     if (isLastQuestion) {
       // Complete the session in database
       if (sessionId) {
@@ -110,11 +278,60 @@ export default function QuizDisplay({ quizData, onComplete, onBack }: QuizDispla
       // Quiz completed
       onComplete(correctCount, quizData.questions.length);
     } else {
-      // Move to next question
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setSelectedAnswer(null);
-      setIsAnswered(false);
-      setShowExplanation(false);
+      // Move to next question (non-test mode) - check if it was already answered
+      const nextIndex = currentQuestionIndex + 1;
+      const nextAnswer = answers.find(a => a.questionIndex === nextIndex);
+
+      setCurrentQuestionIndex(nextIndex);
+
+      if (nextAnswer) {
+        // Restore the answered state
+        setSelectedAnswer(nextAnswer.selected);
+        setIsAnswered(true);
+
+        // Show explanation if configured
+        if (showExplanationSetting) {
+          setShowExplanation(true);
+        } else {
+          setShowExplanation(false);
+        }
+      } else {
+        setSelectedAnswer(null);
+        setIsAnswered(false);
+        setShowExplanation(false);
+      }
+
+      setShowHint(false);
+    }
+  };
+
+  const handlePreviousQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      const prevIndex = currentQuestionIndex - 1;
+
+      // Check if previous question was already answered
+      const previousAnswer = answers.find(a => a.questionIndex === prevIndex);
+
+      setCurrentQuestionIndex(prevIndex);
+
+      if (previousAnswer) {
+        // Restore the answered state
+        setSelectedAnswer(previousAnswer.selected);
+        setIsAnswered(true);
+
+        // Show explanation if configured (non-test mode)
+        if (showExplanationSetting && !isTestMode) {
+          setShowExplanation(true);
+        } else {
+          setShowExplanation(false);
+        }
+      } else {
+        // Reset to unanswered state
+        setSelectedAnswer(null);
+        setIsAnswered(false);
+        setShowExplanation(false);
+      }
+
       setShowHint(false);
     }
   };
@@ -126,14 +343,14 @@ export default function QuizDisplay({ quizData, onComplete, onBack }: QuizDispla
   const getOptionClassName = (option: string) => {
     const baseClasses = "w-full text-left p-4 rounded-lg border-2 transition-all";
 
-    if (!isAnswered) {
-      // Before answering
+    if (!isAnswered || isTestMode) {
+      // Before answering OR in test mode (hide correct/incorrect)
       if (selectedAnswer === option) {
         return `${baseClasses} border-blue-500 bg-blue-50`;
       }
       return `${baseClasses} border-gray-300 hover:border-blue-300 hover:bg-blue-50`;
     } else {
-      // After answering
+      // After answering (non-test mode)
       if (option === currentQuestion.correct_answer) {
         return `${baseClasses} border-green-500 bg-green-50`;
       }
@@ -218,7 +435,7 @@ export default function QuizDisplay({ quizData, onComplete, onBack }: QuizDispla
             <button
               key={index}
               onClick={() => handleAnswerSelect(option)}
-              disabled={isAnswered}
+              disabled={!isTestMode && isAnswered}
               className={getOptionClassName(option)}
             >
               <div className="flex items-center gap-3">
@@ -226,10 +443,10 @@ export default function QuizDisplay({ quizData, onComplete, onBack }: QuizDispla
                   {String.fromCharCode(65 + index)}.
                 </span>
                 <span>{option}</span>
-                {isAnswered && option === currentQuestion.correct_answer && (
+                {!isTestMode && isAnswered && option === currentQuestion.correct_answer && (
                   <span className="ml-auto text-green-600">✓</span>
                 )}
-                {isAnswered && selectedAnswer === option && option !== currentQuestion.correct_answer && (
+                {!isTestMode && isAnswered && selectedAnswer === option && option !== currentQuestion.correct_answer && (
                   <span className="ml-auto text-red-600">✗</span>
                 )}
               </div>
@@ -250,28 +467,98 @@ export default function QuizDisplay({ quizData, onComplete, onBack }: QuizDispla
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex justify-end items-center">
-          <div className="flex gap-3">
-            {!isAnswered ? (
-              <button
-                onClick={handleSubmitAnswer}
-                disabled={!selectedAnswer}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-              >
-                Submit Answer
-              </button>
-            ) : (
-              <button
-                onClick={handleNextQuestion}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                {isLastQuestion ? 'Finish Quiz' : 'Next Question →'}
-              </button>
-            )}
+        {/* Action Buttons - Non-Test Mode */}
+        {!isTestMode && (
+          <div className="flex justify-between items-center">
+            <div className="flex gap-3">
+              {/* Previous Button - always show when available */}
+              {currentQuestionIndex > 0 && (
+                <button
+                  onClick={handlePreviousQuestion}
+                  className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  ← Previous
+                </button>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              {/* Non-Test Mode (Learn, Fast Learn) */}
+              {!quickSubmit && (
+                <>
+                  {!isAnswered ? (
+                    <button
+                      onClick={handleSubmitAnswer}
+                      disabled={!selectedAnswer}
+                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Submit Answer
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleNextQuestion}
+                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      {isLastQuestion ? 'Finish Quiz' : 'Next Question →'}
+                    </button>
+                  )}
+                </>
+              )}
+
+              {/* Quick Submit Mode (Fast Learn) */}
+              {quickSubmit && isAnswered && (
+                <button
+                  onClick={handleNextQuestion}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  {isLastQuestion ? 'Finish Quiz' : 'Next Question →'}
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Action Buttons - Test Mode (inside card, just navigation) */}
+        {isTestMode && (
+          <div className="flex justify-between items-center">
+            <div className="flex gap-3">
+              {/* Previous Button */}
+              {currentQuestionIndex > 0 && (
+                <button
+                  onClick={handlePreviousQuestion}
+                  className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  ← Previous
+                </button>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              {/* Next button in test mode */}
+              {!isLastQuestion && (
+                <button
+                  onClick={handleNextQuestion}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Next →
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Test Mode Submit Button - Outside card */}
+      {isTestMode && (
+        <div className="mt-6 flex justify-center">
+          <button
+            onClick={handleSubmitAnswer}
+            className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg shadow-lg"
+          >
+            Submit
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -224,3 +224,21 @@ export async function deleteSessionsForQuiz(quizId: string): Promise<void> {
 
   console.log(`✅ Deleted ${sessions.length} sessions for quiz: ${quizId}`);
 }
+
+/**
+ * Get the most recently taken quizzes (by completed session)
+ */
+export async function getRecentQuizSessions(limit: number = 5): Promise<string[]> {
+  const db = await initDatabase();
+
+  const sql = `
+    SELECT DISTINCT quiz_id
+    FROM review_sessions
+    WHERE completed_at IS NOT NULL
+    ORDER BY completed_at DESC
+    LIMIT ?
+  `;
+
+  const results = executeQuery<{ quiz_id: string }>(db, sql, [limit]);
+  return results.map(r => r.quiz_id);
+}

@@ -1,18 +1,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAllQuizzes, deleteQuiz, updateQuizMetadata } from '@/lib/db/quiz-storage';
-import { deleteSessionsForQuiz } from '@/lib/db/session-storage';
+import { getAllQuizzes, deleteQuiz, updateQuizMetadata, getQuizQuestionCount } from '@/lib/db/quiz-storage';
+import { deleteSessionsForQuiz, getRecentQuizSessions } from '@/lib/db/session-storage';
 import { Quiz } from '@/lib/db/types';
+import QuizConfigModal, { SessionConfig } from './QuizConfigModal';
 
 interface QuizBrowserProps {
-  onSelectQuiz: (quizId: string) => void;
+  onSelectQuiz: (quizId: string, config: SessionConfig) => void;
   onBack: () => void;
 }
 
 export default function QuizBrowser({ onSelectQuiz, onBack }: QuizBrowserProps) {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showRecents, setShowRecents] = useState(true); // Recents on by default
+  const [recentQuizIds, setRecentQuizIds] = useState<string[]>([]);
   const [filters, setFilters] = useState({
     difficulty_level: '',
     institution: '',
@@ -21,6 +24,8 @@ export default function QuizBrowser({ onSelectQuiz, onBack }: QuizBrowserProps) 
   });
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [editingQuiz, setEditingQuiz] = useState<Quiz | null>(null);
+  const [configuringQuizId, setConfiguringQuizId] = useState<string | null>(null);
+  const [questionCount, setQuestionCount] = useState<number>(15);
   const [editForm, setEditForm] = useState({
     quiz_title: '',
     institution: '',
@@ -32,6 +37,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack }: QuizBrowserProps) 
 
   useEffect(() => {
     loadQuizzes();
+    loadRecentQuizzes();
   }, []);
 
   // Close menu when clicking outside
@@ -54,6 +60,15 @@ export default function QuizBrowser({ onSelectQuiz, onBack }: QuizBrowserProps) 
       console.error('Failed to load quizzes:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadRecentQuizzes = async () => {
+    try {
+      const recentIds = await getRecentQuizSessions(5);
+      setRecentQuizIds(recentIds);
+    } catch (error) {
+      console.error('Failed to load recent quizzes:', error);
     }
   };
 
@@ -134,8 +149,14 @@ export default function QuizBrowser({ onSelectQuiz, onBack }: QuizBrowserProps) 
     return Array.from(new Set(values)).sort();
   };
 
-  // Filter quizzes based on selected filters
+  // Filter quizzes based on selected filters and recents
   const filteredQuizzes = quizzes.filter(quiz => {
+    // Apply recents filter first
+    if (showRecents && recentQuizIds.length > 0 && !recentQuizIds.includes(quiz.quiz_id)) {
+      return false;
+    }
+
+    // Apply other filters
     if (filters.difficulty_level && quiz.difficulty_level !== filters.difficulty_level) return false;
     if (filters.institution && quiz.institution !== filters.institution) return false;
     if (filters.program && quiz.program !== filters.program) return false;
@@ -145,6 +166,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack }: QuizBrowserProps) 
 
   // Clear all filters
   const clearFilters = () => {
+    setShowRecents(false);
     setFilters({
       difficulty_level: '',
       institution: '',
@@ -154,7 +176,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack }: QuizBrowserProps) 
   };
 
   // Check if any filter is active
-  const hasActiveFilters = Object.values(filters).some(value => value !== '');
+  const hasActiveFilters = showRecents || Object.values(filters).some(value => value !== '');
 
   if (loading) {
     return (
@@ -192,7 +214,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack }: QuizBrowserProps) 
       {/* Filters Section - Compact Tag-based Design */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-semibold text-gray-700">Category</h3>
+          <h3 className="text-sm font-semibold text-gray-700">Categories</h3>
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
@@ -204,6 +226,18 @@ export default function QuizBrowser({ onSelectQuiz, onBack }: QuizBrowserProps) 
         </div>
 
         <div className="flex flex-wrap gap-2">
+          {/* Recents Filter */}
+          <button
+            onClick={() => setShowRecents(!showRecents)}
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+              showRecents
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            ⏱️ Recents
+          </button>
+
           {/* Difficulty Tags */}
           {getUniqueValues('difficulty_level').map(value => {
             const difficultyColors = {
@@ -307,7 +341,11 @@ export default function QuizBrowser({ onSelectQuiz, onBack }: QuizBrowserProps) 
       {filteredQuizzes.map((quiz) => (
         <div
           key={quiz.quiz_id}
-          onClick={() => onSelectQuiz(quiz.quiz_id)}
+          onClick={async () => {
+            const count = await getQuizQuestionCount(quiz.quiz_id);
+            setQuestionCount(count);
+            setConfiguringQuizId(quiz.quiz_id);
+          }}
           className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer relative"
         >
           {/* Three-dot menu button */}
@@ -565,6 +603,18 @@ export default function QuizBrowser({ onSelectQuiz, onBack }: QuizBrowserProps) 
           </div>
         </div>
       </div>
+    )}
+
+    {/* Quiz Config Modal */}
+    {configuringQuizId && (
+      <QuizConfigModal
+        totalQuestions={questionCount}
+        onStart={(config) => {
+          onSelectQuiz(configuringQuizId, config);
+          setConfiguringQuizId(null);
+        }}
+        onCancel={() => setConfiguringQuizId(null)}
+      />
     )}
     </div>
   );

@@ -8,6 +8,7 @@ import QuizBrowser from '@/components/QuizBrowser';
 import QuizHistory from '@/components/QuizHistory';
 import QuizReview from '@/components/QuizReview';
 import { QuizGenerationResponse, AnswerRecord } from '@/lib/db/types';
+import { SessionConfig } from '@/components/QuizConfigModal';
 import { saveQuizToDatabase, getQuizById } from '@/lib/db/quiz-storage';
 
 type AppState = 'home' | 'generate' | 'quizzes' | 'history' | 'taking-quiz' | 'reviewing-quiz' | 'results';
@@ -18,6 +19,7 @@ export default function Home() {
   const [organizationMetadata, setOrganizationMetadata] = useState<OrganizationMetadata>({});
   const [isGenerating, setIsGenerating] = useState(false);
   const [quizData, setQuizData] = useState<QuizGenerationResponse | null>(null);
+  const [sessionConfig, setSessionConfig] = useState<SessionConfig | null>(null);
   const [finalScore, setFinalScore] = useState<{ score: number; total: number } | null>(null);
   const [reviewData, setReviewData] = useState<{
     answers: AnswerRecord[];
@@ -128,6 +130,7 @@ export default function Home() {
 
   const handleSelectQuizFromHistory = (
     quiz: QuizGenerationResponse,
+    config?: SessionConfig,
     answers?: AnswerRecord[],
     sessionScore?: { correct: number; total: number }
   ) => {
@@ -138,17 +141,21 @@ export default function Home() {
       setReviewData({ answers, sessionScore });
       setAppState('reviewing-quiz');
     } else {
-      // No past attempt - take quiz fresh
+      // No past attempt - take quiz fresh with config
+      if (config) {
+        setSessionConfig(config);
+      }
       setReviewData(null);
       setAppState('taking-quiz');
     }
   };
 
-  const handleSelectQuizFromBrowser = async (quizId: string) => {
+  const handleSelectQuizFromBrowser = async (quizId: string, config: SessionConfig) => {
     try {
       const quiz = await getQuizById(quizId);
       if (quiz) {
         setQuizData(quiz);
+        setSessionConfig(config);
         setReviewData(null); // Always start fresh from quiz browser
         setAppState('taking-quiz');
       }
@@ -341,6 +348,7 @@ export default function Home() {
         {appState === 'taking-quiz' && quizData && (
           <QuizDisplay
             quizData={quizData}
+            config={sessionConfig ?? undefined}
             onComplete={handleQuizComplete}
             onBack={handleBackToHome}
           />
