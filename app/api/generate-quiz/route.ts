@@ -77,11 +77,11 @@ export async function POST(request: NextRequest) {
     // Add quiz metadata to response
     quizData.quiz_title = quiz_title || file.name.replace('.pdf', '');
     quizData.file_name = file.name;
-    quizData.institution = institution || undefined;
-    quizData.program = program || undefined;
-    quizData.course = course || undefined;
-    quizData.course_code = course_code || undefined;
-    quizData.topic = topic || undefined;
+    quizData.institution = institution || '';
+    quizData.program = program || '';
+    quizData.course = course || '';
+    quizData.course_code = course_code || '';
+    quizData.topic = topic || '';
 
     console.log('✅ Quiz generated successfully:', quizData.questions.length, 'questions');
 

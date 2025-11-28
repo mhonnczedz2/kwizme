@@ -145,35 +145,6 @@ export async function getSessionsForQuiz(quizId: string): Promise<ReviewSession[
 }
 
 /**
- * Get the most recent completed session for a quiz
- */
-export async function getMostRecentSession(quizId: string): Promise<ReviewSession | null> {
-  const db = await initDatabase();
-
-  const sql = `
-    SELECT * FROM review_sessions
-    WHERE quiz_id = ? AND completed_at IS NOT NULL
-    ORDER BY completed_at DESC
-    LIMIT 1
-  `;
-
-  const sessions = executeQuery<ReviewSession>(db, sql, [quizId]);
-  return sessions.length > 0 ? sessions[0] : null;
-}
-
-/**
- * Get a specific session by ID
- */
-export async function getSessionById(sessionId: string): Promise<ReviewSession | null> {
-  const db = await initDatabase();
-
-  const sql = `SELECT * FROM review_sessions WHERE session_id = ?`;
-  const sessions = executeQuery<ReviewSession>(db, sql, [sessionId]);
-
-  return sessions.length > 0 ? sessions[0] : null;
-}
-
-/**
  * Get all answer records for a session
  */
 export async function getAnswersForSession(sessionId: string): Promise<AnswerRecord[]> {
@@ -186,23 +157,6 @@ export async function getAnswersForSession(sessionId: string): Promise<AnswerRec
   `;
 
   return executeQuery<AnswerRecord>(db, sql, [sessionId]);
-}
-
-/**
- * Get session with answers (for review view)
- */
-export interface SessionWithAnswers {
-  session: ReviewSession;
-  answers: AnswerRecord[];
-}
-
-export async function getSessionWithAnswers(sessionId: string): Promise<SessionWithAnswers | null> {
-  const session = await getSessionById(sessionId);
-  if (!session) return null;
-
-  const answers = await getAnswersForSession(sessionId);
-
-  return { session, answers };
 }
 
 /**

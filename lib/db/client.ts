@@ -70,16 +70,6 @@ export function saveDatabase(db: Database): void {
 }
 
 /**
- * Get current database instance
- */
-export function getDatabase(): Database {
-  if (!dbInstance) {
-    throw new Error('Database not initialized. Call initDatabase() first.');
-  }
-  return dbInstance;
-}
-
-/**
  * Execute a query and return results
  */
 export function executeQuery<T = any>(
@@ -122,11 +112,3 @@ export function executeUpdate(
   }
 }
 
-/**
- * Clear all data (for testing/reset)
- */
-export function clearDatabase(): void {
-  localStorage.removeItem(DB_NAME);
-  dbInstance = null;
-  console.log('🗑️  Database cleared');
-}

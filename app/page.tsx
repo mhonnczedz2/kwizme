@@ -108,13 +108,6 @@ export default function Home() {
     setReviewData(null);
   };
 
-  const handleBackToUpload = () => {
-    setAppState('generate');
-    setSelectedFile(null);
-    setQuizData(null);
-    setFinalScore(null);
-  };
-
   const handleTryAgain = () => {
     setAppState('taking-quiz');
     setFinalScore(null);

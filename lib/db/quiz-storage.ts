@@ -204,31 +204,6 @@ export async function deleteQuiz(quizId: string): Promise<void> {
 }
 
 /**
- * Get quiz count and statistics
- */
-export async function getQuizStats(): Promise<{
-  totalQuizzes: number;
-  totalQuestions: number;
-}> {
-  const db = await initDatabase();
-
-  const quizCountResult = executeQuery<{ count: number }>(
-    db,
-    'SELECT COUNT(*) as count FROM quizzes'
-  );
-
-  const questionCountResult = executeQuery<{ count: number }>(
-    db,
-    'SELECT COUNT(*) as count FROM questions'
-  );
-
-  return {
-    totalQuizzes: quizCountResult[0]?.count || 0,
-    totalQuestions: questionCountResult[0]?.count || 0
-  };
-}
-
-/**
  * Get total question count for a specific quiz
  */
 export async function getQuizQuestionCount(quizId: string): Promise<number> {

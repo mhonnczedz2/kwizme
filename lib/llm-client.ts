@@ -127,7 +127,8 @@ export async function generateQuizWithGemini(
 
     return {
       quiz_id: quizId,
-      pdf_filename: '',
+      quiz_title: '',
+      file_name: '',
       topic: 'Generated Quiz',
       difficulty_level: difficulty,
       questions: quizData.questions

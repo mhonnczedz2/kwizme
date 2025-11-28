@@ -90,30 +90,3 @@ export interface SessionConfig {
   num_questions_selected: number;
   preset_name: 'learn' | 'test' | 'fast_learn' | 'custom';
 }
-
-export const SESSION_PRESETS: Record<string, Omit<SessionConfig, 'num_questions_selected'>> = {
-  learn: {
-    quick_submit: false,
-    show_explanation: true,
-    time_limit_seconds: 120,
-    randomize_options: false,
-    randomize_questions: false,
-    preset_name: 'learn',
-  },
-  test: {
-    quick_submit: false,
-    show_explanation: false,
-    time_limit_seconds: 300,
-    randomize_options: false,
-    randomize_questions: false,
-    preset_name: 'test',
-  },
-  fast_learn: {
-    quick_submit: true,
-    show_explanation: false,
-    time_limit_seconds: 20,
-    randomize_options: false,
-    randomize_questions: false,
-    preset_name: 'fast_learn',
-  },
-};

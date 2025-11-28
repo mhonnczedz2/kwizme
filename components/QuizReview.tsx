@@ -1,7 +1,6 @@
 'use client';
 
-import { QuizGenerationResponse } from '@/lib/db/types';
-import { AnswerRecord } from '@/lib/db/types';
+import { QuizGenerationResponse, AnswerRecord } from '@/lib/db/types';
 
 interface QuizReviewProps {
   quizData: QuizGenerationResponse;
