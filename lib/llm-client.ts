@@ -22,7 +22,7 @@ Each question must have:
 - 1 correct answer (provide the actual answer text)
 - 3 plausible distractors (wrong answers that seem reasonable)
 - Brief explanation of why the answer is correct
-- Citation showing where the answer can be found in the source (e.g., "Page 1, paragraph 2" or "Introduction section")
+- Citation showing where the answer can be found in the source (e.g., "FileName.pdf, Page 1, paragraph 2" or "Introduction section")
 - Optional hint (helpful clue without giving away the answer)
 - Difficulty rating based on cognitive complexity
 

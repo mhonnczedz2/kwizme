@@ -1,0 +1,181 @@
+import { Database } from 'sql.js';
+import { QuizGenerationResponse, Quiz, Question } from './types';
+import { initDatabase, saveDatabase, executeQuery, executeUpdate } from './client';
+
+/**
+ * Save a generated quiz to the database
+ */
+export async function saveQuizToDatabase(quizData: QuizGenerationResponse): Promise<void> {
+  const db = await initDatabase();
+
+  try {
+    // Insert quiz metadata
+    const insertQuizSQL = `
+      INSERT INTO quizzes (
+        quiz_id,
+        pdf_filename,
+        institution,
+        program,
+        course,
+        course_code,
+        topic,
+        difficulty_level
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    executeUpdate(db, insertQuizSQL, [
+      quizData.quiz_id,
+      quizData.pdf_filename,
+      quizData.institution || null,
+      quizData.program || null,
+      quizData.course || null,
+      quizData.course_code || null,
+      quizData.topic || null,
+      quizData.difficulty_level
+    ]);
+
+    console.log('✅ Quiz metadata saved:', quizData.quiz_id);
+
+    // Insert all questions
+    const insertQuestionSQL = `
+      INSERT INTO questions (
+        quiz_id,
+        question_text,
+        options,
+        correct_answer,
+        correct_answer_index,
+        explanation,
+        citation,
+        hint,
+        difficulty
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    quizData.questions.forEach((q, index) => {
+      // Find the index of the correct answer
+      const correctAnswerIndex = q.options.indexOf(q.correct_answer);
+
+      executeUpdate(db, insertQuestionSQL, [
+        quizData.quiz_id,
+        q.question,
+        JSON.stringify(q.options), // Store options as JSON string
+        q.correct_answer,
+        correctAnswerIndex,
+        q.explanation,
+        q.citation || null,
+        q.hint || null,
+        q.difficulty
+      ]);
+    });
+
+    console.log(`✅ Saved ${quizData.questions.length} questions to database`);
+  } catch (error) {
+    console.error('❌ Error saving quiz to database:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get all quizzes from the database (metadata only)
+ */
+export async function getAllQuizzes(): Promise<Quiz[]> {
+  const db = await initDatabase();
+
+  const sql = `
+    SELECT * FROM quizzes
+    ORDER BY created_at DESC
+  `;
+
+  return executeQuery<Quiz>(db, sql);
+}
+
+/**
+ * Get a specific quiz with all its questions
+ */
+export async function getQuizById(quizId: string): Promise<QuizGenerationResponse | null> {
+  const db = await initDatabase();
+
+  // Get quiz metadata
+  const quizSQL = `SELECT * FROM quizzes WHERE quiz_id = ?`;
+  const quizzes = executeQuery<Quiz>(db, quizSQL, [quizId]);
+
+  if (quizzes.length === 0) {
+    return null;
+  }
+
+  const quiz = quizzes[0];
+
+  // Get all questions for this quiz
+  const questionsSQL = `
+    SELECT * FROM questions
+    WHERE quiz_id = ?
+    ORDER BY question_id ASC
+  `;
+  const questions = executeQuery<Question>(db, questionsSQL, [quizId]);
+
+  // Transform to QuizGenerationResponse format
+  return {
+    quiz_id: quiz.quiz_id,
+    pdf_filename: quiz.pdf_filename,
+    topic: quiz.topic || 'Generated Quiz',
+    difficulty_level: quiz.difficulty_level,
+    institution: quiz.institution,
+    program: quiz.program,
+    course: quiz.course,
+    course_code: quiz.course_code,
+    questions: questions.map(q => ({
+      question: q.question_text,
+      options: JSON.parse(q.options), // Parse JSON string back to array
+      correct_answer: q.correct_answer,
+      explanation: q.explanation,
+      citation: q.citation,
+      hint: q.hint,
+      difficulty: q.difficulty
+    }))
+  };
+}
+
+/**
+ * Delete a quiz and all its questions
+ */
+export async function deleteQuiz(quizId: string): Promise<void> {
+  const db = await initDatabase();
+
+  try {
+    // Delete questions first (foreign key constraint)
+    executeUpdate(db, 'DELETE FROM questions WHERE quiz_id = ?', [quizId]);
+
+    // Delete quiz
+    executeUpdate(db, 'DELETE FROM quizzes WHERE quiz_id = ?', [quizId]);
+
+    console.log(`✅ Deleted quiz: ${quizId}`);
+  } catch (error) {
+    console.error('❌ Error deleting quiz:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get quiz count and statistics
+ */
+export async function getQuizStats(): Promise<{
+  totalQuizzes: number;
+  totalQuestions: number;
+}> {
+  const db = await initDatabase();
+
+  const quizCountResult = executeQuery<{ count: number }>(
+    db,
+    'SELECT COUNT(*) as count FROM quizzes'
+  );
+
+  const questionCountResult = executeQuery<{ count: number }>(
+    db,
+    'SELECT COUNT(*) as count FROM questions'
+  );
+
+  return {
+    totalQuizzes: quizCountResult[0]?.count || 0,
+    totalQuestions: questionCountResult[0]?.count || 0
+  };
+}

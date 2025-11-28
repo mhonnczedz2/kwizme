@@ -4,9 +4,11 @@ import { useState } from 'react';
 import FileUploadZone from '@/components/FileUploadZone';
 import QuizDisplay from '@/components/QuizDisplay';
 import QuizResults from '@/components/QuizResults';
+import QuizHistory from '@/components/QuizHistory';
 import { QuizGenerationResponse } from '@/lib/db/types';
+import { saveQuizToDatabase } from '@/lib/db/quiz-storage';
 
-type AppState = 'upload' | 'quiz' | 'results';
+type AppState = 'upload' | 'quiz' | 'results' | 'history';
 
 export default function Home() {
   const [appState, setAppState] = useState<AppState>('upload');
@@ -40,6 +42,16 @@ export default function Home() {
       if (response.ok) {
         console.log('✅ Quiz generated successfully:', data);
         setQuizData(data);
+
+        // Save quiz to database
+        try {
+          await saveQuizToDatabase(data);
+          console.log('💾 Quiz saved to database');
+        } catch (dbError) {
+          console.error('⚠️ Failed to save quiz to database:', dbError);
+          // Don't block the user experience if database save fails
+        }
+
         setAppState('quiz');
       } else {
         alert(`Error: ${data.error || 'Failed to generate quiz'}`);
@@ -67,6 +79,15 @@ export default function Home() {
   const handleTryAgain = () => {
     setAppState('quiz');
     setFinalScore(null);
+  };
+
+  const handleViewHistory = () => {
+    setAppState('history');
+  };
+
+  const handleSelectQuizFromHistory = (quiz: QuizGenerationResponse) => {
+    setQuizData(quiz);
+    setAppState('quiz');
   };
 
   return (
@@ -127,6 +148,19 @@ export default function Home() {
                   </button>
                 </div>
               )}
+
+              {/* View History Button */}
+              <div className="mt-4 text-center">
+                <button
+                  onClick={handleViewHistory}
+                  className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-2 mx-auto"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  View Quiz History
+                </button>
+              </div>
             </div>
 
             {/* Features Preview */}
@@ -169,6 +203,14 @@ export default function Home() {
           <QuizDisplay
             quizData={quizData}
             onComplete={handleQuizComplete}
+            onBack={handleBackToUpload}
+          />
+        )}
+
+        {/* History State */}
+        {appState === 'history' && (
+          <QuizHistory
+            onSelectQuiz={handleSelectQuizFromHistory}
             onBack={handleBackToUpload}
           />
         )}
