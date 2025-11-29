@@ -8,8 +8,8 @@ This document outlines potential features and improvements for the QuizMe applic
 
 These features provide the highest value-to-effort ratio and directly address core user needs:
 
-### 1. Question Bank Management & Editing
-**Priority: HIGH** | **Impact: CRITICAL** | **Effort: Medium**
+### 1. Question Bank Management & Editing ⚡ IN PROGRESS
+**Priority: HIGH** | **Impact: CRITICAL** | **Effort: Medium (2-3 weeks)**
 
 Allow users to edit and manage questions after AI generation.
 
@@ -17,19 +17,54 @@ Allow users to edit and manage questions after AI generation.
 - Edit question text, options, correct answer, and explanation
 - Delete individual questions from a quiz
 - Manually add new questions to existing quizzes
-- Reorder questions via drag-and-drop
-- Mark questions for review/improvement
+- Reorder questions via drag-and-drop (Phase 2)
+- Mark questions for review/improvement (Phase 2)
 
 **Why it's valuable:**
 - AI generation isn't perfect - users need to fix mistakes
 - Customization builds trust and ownership
 - Essential for educators creating precise assessments
 
-**Technical considerations:**
-- Add edit UI in QuizReview component
-- Update `quiz-storage.ts` with update functions
-- Add question editing modal/form
-- Implement optimistic UI updates
+**Implementation Plan:**
+
+**Phase 1: Database Layer (Days 1-2)**
+- Add `updateQuestion()`, `deleteQuestion()`, `addQuestionToQuiz()` functions to `lib/db/quiz-storage.ts`
+- Add `display_order` and `last_modified_at` columns to questions table
+- Implement validation and error handling
+- Test all database operations
+
+**Phase 2: Edit Modal Component (Days 3-5)**
+- Create `QuestionEditModal.tsx` with full form
+- Fields: question text, 4 options, correct answer selector, explanation, citation, hint, difficulty
+- Add form validation (required fields, correct answer must be one of options)
+- Implement loading states and error handling
+- Mobile-responsive design
+
+**Phase 3: Integration (Days 6-8)**
+- Add Edit/Delete buttons to `QuizReviewApproval.tsx`
+- Implement optimistic UI updates for instant feedback
+- Add confirmation dialogs for destructive actions
+- Create `QuestionAddModal.tsx` for adding new questions
+- Add toast notifications (success/error)
+
+**Phase 4: Polish & Testing (Days 9-10)**
+- Add keyboard shortcuts (Cmd+S to save, Esc to close)
+- Test edge cases (empty quizzes, long text, special characters)
+- Performance testing with 50+ question quizzes
+- Accessibility improvements
+
+**Database Functions:**
+```typescript
+updateQuestion(questionId: number, updates: Partial<Question>): Promise<void>
+deleteQuestion(questionId: number): Promise<void>
+addQuestionToQuiz(quizId: string, question: NewQuestion): Promise<number>
+getQuestionById(questionId: number): Promise<Question | null>
+```
+
+**UI Components:**
+- `QuestionEditModal.tsx` - Edit existing questions
+- `QuestionAddModal.tsx` - Add new questions
+- Update `QuizReviewApproval.tsx` - Add edit/delete buttons
 
 ---
 
