@@ -246,7 +246,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack }: QuizBrowserProps) 
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 max-h-[9rem] overflow-y-auto">
 
           {/* Difficulty Tags */}
           {getUniqueValues('difficulty_level').map(value => {

@@ -24,19 +24,9 @@ export default function QuizResults({ score, total, quizTitle, onTryAgain, onBac
   return (
     <div className="max-w-2xl mx-auto p-6">
       <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-        {/* Celebration Icon */}
-        <div className="text-6xl mb-4">
-          {percentage >= 70 ? '🎉' : '📚'}
-        </div>
-
-        {/* Grade */}
-        <div className={`text-8xl font-bold mb-2 ${grade.color}`}>
-          {grade.letter}
-        </div>
-
         {/* Message */}
-        <h2 className="text-3xl font-semibold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          {grade.message}
+        <h2 className="text-3xl font-semibold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          Quiz Completed!
         </h2>
 
         {/* Score */}

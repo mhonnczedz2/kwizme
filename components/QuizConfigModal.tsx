@@ -51,6 +51,7 @@ export default function QuizConfigModal({ totalQuestions, onStart, onCancel }: Q
     num_questions_selected: totalQuestions,
     preset_name: 'custom'
   });
+  const [numQuestionsError, setNumQuestionsError] = useState<string>('');
 
   // Load last selection from localStorage
   useEffect(() => {
@@ -261,19 +262,46 @@ export default function QuizConfigModal({ totalQuestions, onStart, onCancel }: Q
                   Number of Questions
                 </label>
                 <input
-                  type="number"
-                  min="1"
-                  max={totalQuestions}
+                  type="text"
                   value={customConfig.num_questions_selected}
                   onChange={(e) => {
-                    const value = parseInt(e.target.value);
-                    if (value >= 1 && value <= totalQuestions) {
-                      setCustomConfig({ ...customConfig, num_questions_selected: value });
+                    const value = e.target.value;
+
+                    // Update the value regardless of what they type
+                    setCustomConfig({ ...customConfig, num_questions_selected: value as any });
+
+                    // Clear error if empty
+                    if (value === '') {
+                      setNumQuestionsError('');
+                      return;
+                    }
+
+                    // Check if it's a valid integer (no decimals, no letters mixed in)
+                    if (!/^\d+$/.test(value)) {
+                      setNumQuestionsError('Please enter a valid number');
+                      return;
+                    }
+
+                    // Validate range
+                    const numValue = parseInt(value);
+                    if (numValue < 1) {
+                      setNumQuestionsError('Number must be at least 1');
+                    } else if (numValue > totalQuestions) {
+                      setNumQuestionsError(`Number must be at most ${totalQuestions}`);
+                    } else {
+                      setNumQuestionsError('');
                     }
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 ${
+                    numQuestionsError ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 />
-                <p className="text-xs text-gray-500 mt-1">Maximum: {totalQuestions} questions</p>
+                {numQuestionsError && (
+                  <p className="text-xs text-red-600 mt-1">{numQuestionsError}</p>
+                )}
+                {!numQuestionsError && (
+                  <p className="text-xs text-gray-500 mt-1">Maximum: {totalQuestions} questions</p>
+                )}
               </div>
             </div>
           )}

@@ -43,13 +43,41 @@ function InfoTooltip({ text }: { text: string }) {
 export default function FileUploadZone({ onFileSelect, onMetadataChange }: FileUploadZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [metadata, setMetadata] = useState<OrganizationMetadata>({});
+  const [metadata, setMetadata] = useState<OrganizationMetadata>({
+    num_questions: 15
+  });
+  const [numQuestionsError, setNumQuestionsError] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleMetadataChange = (field: keyof OrganizationMetadata, value: string) => {
     const newMetadata = { ...metadata, [field]: value || undefined };
     setMetadata(newMetadata);
     onMetadataChange(newMetadata);
+  };
+
+  // Update quiz title when file is selected
+  const handleFile = (file: File) => {
+    // Validate file type
+    if (file.type !== 'application/pdf') {
+      alert('Please upload a PDF file');
+      return;
+    }
+
+    // Validate file size (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File size must be less than 10MB');
+      return;
+    }
+
+    setSelectedFile(file);
+
+    // Update quiz title to filename (without .pdf extension)
+    const filenameWithoutExt = file.name.replace('.pdf', '');
+    const newMetadata = { ...metadata, quiz_title: filenameWithoutExt };
+    setMetadata(newMetadata);
+    onMetadataChange(newMetadata);
+
+    onFileSelect(file);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -76,23 +104,6 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange }: FileU
     if (files && files.length > 0) {
       handleFile(files[0]);
     }
-  };
-
-  const handleFile = (file: File) => {
-    // Validate file type
-    if (file.type !== 'application/pdf') {
-      alert('Please upload a PDF file');
-      return;
-    }
-
-    // Validate file size (10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      alert('File size must be less than 10MB');
-      return;
-    }
-
-    setSelectedFile(file);
-    onFileSelect(file);
   };
 
   const handleClick = () => {
@@ -156,99 +167,122 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange }: FileU
         )}
       </div>
 
-      {/* Organization Metadata Fields - Only show when file is selected */}
-      {selectedFile && (
-        <div className="mt-8" onClick={(e) => e.stopPropagation()}>
-          {/* Quiz Title Field */}
-          <div className="mb-6">
-            <label htmlFor="quiz_title" className="block text-sm font-medium text-gray-700 mb-1">
-              Quiz Title
-              <InfoTooltip text="Give your quiz a descriptive name. If left empty, the filename will be used. This helps you identify quizzes later." />
-            </label>
-            <input
-              id="quiz_title"
-              type="text"
-              value={metadata.quiz_title || ''}
-              onChange={(e) => handleMetadataChange('quiz_title', e.target.value)}
-              placeholder={`e.g., ${selectedFile.name.replace('.pdf', '')}`}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+      {/* Organization Metadata Fields - Always visible */}
+      <div className="mt-8" onClick={(e) => e.stopPropagation()}>
+        {/* Quiz Title Field */}
+        <div className="mb-6">
+          <label htmlFor="quiz_title" className="block text-sm font-medium text-gray-700 mb-1">
+            Quiz Title
+            <InfoTooltip text="Give your quiz a descriptive name. This helps you identify quizzes later." />
+          </label>
+          <input
+            id="quiz_title"
+            type="text"
+            value={metadata.quiz_title || ''}
+            onChange={(e) => handleMetadataChange('quiz_title', e.target.value)}
+            placeholder="Prelims Quiz 1"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+          />
+        </div>
 
-          {/* Number of Questions Field */}
-          <div className="mb-6">
-            <label htmlFor="num_questions" className="block text-sm font-medium text-gray-700 mb-1">
-              Number of Questions
-              <InfoTooltip text="How many questions to generate (10-50). More questions take longer to generate but provide more comprehensive coverage." />
-            </label>
-            <input
-              id="num_questions"
-              type="number"
-              min="10"
-              max="50"
-              value={metadata.num_questions || 15}
-              onChange={(e) => {
-                const value = parseInt(e.target.value);
-                if (value >= 10 && value <= 50) {
-                  handleMetadataChange('num_questions', e.target.value);
-                }
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+        {/* Number of Questions Field */}
+        <div className="mb-6">
+          <label htmlFor="num_questions" className="block text-sm font-medium text-gray-700 mb-1">
+            Number of Questions
+            <InfoTooltip text="How many questions to generate (10-50). More questions take longer to generate but provide more comprehensive coverage." />
+          </label>
+          <input
+            id="num_questions"
+            type="text"
+            value={metadata.num_questions ?? ''}
+            onChange={(e) => {
+              const value = e.target.value;
+
+              // Update the value regardless of what they type
+              handleMetadataChange('num_questions', value);
+
+              // Clear error if empty
+              if (value === '') {
+                setNumQuestionsError('');
+                return;
+              }
+
+              // Validate if it's a number
+              const numValue = parseInt(value);
+              if (isNaN(numValue)) {
+                setNumQuestionsError('Please enter a valid number');
+              } else if (numValue < 10) {
+                setNumQuestionsError('Number must be at least 10');
+              } else if (numValue > 50) {
+                setNumQuestionsError('Number must be at most 50');
+              } else {
+                setNumQuestionsError('');
+              }
+            }}
+            placeholder="15"
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 ${
+              numQuestionsError ? 'border-red-500' : 'border-gray-300'
+            }`}
+          />
+          {numQuestionsError && (
+            <p className="mt-1 text-xs text-red-600">{numQuestionsError}</p>
+          )}
+          {!numQuestionsError && (
             <p className="mt-1 text-xs text-gray-500">Minimum: 10, Maximum: 50</p>
-          </div>
+          )}
+        </div>
 
-          {/* File Description Field */}
-          <div className="mb-6">
-            <label htmlFor="file_description" className="block text-sm font-medium text-gray-700 mb-1">
-              Content Description (optional)
-              <InfoTooltip text="Describe the content and what kind of questions you want. AI will verify and improve your description. If left blank, AI will analyze and describe the content automatically." />
+        {/* File Description Field */}
+        <div className="mb-6">
+          <label htmlFor="file_description" className="block text-sm font-medium text-gray-700 mb-1">
+            Content Description (optional)
+            <InfoTooltip text="Describe the content and what kind of questions you want. AI will verify and improve your description. If left blank, AI will analyze and describe the content automatically." />
+          </label>
+          <textarea
+            id="file_description"
+            value={metadata.file_description || ''}
+            onChange={(e) => handleMetadataChange('file_description', e.target.value)}
+            placeholder="e.g., 'Lecture notes on thermodynamic concepts. Focus on names and definitions' or 'MCQ test with questions, options, and correct answers already compiled. Simply extract the MCQs.' Leave blank for automatic analysis."
+            rows={3}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none bg-white text-gray-900"
+          />
+          <p className="mt-1 text-xs text-gray-500">
+            AI will analyze the document and enhance your description (or create one if blank)
+          </p>
+        </div>
+
+        <h3 className="text-sm font-semibold text-gray-700 mb-4">
+          Categorization (optional)
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label htmlFor="institution" className="block text-sm font-medium text-gray-700 mb-1">
+              Institution
+              <InfoTooltip text="Optional: The school or university. Helps organize quizzes by institution." />
             </label>
-            <textarea
-              id="file_description"
-              value={metadata.file_description || ''}
-              onChange={(e) => handleMetadataChange('file_description', e.target.value)}
-              placeholder="e.g., 'Lecture notes on photosynthesis. Focus on testing understanding of light and dark reactions with application-based questions.' or leave blank for automatic analysis"
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            <input
+              id="institution"
+              type="text"
+              value={metadata.institution || ''}
+              onChange={(e) => handleMetadataChange('institution', e.target.value)}
+              placeholder="e.g., TIP-QC"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
             />
-            <p className="mt-1 text-xs text-gray-500">
-              AI will analyze the document and enhance your description (or create one if blank)
-            </p>
           </div>
 
-          <h3 className="text-sm font-semibold text-gray-700 mb-4">
-            Organization (optional)
-          </h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label htmlFor="institution" className="block text-sm font-medium text-gray-700 mb-1">
-                Institution
-                <InfoTooltip text="Optional: The school or university (e.g., 'UC Berkeley'). Helps organize quizzes by institution." />
-              </label>
-              <input
-                id="institution"
-                type="text"
-                value={metadata.institution || ''}
-                onChange={(e) => handleMetadataChange('institution', e.target.value)}
-                placeholder="e.g., UC Berkeley"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="program" className="block text-sm font-medium text-gray-700 mb-1">
-                Program
-                <InfoTooltip text="Optional: Your major or program (e.g., 'Biology Major'). Helps group quizzes by field of study." />
-              </label>
-              <input
-                id="program"
-                type="text"
-                value={metadata.program || ''}
-                onChange={(e) => handleMetadataChange('program', e.target.value)}
-                placeholder="e.g., Biology Major"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          <div>
+            <label htmlFor="program" className="block text-sm font-medium text-gray-700 mb-1">
+              Program
+              <InfoTooltip text="Optional: Your major or program. Helps group quizzes by field of study." />
+            </label>
+            <input
+              id="program"
+              type="text"
+              value={metadata.program || ''}
+              onChange={(e) => handleMetadataChange('program', e.target.value)}
+              placeholder="e.g., BSME"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               />
             </div>
           </div>
@@ -264,8 +298,8 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange }: FileU
                 type="text"
                 value={metadata.course_code || ''}
                 onChange={(e) => handleMetadataChange('course_code', e.target.value)}
-                placeholder="e.g., BIO 101"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., PPD"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               />
             </div>
 
@@ -279,13 +313,12 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange }: FileU
                 type="text"
                 value={metadata.topic || ''}
                 onChange={(e) => handleMetadataChange('topic', e.target.value)}
-                placeholder="e.g., Cell Biology - Chapter 5"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., Diesel Power Plants"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               />
             </div>
           </div>
         </div>
-      )}
     </>
   );
 }

@@ -341,7 +341,7 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
   };
 
   const getOptionClassName = (option: string) => {
-    const baseClasses = "w-full text-left p-4 rounded-lg border-2 transition-all";
+    const baseClasses = "w-full text-left p-4 rounded-lg border-2 transition-all text-gray-900";
 
     if (!isAnswered || isTestMode) {
       // Before answering OR in test mode (hide correct/incorrect)
@@ -380,13 +380,8 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
         >
           ← Back
         </button>
-        <div className="flex items-center gap-6">
-          <div className="text-sm text-gray-600">
-            Question {currentQuestionIndex + 1} of {quizData.questions.length}
-          </div>
-          <div className="text-sm font-semibold text-gray-700">
-            Score: {correctCount} / {quizData.questions.length}
-          </div>
+        <div className="text-sm font-semibold text-gray-700">
+          Score: {correctCount} / {quizData.questions.length}
         </div>
       </div>
 
@@ -400,6 +395,13 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
 
       {/* Quiz Card */}
       <div className="bg-white rounded-xl shadow-lg p-8">
+        {/* Question Counter - Centered at top */}
+        <div className="text-center mb-4">
+          <span className="text-sm font-medium text-gray-600">
+            Question {currentQuestionIndex + 1} of {quizData.questions.length}
+          </span>
+        </div>
+
         {/* Difficulty Badge */}
         <div className="mb-4">
           <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(currentQuestion.difficulty)}`}>
