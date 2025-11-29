@@ -165,21 +165,21 @@ export default function QuizReviewApproval({
 
       {/* Question Card - Responsive padding */}
       <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-6 border-2 border-gray-200">
-        {/* Question Header - Stack buttons on mobile */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-          <span className={`px-3 py-1 rounded-full text-xs font-medium self-start ${getDifficultyColor(currentQuestion.difficulty)}`}>
+        {/* Question Header - Difficulty and buttons on same row */}
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <span className={`px-4 py-2 rounded-full text-sm font-medium ${getDifficultyColor(currentQuestion.difficulty)}`}>
             {currentQuestion.difficulty.toUpperCase()}
           </span>
           <div className="flex gap-2">
             <button
               onClick={() => setEditingQuestionId(currentQuestionIndex)}
-              className="flex-1 sm:flex-none px-4 md:px-6 py-2 md:py-2.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 text-sm font-medium min-h-[44px]"
+              className="px-4 md:px-6 py-2 md:py-2.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 text-sm font-medium min-h-[44px]"
             >
               Edit
             </button>
             <button
               onClick={() => setShowDeleteConfirm(true)}
-              className="flex-1 sm:flex-none px-4 md:px-6 py-2 md:py-2.5 bg-red-100 text-red-700 rounded-full hover:bg-red-200 text-sm font-medium min-h-[44px]"
+              className="px-4 md:px-6 py-2 md:py-2.5 bg-red-100 text-red-700 rounded-full hover:bg-red-200 text-sm font-medium min-h-[44px]"
               disabled={totalQuestions <= 1}
             >
               Delete
