@@ -4,6 +4,7 @@ export interface Quiz {
   quiz_id: string;
   quiz_title: string;
   file_name: string;
+  description?: string;
   institution?: string;
   program?: string;
   course?: string;
@@ -64,6 +65,7 @@ export interface QuizGenerationResponse {
   file_name: string;
   topic: string;
   difficulty_level: string;
+  description?: string;
   institution?: string;
   program?: string;
   course?: string;

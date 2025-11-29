@@ -15,19 +15,21 @@ export async function saveQuizToDatabase(quizData: QuizGenerationResponse): Prom
         quiz_id,
         quiz_title,
         file_name,
+        description,
         institution,
         program,
         course,
         course_code,
         topic,
         difficulty_level
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     executeUpdate(db, insertQuizSQL, [
       quizData.quiz_id,
       quizData.quiz_title,
       quizData.file_name,
+      quizData.description || null,
       quizData.institution || null,
       quizData.program || null,
       quizData.course || null,

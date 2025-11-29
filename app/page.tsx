@@ -1,17 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import FileUploadZone, { OrganizationMetadata } from '@/components/FileUploadZone';
 import QuizDisplay from '@/components/QuizDisplay';
 import QuizResults from '@/components/QuizResults';
 import QuizBrowser from '@/components/QuizBrowser';
 import QuizHistory from '@/components/QuizHistory';
 import QuizReview from '@/components/QuizReview';
+import QuizReviewApproval from '@/components/QuizReviewApproval';
+import QuizApprovedScreen from '@/components/QuizApprovedScreen';
 import { QuizGenerationResponse, AnswerRecord } from '@/lib/db/types';
 import { SessionConfig } from '@/components/QuizConfigModal';
 import { saveQuizToDatabase, getQuizById } from '@/lib/db/quiz-storage';
 
-type AppState = 'home' | 'generate' | 'quizzes' | 'history' | 'taking-quiz' | 'reviewing-quiz' | 'results';
+type AppState = 'home' | 'generate' | 'quizzes' | 'history' | 'reviewing-approval' | 'quiz-approved' | 'taking-quiz' | 'reviewing-quiz' | 'results';
 
 export default function Home() {
   const [appState, setAppState] = useState<AppState>('home');
@@ -26,6 +28,27 @@ export default function Home() {
     sessionScore: { correct: number; total: number };
   } | null>(null);
   const [showInfoBubble, setShowInfoBubble] = useState(false);
+  const [gridDirection, setGridDirection] = useState('40px 40px');
+
+  // Change grid direction randomly every animation cycle (8s)
+  useEffect(() => {
+    const directions = [
+      '40px 40px',   // diagonal down-right
+      '-40px 40px',  // diagonal down-left
+      '40px -40px',  // diagonal up-right
+      '-40px -40px', // diagonal up-left
+    ];
+
+    const changeDirection = () => {
+      const randomDirection = directions[Math.floor(Math.random() * directions.length)];
+      setGridDirection(randomDirection);
+    };
+
+    // Change direction every 8 seconds (matching animation cycle)
+    const intervalId = setInterval(changeDirection, 8000);
+
+    return () => clearInterval(intervalId);
+  }, []);
 
   const handleFileSelect = (file: File) => {
     setSelectedFile(file);
@@ -62,6 +85,9 @@ export default function Home() {
       if (organizationMetadata.topic) {
         formData.append('topic', organizationMetadata.topic);
       }
+      if (organizationMetadata.file_description) {
+        formData.append('file_description', organizationMetadata.file_description);
+      }
 
       const response = await fetch('/api/generate-quiz', {
         method: 'POST',
@@ -74,16 +100,8 @@ export default function Home() {
         console.log('✅ Quiz generated successfully:', data);
         setQuizData(data);
 
-        // Save quiz to database
-        try {
-          await saveQuizToDatabase(data);
-          console.log('💾 Quiz saved to database');
-        } catch (dbError) {
-          console.error('⚠️ Failed to save quiz to database:', dbError);
-          // Don't block the user experience if database save fails
-        }
-
-        setAppState('taking-quiz');
+        // Go to review/approval state instead of saving immediately
+        setAppState('reviewing-approval');
       } else {
         alert(`Error: ${data.error || 'Failed to generate quiz'}`);
       }
@@ -164,8 +182,60 @@ export default function Home() {
     setAppState('taking-quiz');
   };
 
+  const handleApproveAndSave = async (finalQuizData: QuizGenerationResponse) => {
+    try {
+      // Save the approved quiz to database
+      await saveQuizToDatabase(finalQuizData);
+      console.log('💾 Quiz saved to database');
+
+      // Update local state with final data
+      setQuizData(finalQuizData);
+
+      // Go to approved screen
+      setAppState('quiz-approved');
+    } catch (error) {
+      console.error('⚠️ Failed to save quiz to database:', error);
+      alert('Failed to save quiz. Please try again.');
+    }
+  };
+
+  const handleCancelReview = () => {
+    setQuizData(null);
+    setAppState('generate');
+  };
+
+  const handleTakeApprovedQuiz = () => {
+    setAppState('taking-quiz');
+  };
+
+  const handleGenerateNewAfterApproval = () => {
+    setQuizData(null);
+    setSelectedFile(null);
+    setOrganizationMetadata({});
+    setAppState('generate');
+  };
+
+  const handleCheckQuizzesAfterApproval = () => {
+    setAppState('quizzes');
+  };
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Background Pattern */}
+      <div
+        className="fixed inset-0 opacity-[0.15] pointer-events-none animate-grid-pan"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, #3b82f6 1px, transparent 1px),
+            linear-gradient(to bottom, #3b82f6 1px, transparent 1px)
+          `,
+          backgroundSize: '40px 40px',
+          '--grid-end-position': gridDirection,
+        } as React.CSSProperties & { '--grid-end-position': string }}
+      ></div>
+
+      {/* Content */}
+      <div className="relative z-10">
       {/* Info Bubble - Always visible in upper right */}
       <div className="fixed top-4 right-4 z-50">
         <div className="relative">
@@ -296,7 +366,7 @@ export default function Home() {
 
             {/* Header */}
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Generate a Quiz
               </h2>
               <p className="text-gray-600">
@@ -369,7 +439,7 @@ export default function Home() {
 
             {/* Header */}
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Available Quizzes
               </h2>
               <p className="text-gray-600">
@@ -383,6 +453,26 @@ export default function Home() {
               onBack={handleBackToHome}
             />
           </div>
+        )}
+
+        {/* Reviewing/Approval State - Review questions before saving */}
+        {appState === 'reviewing-approval' && quizData && (
+          <QuizReviewApproval
+            quizData={quizData}
+            onApproveAndSave={handleApproveAndSave}
+            onCancel={handleCancelReview}
+          />
+        )}
+
+        {/* Quiz Approved State - Show what's next options */}
+        {appState === 'quiz-approved' && quizData && (
+          <QuizApprovedScreen
+            quizTitle={quizData.quiz_title}
+            questionCount={quizData.questions.length}
+            onTakeQuiz={handleTakeApprovedQuiz}
+            onGenerateNew={handleGenerateNewAfterApproval}
+            onCheckQuizzes={handleCheckQuizzesAfterApproval}
+          />
         )}
 
         {/* Taking Quiz State */}
@@ -411,7 +501,7 @@ export default function Home() {
 
             {/* Header */}
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Quiz History
               </h2>
               <p className="text-gray-600">
@@ -447,6 +537,7 @@ export default function Home() {
             onBackHome={handleBackToHome}
           />
         )}
+      </div>
       </div>
     </main>
   );

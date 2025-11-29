@@ -7,6 +7,9 @@ CREATE TABLE IF NOT EXISTS quizzes (
     quiz_title TEXT NOT NULL,
     file_name TEXT NOT NULL,
 
+    -- AI-enhanced content description
+    description TEXT,
+
     -- Organizational metadata (optional fields)
     institution TEXT,
     program TEXT,

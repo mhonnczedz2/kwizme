@@ -24,6 +24,7 @@ export default function QuizHistory({ onSelectQuiz, onBack }: QuizHistoryProps) 
   const [expandedQuizId, setExpandedQuizId] = useState<string | null>(null);
   const [configuringQuizId, setConfiguringQuizId] = useState<string | null>(null);
   const [questionCount, setQuestionCount] = useState<number>(15);
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   useEffect(() => {
     loadQuizzesWithSessions();
@@ -150,20 +151,40 @@ export default function QuizHistory({ onSelectQuiz, onBack }: QuizHistoryProps) 
     }
   };
 
+  // Filter quizzes based on search query
+  const filteredQuizzes = quizzesWithSessions.filter(({ quiz }) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      quiz.quiz_title.toLowerCase().includes(query) ||
+      quiz.topic?.toLowerCase().includes(query) ||
+      quiz.institution?.toLowerCase().includes(query) ||
+      quiz.program?.toLowerCase().includes(query) ||
+      quiz.course_code?.toLowerCase().includes(query) ||
+      quiz.difficulty_level.toLowerCase().includes(query)
+    );
+  });
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      {/* Header */}
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Quiz History</h1>
-          <p className="text-gray-600 mt-1">Review your past quizzes</p>
+    <div className="space-y-4">
+      {/* Search Bar */}
+      <div className="mb-6">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search quizzes by title, topic, institution, program, course, or difficulty..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          <svg
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
         </div>
-        <button
-          onClick={onBack}
-          className="text-blue-600 hover:text-blue-700 flex items-center gap-2"
-        >
-          ← Back
-        </button>
       </div>
 
       {/* Loading State */}
@@ -189,10 +210,25 @@ export default function QuizHistory({ onSelectQuiz, onBack }: QuizHistoryProps) 
         </div>
       )}
 
+      {/* No Search Results */}
+      {!isLoading && quizzesWithSessions.length > 0 && filteredQuizzes.length === 0 && (
+        <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+          <div className="text-6xl mb-4">🔍</div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">No Matches Found</h2>
+          <p className="text-gray-600 mb-6">Try a different search term</p>
+          <button
+            onClick={() => setSearchQuery('')}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Clear Search
+          </button>
+        </div>
+      )}
+
       {/* Quiz List */}
-      {!isLoading && quizzesWithSessions.length > 0 && (
+      {!isLoading && filteredQuizzes.length > 0 && (
         <div className="space-y-4">
-          {quizzesWithSessions.map(({ quiz, sessions }) => {
+          {filteredQuizzes.map(({ quiz, sessions }) => {
             const isExpanded = expandedQuizId === quiz.quiz_id;
             const completedSessions = sessions.filter(s => s.completed_at);
 

@@ -14,8 +14,7 @@ interface QuizBrowserProps {
 export default function QuizBrowser({ onSelectQuiz, onBack }: QuizBrowserProps) {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showRecents, setShowRecents] = useState(true); // Recents on by default
-  const [recentQuizIds, setRecentQuizIds] = useState<string[]>([]);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc'); // desc = newest first
   const [filters, setFilters] = useState({
     difficulty_level: '',
     institution: '',
@@ -37,7 +36,6 @@ export default function QuizBrowser({ onSelectQuiz, onBack }: QuizBrowserProps) 
 
   useEffect(() => {
     loadQuizzes();
-    loadRecentQuizzes();
   }, []);
 
   // Close menu when clicking outside
@@ -60,15 +58,6 @@ export default function QuizBrowser({ onSelectQuiz, onBack }: QuizBrowserProps) 
       console.error('Failed to load quizzes:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadRecentQuizzes = async () => {
-    try {
-      const recentIds = await getRecentQuizSessions(5);
-      setRecentQuizIds(recentIds);
-    } catch (error) {
-      console.error('Failed to load recent quizzes:', error);
     }
   };
 
@@ -149,24 +138,25 @@ export default function QuizBrowser({ onSelectQuiz, onBack }: QuizBrowserProps) 
     return Array.from(new Set(values)).sort();
   };
 
-  // Filter quizzes based on selected filters and recents
-  const filteredQuizzes = quizzes.filter(quiz => {
-    // Apply recents filter first
-    if (showRecents && recentQuizIds.length > 0 && !recentQuizIds.includes(quiz.quiz_id)) {
-      return false;
-    }
-
-    // Apply other filters
-    if (filters.difficulty_level && quiz.difficulty_level !== filters.difficulty_level) return false;
-    if (filters.institution && quiz.institution !== filters.institution) return false;
-    if (filters.program && quiz.program !== filters.program) return false;
-    if (filters.course_code && quiz.course_code !== filters.course_code) return false;
-    return true;
-  });
+  // Filter and sort quizzes
+  const filteredQuizzes = quizzes
+    .filter(quiz => {
+      // Apply filters
+      if (filters.difficulty_level && quiz.difficulty_level !== filters.difficulty_level) return false;
+      if (filters.institution && quiz.institution !== filters.institution) return false;
+      if (filters.program && quiz.program !== filters.program) return false;
+      if (filters.course_code && quiz.course_code !== filters.course_code) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      // Sort by created_at
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+    });
 
   // Clear all filters
   const clearFilters = () => {
-    setShowRecents(false);
     setFilters({
       difficulty_level: '',
       institution: '',
@@ -176,7 +166,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack }: QuizBrowserProps) 
   };
 
   // Check if any filter is active
-  const hasActiveFilters = showRecents || Object.values(filters).some(value => value !== '');
+  const hasActiveFilters = Object.values(filters).some(value => value !== '');
 
   if (loading) {
     return (
@@ -211,32 +201,52 @@ export default function QuizBrowser({ onSelectQuiz, onBack }: QuizBrowserProps) 
 
   return (
     <div className="space-y-4">
-      {/* Filters Section - Compact Tag-based Design */}
+      {/* Filters and Sort Section */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-semibold text-gray-700">Categories</h3>
-          {hasActiveFilters && (
-            <button
-              onClick={clearFilters}
-              className="text-xs text-blue-600 hover:text-blue-700 font-medium"
-            >
-              Clear All
-            </button>
-          )}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <h3 className="text-sm font-semibold text-gray-700">Categories</h3>
+
+            {/* Sort Buttons */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setSortOrder('desc')}
+                className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                  sortOrder === 'desc'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+                title="Newest first"
+              >
+                ↓ Newest
+              </button>
+              <button
+                onClick={() => setSortOrder('asc')}
+                className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                  sortOrder === 'asc'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+                title="Oldest first"
+              >
+                ↑ Oldest
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {/* Recents Filter */}
-          <button
-            onClick={() => setShowRecents(!showRecents)}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-              showRecents
-                ? 'bg-purple-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            ⏱️ Recents
-          </button>
 
           {/* Difficulty Tags */}
           {getUniqueValues('difficulty_level').map(value => {
@@ -251,7 +261,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack }: QuizBrowserProps) 
               <button
                 key={`difficulty-${value}`}
                 onClick={() => setFilters({ ...filters, difficulty_level: filters.difficulty_level === value ? '' : value })}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   filters.difficulty_level === value
                     ? `${colors.active} text-white`
                     : colors.inactive
@@ -267,7 +277,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack }: QuizBrowserProps) 
             <button
               key={`institution-${value}`}
               onClick={() => setFilters({ ...filters, institution: filters.institution === value ? '' : value })}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 filters.institution === value
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -282,7 +292,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack }: QuizBrowserProps) 
             <button
               key={`program-${value}`}
               onClick={() => setFilters({ ...filters, program: filters.program === value ? '' : value })}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 filters.program === value
                   ? 'bg-purple-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -297,7 +307,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack }: QuizBrowserProps) 
             <button
               key={`course_code-${value}`}
               onClick={() => setFilters({ ...filters, course_code: filters.course_code === value ? '' : value })}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 filters.course_code === value
                   ? 'bg-indigo-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -310,9 +320,9 @@ export default function QuizBrowser({ onSelectQuiz, onBack }: QuizBrowserProps) 
       </div>
 
       {/* Stats Header */}
-      <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <p className="text-sm text-gray-600">
-          <span className="font-semibold text-gray-900">{filteredQuizzes.length}</span> quiz{filteredQuizzes.length !== 1 ? 'es' : ''} {hasActiveFilters ? 'found' : 'available'}
+      <div className="bg-blue-600 rounded-lg shadow p-4 mb-6">
+        <p className="text-sm text-white text-center">
+          <span className="font-semibold">{filteredQuizzes.length}</span> quiz{filteredQuizzes.length !== 1 ? 'es' : ''} {hasActiveFilters ? 'found' : 'available'}
         </p>
       </div>
 

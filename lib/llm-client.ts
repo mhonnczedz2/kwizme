@@ -2,9 +2,129 @@ import { QuizGenerationResponse } from '@/lib/db/types';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 /**
+ * Validate and improve the user's description of the PDF content
+ * If no description provided, generate one automatically
+ */
+export async function validateAndImproveDescription(
+  pdfText: string,
+  userDescription: string | null
+): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY not found in environment variables');
+  }
+
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+    const prompt = userDescription
+      ? `You are an expert educational content analyst.
+
+A user uploaded a PDF and provided this description:
+"${userDescription}"
+
+Here is a sample of the PDF content (first 5000 characters):
+${pdfText.substring(0, 5000)}
+
+Your tasks:
+1. Verify if the user's description matches the actual content
+2. If it matches: Enhance and improve the description to be more specific and helpful for quiz generation
+3. If it doesn't match or is vague: Create an accurate description based on the actual content
+
+Return a JSON object with this structure:
+{
+  "matches": true/false,
+  "enhanced_description": "Your improved description here"
+}
+
+The enhanced_description should include:
+- What the content is about (subject, topic, scope)
+- What type of questions would be most appropriate (recall, application, analysis)
+- Any specific focus areas or important concepts
+- Appropriate difficulty level
+
+Keep it concise (2-4 sentences max).`
+      : `You are an expert educational content analyst.
+
+A user uploaded a PDF but didn't provide a description.
+
+Here is a sample of the PDF content (first 5000 characters):
+${pdfText.substring(0, 5000)}
+
+Analyze the content and create a comprehensive description that will help generate relevant quiz questions.
+
+Return a JSON object with this structure:
+{
+  "enhanced_description": "Your description here"
+}
+
+The description should include:
+- What the content is about (subject, topic, scope)
+- What type of questions would be most appropriate (recall, application, analysis)
+- Any specific focus areas or important concepts
+- Appropriate difficulty level
+
+Keep it concise (2-4 sentences max).`;
+
+    const result = await model.generateContent({
+      contents: [{
+        role: 'user',
+        parts: [{ text: prompt }]
+      }],
+      generationConfig: {
+        temperature: 0.3,
+        maxOutputTokens: 500,
+        responseMimeType: 'application/json',
+      }
+    });
+
+    const response = result.response;
+    const generatedText = response.text();
+
+    if (!generatedText) {
+      throw new Error('No response from Gemini API for description validation');
+    }
+
+    // Parse JSON response
+    let jsonText = generatedText.trim();
+    if (jsonText.startsWith('```json')) {
+      jsonText = jsonText.substring(7);
+    }
+    if (jsonText.startsWith('```')) {
+      jsonText = jsonText.substring(3);
+    }
+    if (jsonText.endsWith('```')) {
+      jsonText = jsonText.substring(0, jsonText.length - 3);
+    }
+    jsonText = jsonText.trim();
+
+    const parsed = JSON.parse(jsonText);
+
+    // Log the validation result
+    if (userDescription) {
+      console.log('📝 Description validation:', parsed.matches ? 'MATCHED' : 'MISMATCH');
+    }
+    console.log('✨ Enhanced description:', parsed.enhanced_description);
+
+    return parsed.enhanced_description;
+  } catch (error) {
+    console.error('Description validation error:', error);
+    // Fallback: return user description or a generic message
+    return userDescription || 'Educational content for quiz generation';
+  }
+}
+
+/**
  * Build the prompt for quiz generation
  */
-function buildPrompt(pdfText: string, numQuestions: number, difficulty: string): string {
+function buildPrompt(
+  pdfText: string,
+  numQuestions: number,
+  difficulty: string,
+  enhancedDescription?: string
+): string {
   const difficultyInstructions = {
     easy: 'Focus on recall and basic comprehension: simple definitions, key facts, direct information from the text.',
     medium: 'Focus on application and analysis: conceptual understanding, relationships between ideas, inference from context.',
@@ -13,9 +133,14 @@ function buildPrompt(pdfText: string, numQuestions: number, difficulty: string):
 
   const instruction = difficultyInstructions[difficulty as keyof typeof difficultyInstructions] || difficultyInstructions.medium;
 
+  // Add content context if provided
+  const contextSection = enhancedDescription
+    ? `\n\nCONTENT CONTEXT:\n${enhancedDescription}\n\nUse this context to guide your question generation - align questions with the content type and focus areas described above.\n`
+    : '';
+
   return `You are an expert educator creating multiple choice questions for students.
 Generate ${numQuestions} multiple choice questions from the following document.
-
+${contextSection}
 ${instruction}
 
 Each question must have:
@@ -57,7 +182,8 @@ ${pdfText.substring(0, 30000)}`;
 export async function generateQuizWithGemini(
   pdfText: string,
   numQuestions: number = 15,
-  difficulty: string = 'medium'
+  difficulty: string = 'medium',
+  enhancedDescription?: string
 ): Promise<QuizGenerationResponse> {
   const apiKey = process.env.GEMINI_API_KEY;
 
@@ -70,7 +196,7 @@ export async function generateQuizWithGemini(
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-    const prompt = buildPrompt(pdfText, numQuestions, difficulty);
+    const prompt = buildPrompt(pdfText, numQuestions, difficulty, enhancedDescription);
 
     // Generate content using the SDK
     const result = await model.generateContent({

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractTextFromPDF } from '@/lib/pdf-parser';
-import { generateQuizWithGemini, validateQuizResponse } from '@/lib/llm-client';
+import { generateQuizWithGemini, validateQuizResponse, validateAndImproveDescription } from '@/lib/llm-client';
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
 
     // Extract organization metadata (optional fields)
     const quiz_title = formData.get('quiz_title') as string | null;
+    const file_description = formData.get('file_description') as string | null;
     const institution = formData.get('institution') as string | null;
     const program = formData.get('program') as string | null;
     const course = formData.get('course') as string | null;
@@ -61,11 +62,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Step 2: Generate quiz using LLM
-    console.log('🤖 Generating quiz with Gemini Flash...');
-    const quizData = await generateQuizWithGemini(pdfText, numQuestions, difficulty);
+    // Step 2: Validate and improve description
+    console.log('📝 Validating and enhancing description...');
+    const enhancedDescription = await validateAndImproveDescription(pdfText, file_description);
 
-    // Step 3: Validate response
+    // Step 3: Generate quiz using LLM
+    console.log('🤖 Generating quiz with Gemini Flash...');
+    const quizData = await generateQuizWithGemini(pdfText, numQuestions, difficulty, enhancedDescription);
+
+    // Step 4: Validate response
     if (!validateQuizResponse(quizData)) {
       console.error('❌ Quiz validation failed');
       return NextResponse.json(
@@ -77,6 +82,7 @@ export async function POST(request: NextRequest) {
     // Add quiz metadata to response
     quizData.quiz_title = quiz_title || file.name.replace('.pdf', '');
     quizData.file_name = file.name;
+    quizData.description = enhancedDescription; // Store the enhanced description
     quizData.institution = institution || '';
     quizData.program = program || '';
     quizData.course = course || '';

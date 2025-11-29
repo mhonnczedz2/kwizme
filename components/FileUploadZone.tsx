@@ -5,6 +5,7 @@ import { useState, useRef } from 'react';
 export interface OrganizationMetadata {
   quiz_title?: string;
   num_questions?: number;
+  file_description?: string;
   institution?: string;
   program?: string;
   course_code?: string;
@@ -195,6 +196,25 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange }: FileU
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <p className="mt-1 text-xs text-gray-500">Minimum: 10, Maximum: 50</p>
+          </div>
+
+          {/* File Description Field */}
+          <div className="mb-6">
+            <label htmlFor="file_description" className="block text-sm font-medium text-gray-700 mb-1">
+              Content Description (optional)
+              <InfoTooltip text="Describe the content and what kind of questions you want. AI will verify and improve your description. If left blank, AI will analyze and describe the content automatically." />
+            </label>
+            <textarea
+              id="file_description"
+              value={metadata.file_description || ''}
+              onChange={(e) => handleMetadataChange('file_description', e.target.value)}
+              placeholder="e.g., 'Lecture notes on photosynthesis. Focus on testing understanding of light and dark reactions with application-based questions.' or leave blank for automatic analysis"
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              AI will analyze the document and enhance your description (or create one if blank)
+            </p>
           </div>
 
           <h3 className="text-sm font-semibold text-gray-700 mb-4">

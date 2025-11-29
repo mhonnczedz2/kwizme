@@ -8,6 +8,29 @@ const DB_NAME = 'quizme-db';
 let dbInstance: Database | null = null;
 
 /**
+ * Run database migrations for schema updates
+ */
+function runMigrations(db: Database): void {
+  try {
+    // Check if description column exists
+    const tableInfo = db.exec("PRAGMA table_info(quizzes)");
+
+    if (tableInfo.length > 0) {
+      const columns = tableInfo[0].values.map(row => row[1]); // column names are at index 1
+
+      if (!columns.includes('description')) {
+        console.log('🔄 Running migration: Adding description column to quizzes table');
+        db.run('ALTER TABLE quizzes ADD COLUMN description TEXT');
+        console.log('✅ Migration complete: description column added');
+      }
+    }
+  } catch (error) {
+    console.error('⚠️ Migration error:', error);
+    // Don't throw - migrations are optional upgrades
+  }
+}
+
+/**
  * Initialize SQL.js and create/load database
  */
 export async function initDatabase(): Promise<Database> {
@@ -44,6 +67,9 @@ export async function initDatabase(): Promise<Database> {
     // Run schema (CREATE TABLE IF NOT EXISTS ensures idempotency)
     dbInstance.run(SCHEMA_SQL);
     console.log('✅ Database schema initialized');
+
+    // Run migrations for existing databases
+    runMigrations(dbInstance);
 
     // Save to localStorage
     saveDatabase(dbInstance);
