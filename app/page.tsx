@@ -282,41 +282,41 @@ export default function Home() {
       {/* Info Bubble - Always visible in upper right */}
       <div className="fixed top-4 right-4 z-50">
         <div className="relative">
-          {/* Info Icon Button */}
+          {/* Info Icon Button - Smaller on mobile */}
           <button
             onClick={() => setShowInfoBubble(!showInfoBubble)}
-            className="bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg hover:bg-blue-700 transition-colors"
+            className="bg-blue-600 text-white rounded-full w-10 h-10 md:w-12 md:h-12 flex items-center justify-center shadow-lg hover:bg-blue-700 transition-colors"
             aria-label="Information"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </button>
 
-          {/* Info Popup */}
+          {/* Info Popup - Responsive width and positioning */}
           {showInfoBubble && (
-            <div className="absolute top-14 right-0 w-80 bg-white rounded-lg shadow-xl p-6 border-2 border-blue-200">
+            <div className="absolute top-14 right-0 w-[calc(100vw-2rem)] max-w-[20rem] md:w-80 bg-white rounded-lg shadow-xl p-4 md:p-6 border-2 border-blue-200">
               {/* Close button */}
               <button
                 onClick={() => setShowInfoBubble(false)}
-                className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+                className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
 
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+              <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-2 md:mb-3">
                 Feedback & Support
               </h3>
-              <p className="text-sm text-gray-700 mb-4">
+              <p className="text-xs md:text-sm text-gray-700 mb-3 md:mb-4">
                 Have feedback or a feature request? We'd love to hear from you!
               </p>
               <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
                 <p className="text-xs text-gray-600 mb-1">Contact the developer:</p>
                 <a
                   href="mailto:my.stationptot@gmail.com"
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium break-all"
+                  className="text-xs md:text-sm text-blue-600 hover:text-blue-700 font-medium break-all"
                 >
                   my.stationptot@gmail.com
                 </a>
@@ -329,30 +329,30 @@ export default function Home() {
       <div className="container mx-auto px-4 py-16">
         {/* Home Screen - 3 Buttons */}
         {appState === 'home' && (
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto px-4">
             {/* Header */}
-            <div className="text-center mb-16">
-              <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <div className="text-center mb-12 md:mb-16">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 QuizMe
               </h1>
-              <p className="text-xl text-gray-600">
+              <p className="text-lg md:text-xl text-gray-600">
                 Generate practice quizzes from your PDF learning materials using AI
               </p>
             </div>
 
-            {/* 3 Main Buttons */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* 3 Main Buttons - Stack on mobile, grid on desktop */}
+            <div className="flex flex-col sm:grid sm:grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
               {/* Generate Quiz Button */}
               <button
                 onClick={() => setAppState('generate')}
-                className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-all hover:-translate-y-1 text-center group"
+                className="bg-white rounded-xl shadow-lg p-6 md:p-8 hover:shadow-xl transition-all hover:-translate-y-1 text-center group"
               >
-                <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition-colors">
-                  <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-blue-100 w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:bg-blue-200 transition-colors">
+                  <svg className="w-7 h-7 md:w-8 md:h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Generate Quiz</h3>
+                <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">Generate Quiz</h3>
                 <p className="text-sm text-gray-600">
                   Upload a PDF and create a new quiz
                 </p>
@@ -361,14 +361,14 @@ export default function Home() {
               {/* Quizzes Button */}
               <button
                 onClick={() => setAppState('quizzes')}
-                className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-all hover:-translate-y-1 text-center group"
+                className="bg-white rounded-xl shadow-lg p-6 md:p-8 hover:shadow-xl transition-all hover:-translate-y-1 text-center group"
               >
-                <div className="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-indigo-200 transition-colors">
-                  <svg className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-indigo-100 w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:bg-indigo-200 transition-colors">
+                  <svg className="w-7 h-7 md:w-8 md:h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Quizzes</h3>
+                <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">Quizzes</h3>
                 <p className="text-sm text-gray-600">
                   Browse and take available quizzes
                 </p>
@@ -377,14 +377,14 @@ export default function Home() {
               {/* Quiz History Button */}
               <button
                 onClick={() => setAppState('history')}
-                className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-all hover:-translate-y-1 text-center group"
+                className="bg-white rounded-xl shadow-lg p-6 md:p-8 hover:shadow-xl transition-all hover:-translate-y-1 text-center group"
               >
-                <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-200 transition-colors">
-                  <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-purple-100 w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:bg-purple-200 transition-colors">
+                  <svg className="w-7 h-7 md:w-8 md:h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Quiz History</h3>
+                <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">Quiz History</h3>
                 <p className="text-sm text-gray-600">
                   View past quiz attempts and scores
                 </p>
@@ -395,24 +395,24 @@ export default function Home() {
 
         {/* Generate Quiz Screen */}
         {appState === 'generate' && (
-          <div className="max-w-2xl mx-auto">
-            {/* Back Button */}
+          <div className="max-w-2xl mx-auto px-4">
+            {/* Back Button - Larger for touch */}
             <button
               onClick={handleBackToHome}
-              className="mb-6 text-blue-600 hover:text-blue-700 flex items-center gap-2"
+              className="mb-6 text-blue-600 hover:text-blue-700 flex items-center gap-2 min-h-[44px] text-base md:text-sm font-medium"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Back to Home
             </button>
 
-            {/* Header */}
+            {/* Header - Mobile responsive */}
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <h2 className="text-2xl md:text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Generate a Quiz
               </h2>
-              <p className="text-gray-600">
+              <p className="text-sm md:text-base text-gray-600">
                 Upload a PDF and we'll create practice questions for you
               </p>
             </div>
@@ -468,24 +468,24 @@ export default function Home() {
 
         {/* Quizzes Screen - Browse available quizzes */}
         {appState === 'quizzes' && (
-          <div className="max-w-4xl mx-auto">
-            {/* Back Button */}
+          <div className="max-w-4xl mx-auto px-4">
+            {/* Back Button - Larger for touch */}
             <button
               onClick={handleBackToHome}
-              className="mb-6 text-blue-600 hover:text-blue-700 flex items-center gap-2"
+              className="mb-6 text-blue-600 hover:text-blue-700 flex items-center gap-2 min-h-[44px] text-base md:text-sm font-medium"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Back to Home
             </button>
 
-            {/* Header */}
+            {/* Header - Mobile responsive */}
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <h2 className="text-2xl md:text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Available Quizzes
               </h2>
-              <p className="text-gray-600">
+              <p className="text-sm md:text-base text-gray-600">
                 Browse and take your generated quizzes
               </p>
             </div>
@@ -531,24 +531,24 @@ export default function Home() {
 
         {/* History State */}
         {appState === 'history' && (
-          <div className="max-w-4xl mx-auto">
-            {/* Back Button */}
+          <div className="max-w-4xl mx-auto px-4">
+            {/* Back Button - Larger for touch */}
             <button
               onClick={handleBackToHome}
-              className="mb-6 text-blue-600 hover:text-blue-700 flex items-center gap-2"
+              className="mb-6 text-blue-600 hover:text-blue-700 flex items-center gap-2 min-h-[44px] text-base md:text-sm font-medium"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Back to Home
             </button>
 
-            {/* Header */}
+            {/* Header - Mobile responsive */}
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <h2 className="text-2xl md:text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Quiz History
               </h2>
-              <p className="text-gray-600">
+              <p className="text-sm md:text-base text-gray-600">
                 Review your past quiz attempts and scores
               </p>
             </div>

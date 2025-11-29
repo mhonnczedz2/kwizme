@@ -123,35 +123,35 @@ export default function QuizReviewApproval({
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto p-4 md:p-6">
       {/* Header */}
       <div className="mb-6 flex justify-between items-center">
         <button
           onClick={onCancel}
-          className="text-blue-600 hover:text-blue-700 flex items-center gap-2"
+          className="text-blue-600 hover:text-blue-700 flex items-center gap-2 min-h-[44px] text-base md:text-sm font-medium"
         >
           ← Cancel
         </button>
       </div>
 
-      {/* Title */}
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+      {/* Title - Responsive */}
+      <div className="mb-6 md:mb-8 text-center">
+        <h1 className="text-2xl md:text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
           Review & Approve Questions
         </h1>
-        <p className="text-gray-600">Review each question before saving your quiz</p>
+        <p className="text-sm md:text-base text-gray-600">Review each question before saving your quiz</p>
       </div>
 
       {/* Progress */}
       <div className="mb-6">
-        <div className="flex justify-between items-center mb-2">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-2">
           <span className="text-sm font-medium text-gray-700">
             Question {currentQuestionIndex + 1} of {totalQuestions}
           </span>
           <div className="flex gap-2">
             <button
               onClick={() => setShowAddQuestion(true)}
-              className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 text-sm font-medium"
+              className="px-4 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 text-sm font-medium min-h-[44px]"
             >
               + Add Question
             </button>
@@ -165,23 +165,23 @@ export default function QuizReviewApproval({
         </div>
       </div>
 
-      {/* Question Card */}
-      <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border-2 border-gray-200">
-        {/* Question Header */}
-        <div className="flex items-center justify-between mb-4">
-          <span className={`px-3 py-1 rounded text-xs font-medium ${getDifficultyColor(currentQuestion.difficulty)}`}>
+      {/* Question Card - Responsive padding */}
+      <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-6 border-2 border-gray-200">
+        {/* Question Header - Stack buttons on mobile */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <span className={`px-3 py-1 rounded text-xs font-medium self-start ${getDifficultyColor(currentQuestion.difficulty)}`}>
             {currentQuestion.difficulty.toUpperCase()}
           </span>
           <div className="flex gap-2">
             <button
               onClick={() => setEditingQuestionId(currentQuestionIndex)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+              className="flex-1 sm:flex-none px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium min-h-[44px]"
             >
               Edit
             </button>
             <button
               onClick={() => setShowDeleteConfirm(true)}
-              className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 text-sm font-medium"
+              className="flex-1 sm:flex-none px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 text-sm font-medium min-h-[44px]"
               disabled={totalQuestions <= 1}
             >
               Delete
@@ -189,19 +189,19 @@ export default function QuizReviewApproval({
           </div>
         </div>
 
-        {/* Question Text */}
-        <h3 className="text-xl font-semibold mb-4 text-gray-800">
+        {/* Question Text - Responsive sizing */}
+        <h3 className="text-lg md:text-xl font-semibold mb-4 text-gray-800">
           {currentQuestion.question}
         </h3>
 
-        {/* Options */}
-        <div className="space-y-2 mb-4">
+        {/* Options - Touch-friendly */}
+        <div className="space-y-2 md:space-y-2 mb-4">
           {currentQuestion.options.map((option, idx) => {
             const isCorrect = option === currentQuestion.correct_answer;
             return (
               <div
                 key={idx}
-                className={`p-3 rounded-lg border-2 ${
+                className={`p-3 md:p-3 rounded-lg border-2 ${
                   isCorrect ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-gray-50'
                 }`}
               >
@@ -209,9 +209,9 @@ export default function QuizReviewApproval({
                   <span className="font-semibold text-gray-600">
                     {String.fromCharCode(65 + idx)}.
                   </span>
-                  <span className="flex-1 text-gray-900">{option}</span>
+                  <span className="flex-1 text-gray-900 text-sm md:text-base">{option}</span>
                   {isCorrect && (
-                    <span className="text-green-600 font-semibold">✓ Correct</span>
+                    <span className="text-green-600 font-semibold text-sm">✓ Correct</span>
                   )}
                 </div>
               </div>
@@ -219,17 +219,17 @@ export default function QuizReviewApproval({
           })}
         </div>
 
-        {/* Explanation */}
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-3">
-          <h4 className="font-semibold mb-2 text-blue-900">Explanation:</h4>
-          <p className="text-blue-800">{currentQuestion.explanation}</p>
+        {/* Explanation - Responsive padding and text */}
+        <div className="p-3 md:p-4 bg-blue-50 border border-blue-200 rounded-lg mb-3">
+          <h4 className="font-semibold mb-2 text-blue-900 text-sm md:text-base">Explanation:</h4>
+          <p className="text-blue-800 text-sm md:text-base">{currentQuestion.explanation}</p>
         </div>
 
-        {/* Hint (if exists) */}
+        {/* Hint (if exists) - Responsive */}
         {currentQuestion.hint && (
-          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg mb-3">
-            <h4 className="font-semibold mb-2 text-yellow-900">Hint:</h4>
-            <p className="text-yellow-800">{currentQuestion.hint}</p>
+          <div className="p-3 md:p-4 bg-yellow-50 border border-yellow-200 rounded-lg mb-3">
+            <h4 className="font-semibold mb-2 text-yellow-900 text-sm md:text-base">Hint:</h4>
+            <p className="text-yellow-800 text-sm md:text-base">{currentQuestion.hint}</p>
           </div>
         )}
 
@@ -240,12 +240,12 @@ export default function QuizReviewApproval({
           </p>
         )}
 
-        {/* Navigation Buttons - Inside Card */}
-        <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-200">
+        {/* Navigation Buttons - Touch-friendly, stack on very small screens */}
+        <div className="flex flex-col xs:flex-row justify-between items-stretch xs:items-center gap-3 mt-6 pt-4 border-t border-gray-200">
           <button
             onClick={handlePrevious}
             disabled={currentQuestionIndex === 0}
-            className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+            className={`px-6 py-3 rounded-lg font-medium transition-colors min-h-[44px] ${
               currentQuestionIndex === 0
                 ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                 : 'bg-blue-600 text-white hover:bg-blue-700'
@@ -257,7 +257,7 @@ export default function QuizReviewApproval({
           <button
             onClick={handleNext}
             disabled={currentQuestionIndex === totalQuestions - 1}
-            className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+            className={`px-6 py-3 rounded-lg font-medium transition-colors min-h-[44px] ${
               currentQuestionIndex === totalQuestions - 1
                 ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                 : 'bg-blue-600 text-white hover:bg-blue-700'
@@ -268,11 +268,11 @@ export default function QuizReviewApproval({
         </div>
       </div>
 
-      {/* Approve Button - Outside card, below */}
+      {/* Approve Button - Touch-friendly */}
       <div className="text-center mt-6">
         <button
           onClick={() => setShowApproveAllConfirm(true)}
-          className="px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold shadow-md hover:shadow-lg text-lg"
+          className="w-full sm:w-auto px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold shadow-md hover:shadow-lg text-base md:text-lg min-h-[44px]"
         >
           Finish Review
         </button>

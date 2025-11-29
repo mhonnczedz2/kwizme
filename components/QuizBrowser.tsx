@@ -212,121 +212,123 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions }:
   return (
     <div className="space-y-4">
       {/* Filters and Sort Section */}
-      <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <h3 className="text-sm font-semibold text-gray-700">Categories</h3>
+      <div className="bg-white rounded-lg shadow p-4 md:p-5 mb-6">
+        {/* Header Row with Sort Buttons */}
+        <div className="flex items-center gap-3 mb-4">
+          <h3 className="text-sm font-semibold text-gray-700">Categories</h3>
 
-            {/* Sort Buttons */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setSortOrder('desc')}
-                className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                  sortOrder === 'desc'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-                title="Newest first"
-              >
-                ↓ Newest
-              </button>
-              <button
-                onClick={() => setSortOrder('asc')}
-                className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                  sortOrder === 'asc'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-                title="Oldest first"
-              >
-                ↑ Oldest
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="text-xs text-blue-600 hover:text-blue-700 font-medium"
-              >
-                Clear Filters
-              </button>
-            )}
+          {/* Sort Buttons - Circular with icons only */}
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setSortOrder('desc')}
+              className={`w-8 h-8 rounded-full text-sm font-medium transition-all flex items-center justify-center ${
+                sortOrder === 'desc'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+              title="Newest first"
+            >
+              ↓
+            </button>
+            <button
+              onClick={() => setSortOrder('asc')}
+              className={`w-8 h-8 rounded-full text-sm font-medium transition-all flex items-center justify-center ${
+                sortOrder === 'asc'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+              title="Oldest first"
+            >
+              ↑
+            </button>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 max-h-[9rem] overflow-y-auto">
+        {/* Category Tags - Horizontal scroll, max 3 rows */}
+        <div className="overflow-x-auto pb-2">
+          <div className="flex flex-wrap gap-2 max-h-[calc(44px*3+1rem)]">
+            {/* Difficulty Tags */}
+            {getUniqueValues('difficulty_level').map(value => {
+              const difficultyColors = {
+                easy: { active: 'bg-green-600', inactive: 'bg-green-50 text-green-700 border-green-200' },
+                medium: { active: 'bg-yellow-600', inactive: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+                hard: { active: 'bg-red-600', inactive: 'bg-red-50 text-red-700 border-red-200' }
+              };
+              const colors = difficultyColors[value as keyof typeof difficultyColors] || { active: 'bg-gray-600', inactive: 'bg-gray-50 text-gray-700 border-gray-200' };
 
-          {/* Difficulty Tags */}
-          {getUniqueValues('difficulty_level').map(value => {
-            const difficultyColors = {
-              easy: { active: 'bg-green-600', inactive: 'bg-green-100 text-green-700' },
-              medium: { active: 'bg-yellow-600', inactive: 'bg-yellow-100 text-yellow-700' },
-              hard: { active: 'bg-red-600', inactive: 'bg-red-100 text-red-700' }
-            };
-            const colors = difficultyColors[value as keyof typeof difficultyColors] || { active: 'bg-gray-600', inactive: 'bg-gray-100 text-gray-700' };
+              return (
+                <button
+                  key={`difficulty-${value}`}
+                  onClick={() => setFilters({ ...filters, difficulty_level: filters.difficulty_level === value ? '' : value })}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border-2 whitespace-nowrap ${
+                    filters.difficulty_level === value
+                      ? `${colors.active} text-white border-transparent shadow-sm`
+                      : colors.inactive
+                  }`}
+                >
+                  {value.charAt(0).toUpperCase() + value.slice(1)}
+                </button>
+              );
+            })}
 
-            return (
+            {/* Institution Tags */}
+            {getUniqueValues('institution').map(value => (
               <button
-                key={`difficulty-${value}`}
-                onClick={() => setFilters({ ...filters, difficulty_level: filters.difficulty_level === value ? '' : value })}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  filters.difficulty_level === value
-                    ? `${colors.active} text-white`
-                    : colors.inactive
+                key={`institution-${value}`}
+                onClick={() => setFilters({ ...filters, institution: filters.institution === value ? '' : value })}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border-2 whitespace-nowrap ${
+                  filters.institution === value
+                    ? 'bg-blue-600 text-white border-transparent shadow-sm'
+                    : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
                 }`}
               >
-                {value.charAt(0).toUpperCase() + value.slice(1)}
+                🏛️ {value}
               </button>
-            );
-          })}
+            ))}
 
-          {/* Institution Tags */}
-          {getUniqueValues('institution').map(value => (
-            <button
-              key={`institution-${value}`}
-              onClick={() => setFilters({ ...filters, institution: filters.institution === value ? '' : value })}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                filters.institution === value
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              🏛️ {value}
-            </button>
-          ))}
+            {/* Program Tags */}
+            {getUniqueValues('program').map(value => (
+              <button
+                key={`program-${value}`}
+                onClick={() => setFilters({ ...filters, program: filters.program === value ? '' : value })}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border-2 whitespace-nowrap ${
+                  filters.program === value
+                    ? 'bg-purple-600 text-white border-transparent shadow-sm'
+                    : 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100'
+                }`}
+              >
+                🎓 {value}
+              </button>
+            ))}
 
-          {/* Program Tags */}
-          {getUniqueValues('program').map(value => (
-            <button
-              key={`program-${value}`}
-              onClick={() => setFilters({ ...filters, program: filters.program === value ? '' : value })}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                filters.program === value
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              🎓 {value}
-            </button>
-          ))}
-
-          {/* Course Tags */}
-          {getUniqueValues('course_code').map(value => (
-            <button
-              key={`course_code-${value}`}
-              onClick={() => setFilters({ ...filters, course_code: filters.course_code === value ? '' : value })}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                filters.course_code === value
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              📚 {value}
-            </button>
-          ))}
+            {/* Course Tags */}
+            {getUniqueValues('course_code').map(value => (
+              <button
+                key={`course_code-${value}`}
+                onClick={() => setFilters({ ...filters, course_code: filters.course_code === value ? '' : value })}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border-2 whitespace-nowrap ${
+                  filters.course_code === value
+                    ? 'bg-indigo-600 text-white border-transparent shadow-sm'
+                    : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
+                }`}
+              >
+                📚 {value}
+              </button>
+            ))}
+          </div>
         </div>
+
+        {/* Clear All Button - Fixed bottom right */}
+        {hasActiveFilters && (
+          <div className="flex justify-end mt-3">
+            <button
+              onClick={clearFilters}
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium px-3 py-1.5 underline"
+            >
+              Clear All
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Stats Header */}
@@ -366,48 +368,48 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions }:
             setQuestionCount(count);
             setConfiguringQuizId(quiz.quiz_id);
           }}
-          className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer relative"
+          className="bg-white rounded-lg shadow-lg p-4 md:p-6 hover:shadow-xl transition-shadow cursor-pointer relative"
         >
-          {/* Three-dot menu button */}
-          <div className="absolute top-6 right-6">
+          {/* Three-dot menu button - Larger for touch */}
+          <div className="absolute top-4 md:top-6 right-4 md:right-6">
             <button
               onClick={(e) => toggleMenu(quiz.quiz_id, e)}
-              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
               aria-label="More options"
             >
-              <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 16 16">
+              <svg className="w-5 h-5 md:w-4 md:h-4 text-gray-600" fill="currentColor" viewBox="0 0 16 16">
                 <circle cx="8" cy="2" r="1.5" />
                 <circle cx="8" cy="8" r="1.5" />
                 <circle cx="8" cy="14" r="1.5" />
               </svg>
             </button>
 
-            {/* Dropdown menu */}
+            {/* Dropdown menu - Wider on mobile for easier tapping */}
             {openMenuId === quiz.quiz_id && (
-              <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+              <div className="absolute right-0 mt-1 w-56 md:w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
                 <button
                   onClick={(e) => handleReviewQuestions(quiz.quiz_id, e)}
-                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  className="w-full px-4 py-3 md:py-2 text-left text-sm md:text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                   </svg>
                   Review Questions
                 </button>
                 <button
                   onClick={(e) => handleEditQuiz(quiz.quiz_id, e)}
-                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  className="w-full px-4 py-3 md:py-2 text-left text-sm md:text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                   Edit Categorization
                 </button>
                 <button
                   onClick={(e) => handleDeleteQuiz(quiz.quiz_id, e)}
-                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                  className="w-full px-4 py-3 md:py-2 text-left text-sm md:text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
                   Delete
@@ -416,16 +418,16 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions }:
             )}
           </div>
 
-          {/* Topic | Quiz Title with Difficulty Badge inline */}
-          <div className="mb-2 pr-10 flex items-center gap-2">
-            <h3 className="text-xl font-semibold text-gray-900">
+          {/* Topic | Quiz Title with Difficulty Badge - Stack on very small screens */}
+          <div className="mb-2 pr-12 md:pr-10 flex flex-col sm:flex-row sm:items-center gap-2">
+            <h3 className="text-lg md:text-xl font-semibold text-gray-900">
               {quiz.topic && (
                 <span>{quiz.topic} | </span>
               )}
               {quiz.quiz_title}
             </h3>
             {/* Difficulty Badge - inline after title */}
-            <span className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium ${
+            <span className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium self-start sm:self-auto ${
               quiz.difficulty_level === 'easy'
                 ? 'bg-green-100 text-green-700'
                 : quiz.difficulty_level === 'hard'
@@ -436,38 +438,38 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions }:
             </span>
           </div>
 
-          {/* Institution • Program • Course */}
+          {/* Institution • Program • Course - Stack on mobile */}
           {(quiz.institution || quiz.program || quiz.course_code) && (
-            <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm text-gray-600 mb-2">
               {quiz.institution && (
-                <>
+                <div className="flex items-center gap-1">
                   <span>🏛️</span>
                   <span>{quiz.institution}</span>
-                </>
+                </div>
               )}
-              {quiz.institution && quiz.program && <span>•</span>}
+              {quiz.institution && quiz.program && <span className="hidden sm:inline">•</span>}
               {quiz.program && (
-                <>
+                <div className="flex items-center gap-1">
                   <span>🎓</span>
                   <span>{quiz.program}</span>
-                </>
+                </div>
               )}
-              {(quiz.institution || quiz.program) && quiz.course_code && <span>•</span>}
+              {(quiz.institution || quiz.program) && quiz.course_code && <span className="hidden sm:inline">•</span>}
               {quiz.course_code && (
-                <>
+                <div className="flex items-center gap-1">
                   <span>📚</span>
                   <span>{quiz.course_code}</span>
-                </>
+                </div>
               )}
             </div>
           )}
 
           {/* File name */}
           <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <span>{quiz.file_name}</span>
+            <span className="break-all">{quiz.file_name}</span>
           </div>
 
           {/* Date - Lower Left */}
