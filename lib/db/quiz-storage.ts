@@ -1,6 +1,7 @@
 import { Database } from 'sql.js';
 import { QuizGenerationResponse, Quiz, Question } from './types';
 import { initDatabase, saveDatabase, executeQuery, executeUpdate } from './client';
+import { SEED_QUIZZES } from './seed-data';
 
 /**
  * Save a generated quiz to the database
@@ -218,4 +219,39 @@ export async function getQuizQuestionCount(quizId: string): Promise<number> {
   );
 
   return result[0]?.count || 0;
+}
+
+/**
+ * Seed the database with default quizzes if empty
+ * This runs automatically on first app launch
+ */
+export async function seedDatabaseIfEmpty(): Promise<void> {
+  const db = await initDatabase();
+
+  try {
+    // Check if database already has quizzes
+    const result = executeQuery<{ count: number }>(
+      db,
+      'SELECT COUNT(*) as count FROM quizzes',
+      []
+    );
+
+    const quizCount = result[0]?.count || 0;
+
+    if (quizCount === 0) {
+      console.log('📦 Database is empty. Seeding with default quizzes...');
+
+      // Insert each seed quiz
+      for (const seedQuiz of SEED_QUIZZES) {
+        await saveQuizToDatabase(seedQuiz);
+      }
+
+      console.log(`✅ Successfully seeded database with ${SEED_QUIZZES.length} default quizzes`);
+    } else {
+      console.log(`✓ Database already contains ${quizCount} quizzes. Skipping seed.`);
+    }
+  } catch (error) {
+    console.error('❌ Error seeding database:', error);
+    // Don't throw - seeding is optional
+  }
 }

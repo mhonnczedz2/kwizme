@@ -11,7 +11,7 @@ import QuizReviewApproval from '@/components/QuizReviewApproval';
 import QuizApprovedScreen from '@/components/QuizApprovedScreen';
 import { QuizGenerationResponse, AnswerRecord } from '@/lib/db/types';
 import { SessionConfig } from '@/components/QuizConfigModal';
-import { saveQuizToDatabase, getQuizById } from '@/lib/db/quiz-storage';
+import { saveQuizToDatabase, getQuizById, seedDatabaseIfEmpty } from '@/lib/db/quiz-storage';
 
 type AppState = 'home' | 'generate' | 'quizzes' | 'history' | 'reviewing-approval' | 'quiz-approved' | 'taking-quiz' | 'reviewing-quiz' | 'results';
 
@@ -29,6 +29,11 @@ export default function Home() {
   } | null>(null);
   const [showInfoBubble, setShowInfoBubble] = useState(false);
   const [gridDirection, setGridDirection] = useState('40px 40px');
+
+  // Seed database with default quizzes on first load
+  useEffect(() => {
+    seedDatabaseIfEmpty().catch(console.error);
+  }, []);
 
   // Change grid direction randomly every animation cycle (8s)
   useEffect(() => {
