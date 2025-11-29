@@ -1,27 +1,4 @@
-// @ts-ignore - pdfjs-dist types are not perfect for Node.js usage
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
-
-// Configure worker and canvas polyfill for different environments
-if (typeof window === 'undefined') {
-  // Server-side (Node.js) - setup canvas polyfill and worker
-  const { Canvas } = require('canvas');
-
-  // Polyfill canvas APIs for pdfjs-dist
-  if (typeof globalThis.DOMMatrix === 'undefined') {
-    // @ts-ignore
-    globalThis.DOMMatrix = Canvas.DOMMatrix;
-  }
-  if (typeof globalThis.Path2D === 'undefined') {
-    // @ts-ignore
-    globalThis.Path2D = Canvas.Path2D;
-  }
-
-  // Point to the actual worker file in node_modules
-  (pdfjsLib as any).GlobalWorkerOptions.workerSrc = 'pdfjs-dist/legacy/build/pdf.worker.mjs';
-} else {
-  // Client-side - set worker source from CDN
-  (pdfjsLib as any).GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
-}
+import { extractText, getDocumentProxy } from 'unpdf';
 
 /**
  * Extract text content from a PDF file
@@ -32,42 +9,17 @@ export async function extractTextFromPDF(file: File): Promise<string> {
   try {
     // Convert File to ArrayBuffer
     const arrayBuffer = await file.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
 
-    // Load PDF document
-    const loadingTask = (pdfjsLib as any).getDocument({
-      data: uint8Array,
-      useSystemFonts: true,
-      standardFontDataUrl: undefined,
-      cMapUrl: undefined,
-      cMapPacked: false,
-      useWorkerFetch: false,
-      isEvalSupported: false,
+    // Extract text using unpdf
+    const { text } = await extractText(new Uint8Array(arrayBuffer), {
+      mergePages: true,
     });
-    const pdf = await loadingTask.promise;
 
-    // Extract text from all pages
-    const textParts: string[] = [];
-
-    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-      const page = await pdf.getPage(pageNum);
-      const textContent = await page.getTextContent();
-
-      // Combine text items
-      const pageText = textContent.items
-        .map((item: any) => item.str)
-        .join(' ');
-
-      textParts.push(pageText);
-    }
-
-    const fullText = textParts.join('\n\n');
-
-    if (!fullText || fullText.trim().length === 0) {
+    if (!text || text.trim().length === 0) {
       throw new Error('No text content found in PDF');
     }
 
-    return fullText;
+    return text;
   } catch (error: any) {
     console.error('PDF parsing error:', error);
     console.error('Error details:', {
@@ -91,19 +43,17 @@ export async function getPDFMetadata(file: File): Promise<{
 }> {
   try {
     const arrayBuffer = await file.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
 
-    const loadingTask = (pdfjsLib as any).getDocument({
-      data: uint8Array,
-      useSystemFonts: true,
-    });
-    const pdf = await loadingTask.promise;
+    const pdf = await getDocumentProxy(new Uint8Array(arrayBuffer));
     const metadata = await pdf.getMetadata();
+
+    // Type assertion for metadata.info
+    const info = metadata.info as { Title?: string; Author?: string } | undefined;
 
     return {
       numPages: pdf.numPages,
-      title: metadata.info?.Title,
-      author: metadata.info?.Author,
+      title: info?.Title,
+      author: info?.Author,
     };
   } catch (error) {
     console.error('PDF metadata error:', error);
