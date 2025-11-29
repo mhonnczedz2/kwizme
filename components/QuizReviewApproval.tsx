@@ -168,7 +168,7 @@ export default function QuizReviewApproval({
         {/* Question Header - Difficulty and buttons on same row */}
         <div className="flex items-center justify-between gap-2 mb-4">
           <span className={`px-4 py-2 rounded-full text-sm font-medium ${getDifficultyColor(currentQuestion.difficulty)}`}>
-            {currentQuestion.difficulty.toUpperCase()}
+            {currentQuestion.difficulty.charAt(0).toUpperCase() + currentQuestion.difficulty.slice(1)}
           </span>
           <div className="flex gap-2">
             <button
