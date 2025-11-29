@@ -479,9 +479,9 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6">
-      {/* Header - Sticky on mobile */}
-      <div className="sticky top-0 bg-gradient-to-br from-blue-50 to-indigo-100 z-20 pb-4 mb-2 md:mb-6">
-        <div className="flex justify-between items-center mb-4 md:mb-6">
+      {/* Header */}
+      <div className="pb-3 mb-2 pt-4">
+        <div className="flex justify-between items-center mb-4">
           <button
             onClick={onBack}
             className="text-blue-600 hover:text-blue-700 flex items-center gap-2 min-h-[44px] text-base md:text-sm font-medium"
@@ -491,6 +491,10 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
             </svg>
             Back
           </button>
+        </div>
+
+        {/* Score Badge - Centered */}
+        <div className="flex justify-center mb-4">
           <div className="text-sm md:text-sm font-semibold text-gray-700 bg-white px-4 py-2 rounded-full shadow">
             Score: {correctCount} / {quizDataState.questions.length}
           </div>
@@ -508,16 +512,16 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
       {/* Quiz Card */}
       <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
         {/* Question Counter - Centered at top */}
-        <div className="text-center mb-3 md:mb-4">
+        <div className="text-center mb-2">
           <span className="text-sm font-medium text-gray-600">
             Question {currentQuestionIndex + 1} of {quizDataState.questions.length}
           </span>
         </div>
 
         {/* Difficulty Badge and Menu */}
-        <div className="mb-4 flex items-center justify-between">
-          <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(currentQuestion.difficulty)}`}>
-            {currentQuestion.difficulty.toUpperCase()}
+        <div className="mb-2 flex items-center justify-between">
+          <span className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${getDifficultyColor(currentQuestion.difficulty)}`}>
+            {currentQuestion.difficulty.charAt(0).toUpperCase() + currentQuestion.difficulty.slice(1)}
           </span>
           <div className="relative">
             <button
@@ -551,13 +555,13 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
         </div>
 
         {/* Question */}
-        <h2 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6 text-gray-800">
+        <h2 className="text-xl md:text-2xl font-semibold mb-2 text-gray-800 pl-1">
           {currentQuestion.question}
         </h2>
 
         {/* Hint Button */}
         {currentQuestion.hint && !isAnswered && (
-          <div className="mb-4">
+          <div className="mb-2">
             <button
               onClick={handleToggleHint}
               className="text-blue-600 hover:text-blue-700 text-sm md:text-sm flex items-center gap-2 min-h-[44px]"
