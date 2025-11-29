@@ -1,9 +1,22 @@
 // @ts-ignore - pdfjs-dist types are not perfect for Node.js usage
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 
-// Configure worker for different environments
+// Configure worker and canvas polyfill for different environments
 if (typeof window === 'undefined') {
-  // Server-side (Node.js) - point to the actual worker file in node_modules
+  // Server-side (Node.js) - setup canvas polyfill and worker
+  const { Canvas } = require('canvas');
+
+  // Polyfill canvas APIs for pdfjs-dist
+  if (typeof globalThis.DOMMatrix === 'undefined') {
+    // @ts-ignore
+    globalThis.DOMMatrix = Canvas.DOMMatrix;
+  }
+  if (typeof globalThis.Path2D === 'undefined') {
+    // @ts-ignore
+    globalThis.Path2D = Canvas.Path2D;
+  }
+
+  // Point to the actual worker file in node_modules
   (pdfjsLib as any).GlobalWorkerOptions.workerSrc = 'pdfjs-dist/legacy/build/pdf.worker.mjs';
 } else {
   // Client-side - set worker source from CDN
