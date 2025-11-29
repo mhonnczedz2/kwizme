@@ -222,34 +222,33 @@ export async function getQuizQuestionCount(quizId: string): Promise<number> {
 }
 
 /**
- * Seed the database with default quizzes if empty
- * This runs automatically on first app launch
+ * Seed the database with default quizzes
+ * Runs on every app load but skips quizzes that already exist
  */
-export async function seedDatabaseIfEmpty(): Promise<void> {
+export async function seedDefaultQuizzes(): Promise<void> {
   const db = await initDatabase();
 
   try {
-    // Check if database already has quizzes
-    const result = executeQuery<{ count: number }>(
-      db,
-      'SELECT COUNT(*) as count FROM quizzes',
-      []
-    );
+    console.log('📦 Checking for seed quizzes...');
 
-    const quizCount = result[0]?.count || 0;
+    // Check each seed quiz individually
+    for (const seedQuiz of SEED_QUIZZES) {
+      const existing = executeQuery<Quiz>(
+        db,
+        'SELECT quiz_id FROM quizzes WHERE quiz_id = ?',
+        [seedQuiz.quiz_id]
+      );
 
-    if (quizCount === 0) {
-      console.log('📦 Database is empty. Seeding with default quizzes...');
-
-      // Insert each seed quiz
-      for (const seedQuiz of SEED_QUIZZES) {
+      if (existing.length === 0) {
+        // Quiz doesn't exist, insert it
+        console.log(`📝 Adding seed quiz: ${seedQuiz.quiz_title}`);
         await saveQuizToDatabase(seedQuiz);
+      } else {
+        console.log(`✓ Seed quiz already exists: ${seedQuiz.quiz_title}`);
       }
-
-      console.log(`✅ Successfully seeded database with ${SEED_QUIZZES.length} default quizzes`);
-    } else {
-      console.log(`✓ Database already contains ${quizCount} quizzes. Skipping seed.`);
     }
+
+    console.log('✅ Seed quiz check complete');
   } catch (error) {
     console.error('❌ Error seeding database:', error);
     // Don't throw - seeding is optional
