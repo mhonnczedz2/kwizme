@@ -57,6 +57,9 @@ export async function saveQuizToDatabase(quizData: QuizGenerationResponse): Prom
     `;
 
     quizData.questions.forEach((q, index) => {
+      // Debug log to check question structure
+      console.log(`Question ${index + 1}:`, q);
+
       // Find the index of the correct answer
       const correctAnswerIndex = q.options.indexOf(q.correct_answer);
 
