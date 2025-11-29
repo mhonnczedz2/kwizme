@@ -348,7 +348,7 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
   };
 
   const getOptionClassName = (option: string) => {
-    const baseClasses = "w-full text-left p-4 rounded-lg border-2 transition-all text-gray-900";
+    const baseClasses = "w-full text-left p-4 md:p-4 rounded-lg border-2 transition-all text-gray-900 text-base md:text-base min-h-[56px]";
 
     if (!isAnswered || isTestMode) {
       // Before answering OR in test mode (hide correct/incorrect)
@@ -478,32 +478,37 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      {/* Header */}
-      <div className="mb-6 flex justify-between items-center">
-        <button
-          onClick={onBack}
-          className="text-blue-600 hover:text-blue-700 flex items-center gap-2"
-        >
-          ← Back
-        </button>
-        <div className="text-sm font-semibold text-gray-700">
-          Score: {correctCount} / {quizDataState.questions.length}
+    <div className="max-w-4xl mx-auto p-4 md:p-6">
+      {/* Header - Sticky on mobile */}
+      <div className="sticky top-0 bg-gradient-to-br from-blue-50 to-indigo-100 z-20 pb-4 mb-2 md:mb-6">
+        <div className="flex justify-between items-center mb-4 md:mb-6">
+          <button
+            onClick={onBack}
+            className="text-blue-600 hover:text-blue-700 flex items-center gap-2 min-h-[44px] text-base md:text-sm font-medium"
+          >
+            <svg className="w-6 h-6 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back
+          </button>
+          <div className="text-sm md:text-sm font-semibold text-gray-700 bg-white px-4 py-2 rounded-full shadow">
+            Score: {correctCount} / {quizDataState.questions.length}
+          </div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="bg-gray-200 rounded-full h-2">
+          <div
+            className="bg-blue-600 h-2 rounded-full transition-all"
+            style={{ width: `${((currentQuestionIndex + 1) / quizDataState.questions.length) * 100}%` }}
+          />
         </div>
       </div>
 
-      {/* Progress Bar */}
-      <div className="mb-6 bg-gray-200 rounded-full h-2">
-        <div
-          className="bg-blue-600 h-2 rounded-full transition-all"
-          style={{ width: `${((currentQuestionIndex + 1) / quizDataState.questions.length) * 100}%` }}
-        />
-      </div>
-
       {/* Quiz Card */}
-      <div className="bg-white rounded-xl shadow-lg p-8">
+      <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
         {/* Question Counter - Centered at top */}
-        <div className="text-center mb-4">
+        <div className="text-center mb-3 md:mb-4">
           <span className="text-sm font-medium text-gray-600">
             Question {currentQuestionIndex + 1} of {quizDataState.questions.length}
           </span>
@@ -517,18 +522,18 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
           <div className="relative">
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="px-3 py-1 text-gray-700 rounded-md hover:bg-gray-100 text-lg font-medium"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-700 rounded-md hover:bg-gray-100 text-xl font-medium"
             >
               ⋮
             </button>
             {showMenu && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+              <div className="absolute right-0 mt-2 w-56 md:w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
                 <button
                   onClick={() => {
                     setEditingQuestionId(currentQuestionIndex);
                     setShowMenu(false);
                   }}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700 rounded-t-lg"
+                  className="w-full text-left px-4 py-3 md:py-2 hover:bg-gray-100 text-gray-700 rounded-t-lg text-sm"
                 >
                   Edit
                 </button>
@@ -536,7 +541,7 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
                   onClick={() => {
                     handleQuestionDelete();
                   }}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600 rounded-b-lg"
+                  className="w-full text-left px-4 py-3 md:py-2 hover:bg-gray-100 text-red-600 rounded-b-lg text-sm"
                 >
                   Delete
                 </button>
@@ -546,7 +551,7 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
         </div>
 
         {/* Question */}
-        <h2 className="text-2xl font-semibold mb-6 text-gray-800">
+        <h2 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6 text-gray-800">
           {currentQuestion.question}
         </h2>
 
@@ -555,12 +560,12 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
           <div className="mb-4">
             <button
               onClick={handleToggleHint}
-              className="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-2"
+              className="text-blue-600 hover:text-blue-700 text-sm md:text-sm flex items-center gap-2 min-h-[44px]"
             >
               💡 {showHint ? 'Hide Hint' : 'Show Hint'}
             </button>
             {showHint && (
-              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-gray-700">
+              <div className="mt-2 p-3 md:p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-gray-700">
                 {currentQuestion.hint}
               </div>
             )}
@@ -568,7 +573,7 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
         )}
 
         {/* Options */}
-        <div className="space-y-3 mb-6">
+        <div className="space-y-3 md:space-y-3 mb-6">
           {currentQuestion.options.map((option, index) => (
             <button
               key={index}
@@ -594,9 +599,9 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
 
         {/* Explanation */}
         {showExplanation && (
-          <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-            <h3 className="font-semibold mb-2 text-gray-800">Explanation:</h3>
-            <p className="text-gray-700 mb-3">{currentQuestion.explanation}</p>
+          <div className="mb-6 p-3 md:p-4 bg-gray-50 border border-gray-200 rounded-lg">
+            <h3 className="font-semibold mb-2 text-gray-800 text-sm md:text-base">Explanation:</h3>
+            <p className="text-gray-700 mb-3 text-sm md:text-base">{currentQuestion.explanation}</p>
             {currentQuestion.citation && (
               <p className="text-xs text-gray-500 italic border-t border-gray-300 pt-2 mt-2">
                 📄 Source: {currentQuestion.citation}
@@ -607,13 +612,13 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
 
         {/* Action Buttons - Non-Test Mode */}
         {!isTestMode && (
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col xs:flex-row justify-between items-stretch xs:items-center gap-3">
             <div className="flex gap-3">
               {/* Previous Button - always show when available */}
               {currentQuestionIndex > 0 && (
                 <button
                   onClick={handlePreviousQuestion}
-                  className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                  className="flex-1 xs:flex-none px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors min-h-[44px] font-medium"
                 >
                   ← Previous
                 </button>
@@ -628,14 +633,14 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
                     <button
                       onClick={handleSubmitAnswer}
                       disabled={!selectedAnswer}
-                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                      className="flex-1 xs:flex-none px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors min-h-[44px] font-medium"
                     >
                       Submit Answer
                     </button>
                   ) : (
                     <button
                       onClick={handleNextQuestion}
-                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      className="flex-1 xs:flex-none px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors min-h-[44px] font-medium"
                     >
                       {isLastQuestion ? 'Finish Quiz' : 'Next Question →'}
                     </button>
@@ -647,7 +652,7 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
               {quickSubmit && isAnswered && (
                 <button
                   onClick={handleNextQuestion}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex-1 xs:flex-none px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors min-h-[44px] font-medium"
                 >
                   {isLastQuestion ? 'Finish Quiz' : 'Next Question →'}
                 </button>
@@ -658,13 +663,13 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
 
         {/* Action Buttons - Test Mode (inside card, just navigation) */}
         {isTestMode && (
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col xs:flex-row justify-between items-stretch xs:items-center gap-3">
             <div className="flex gap-3">
               {/* Previous Button */}
               {currentQuestionIndex > 0 && (
                 <button
                   onClick={handlePreviousQuestion}
-                  className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                  className="flex-1 xs:flex-none px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors min-h-[44px] font-medium"
                 >
                   ← Previous
                 </button>
@@ -676,7 +681,7 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
               {!isLastQuestion && (
                 <button
                   onClick={handleNextQuestion}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex-1 xs:flex-none px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors min-h-[44px] font-medium"
                 >
                   Next →
                 </button>
@@ -691,7 +696,7 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
         <div className="mt-6 flex justify-center">
           <button
             onClick={handleSubmitAnswer}
-            className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg shadow-lg"
+            className="w-full sm:w-auto px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-base md:text-lg shadow-lg min-h-[44px]"
           >
             Submit
           </button>
