@@ -246,7 +246,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions }:
 
         {/* Category Tags - Horizontal scroll, max 3 rows */}
         <div className="overflow-x-auto pb-2">
-          <div className="flex flex-wrap gap-2 max-h-[calc(44px*3+1rem)]">
+          <div className="flex flex-wrap gap-2 max-h-[calc(36px*3+0.5rem)]">
             {/* Difficulty Tags */}
             {getUniqueValues('difficulty_level').map(value => {
               const difficultyColors = {
@@ -260,7 +260,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions }:
                 <button
                   key={`difficulty-${value}`}
                   onClick={() => setFilters({ ...filters, difficulty_level: filters.difficulty_level === value ? '' : value })}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border-2 whitespace-nowrap ${
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all min-h-[36px] border-2 whitespace-nowrap ${
                     filters.difficulty_level === value
                       ? `${colors.active} text-white border-transparent shadow-sm`
                       : colors.inactive
@@ -276,7 +276,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions }:
               <button
                 key={`institution-${value}`}
                 onClick={() => setFilters({ ...filters, institution: filters.institution === value ? '' : value })}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border-2 whitespace-nowrap ${
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all min-h-[36px] border-2 whitespace-nowrap ${
                   filters.institution === value
                     ? 'bg-blue-600 text-white border-transparent shadow-sm'
                     : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
@@ -291,7 +291,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions }:
               <button
                 key={`program-${value}`}
                 onClick={() => setFilters({ ...filters, program: filters.program === value ? '' : value })}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border-2 whitespace-nowrap ${
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all min-h-[36px] border-2 whitespace-nowrap ${
                   filters.program === value
                     ? 'bg-purple-600 text-white border-transparent shadow-sm'
                     : 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100'
@@ -306,7 +306,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions }:
               <button
                 key={`course_code-${value}`}
                 onClick={() => setFilters({ ...filters, course_code: filters.course_code === value ? '' : value })}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all min-h-[44px] border-2 whitespace-nowrap ${
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all min-h-[36px] border-2 whitespace-nowrap ${
                   filters.course_code === value
                     ? 'bg-indigo-600 text-white border-transparent shadow-sm'
                     : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
