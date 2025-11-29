@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { QuizGenerationResponse } from '@/lib/db/types';
 import { createSession, saveAnswer, completeSession } from '@/lib/db/session-storage';
-import { getQuizById } from '@/lib/db/quiz-storage';
+import { getQuizById, updateQuestion, deleteQuestion } from '@/lib/db/quiz-storage';
 import { SessionConfig } from './QuizConfigModal';
+import QuestionEditModal from './QuestionEditModal';
 
 interface QuizDisplayProps {
   quizData: QuizGenerationResponse;
@@ -23,6 +24,9 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
   const [answers, setAnswers] = useState<{ questionIndex: number; selected: string; correct: string; isCorrect: boolean }[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [questionIds, setQuestionIds] = useState<number[]>([]);
+  const [editingQuestionId, setEditingQuestionId] = useState<number | null>(null);
+  const [quizDataState, setQuizDataState] = useState<QuizGenerationResponse>(quizData);
+  const [showMenu, setShowMenu] = useState(false);
 
   // Test mode: track answers but don't show results until end
   const isTestMode = config?.preset_name === 'test';
@@ -43,9 +47,12 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
         // Fetch the full quiz with question IDs from database
         const fullQuiz = await getQuizById(quizData.quiz_id);
         if (fullQuiz) {
-          // Extract question IDs (they should be in order from the database)
-          const ids = Array.from({ length: fullQuiz.questions.length }, (_, i) => i + 1);
+          // Extract actual question IDs from the database
+          const ids = fullQuiz.questions.map(q => q.question_id).filter((id): id is number => id !== undefined);
           setQuestionIds(ids);
+
+          // Update quiz data state with full data including question IDs
+          setQuizDataState(fullQuiz);
         }
       } catch (error) {
         console.error('Failed to initialize session:', error);
@@ -55,8 +62,8 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
     initSession();
   }, [quizData.quiz_id, quizData.questions.length]);
 
-  const currentQuestion = quizData.questions[currentQuestionIndex];
-  const isLastQuestion = currentQuestionIndex === quizData.questions.length - 1;
+  const currentQuestion = quizDataState.questions[currentQuestionIndex];
+  const isLastQuestion = currentQuestionIndex === quizDataState.questions.length - 1;
 
   const handleAnswerSelect = async (option: string) => {
     if (isAnswered) return;
@@ -370,6 +377,106 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
     }
   };
 
+  const handleQuestionUpdate = async (updates: {
+    question_text: string;
+    options: string[];
+    correct_answer: string;
+    explanation: string;
+    citation?: string;
+    hint?: string;
+    difficulty: 'easy' | 'medium' | 'hard';
+  }) => {
+    const questionId = questionIds[currentQuestionIndex];
+
+    if (!questionId) {
+      alert('Unable to edit question - question ID not found');
+      return;
+    }
+
+    try {
+      // Update in database
+      await updateQuestion(questionId, updates);
+
+      // Update local state
+      const updatedQuestions = [...quizDataState.questions];
+      updatedQuestions[currentQuestionIndex] = {
+        ...currentQuestion,
+        question: updates.question_text,
+        options: updates.options,
+        correct_answer: updates.correct_answer,
+        explanation: updates.explanation,
+        citation: updates.citation,
+        hint: updates.hint,
+        difficulty: updates.difficulty
+      };
+
+      setQuizDataState({
+        ...quizDataState,
+        questions: updatedQuestions
+      });
+
+      // Reset answer state if the question changed significantly
+      setSelectedAnswer(null);
+      setIsAnswered(false);
+      setShowExplanation(false);
+      setShowHint(false);
+
+      setEditingQuestionId(null);
+    } catch (error) {
+      console.error('Failed to update question:', error);
+      alert('Failed to update question. Please try again.');
+    }
+  };
+
+  const handleQuestionDelete = async () => {
+    const questionId = questionIds[currentQuestionIndex];
+
+    if (!questionId) {
+      alert('Unable to delete question - question ID not found');
+      return;
+    }
+
+    if (quizDataState.questions.length <= 1) {
+      alert('Cannot delete the last question in a quiz.');
+      return;
+    }
+
+    if (!confirm('Delete this question? This cannot be undone.')) {
+      return;
+    }
+
+    try {
+      // Delete from database
+      await deleteQuestion(questionId);
+
+      // Update local state - remove the question
+      const updatedQuestions = quizDataState.questions.filter((_, idx) => idx !== currentQuestionIndex);
+      setQuizDataState({
+        ...quizDataState,
+        questions: updatedQuestions
+      });
+
+      // Update questionIds array
+      const updatedQuestionIds = questionIds.filter((_, idx) => idx !== currentQuestionIndex);
+      setQuestionIds(updatedQuestionIds);
+
+      // Adjust current index if needed
+      if (currentQuestionIndex >= updatedQuestions.length) {
+        setCurrentQuestionIndex(updatedQuestions.length - 1);
+      }
+
+      // Reset answer state
+      setSelectedAnswer(null);
+      setIsAnswered(false);
+      setShowExplanation(false);
+      setShowHint(false);
+      setShowMenu(false);
+    } catch (error) {
+      console.error('Failed to delete question:', error);
+      alert('Failed to delete question. Please try again.');
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       {/* Header */}
@@ -381,7 +488,7 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
           ← Back
         </button>
         <div className="text-sm font-semibold text-gray-700">
-          Score: {correctCount} / {quizData.questions.length}
+          Score: {correctCount} / {quizDataState.questions.length}
         </div>
       </div>
 
@@ -389,7 +496,7 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
       <div className="mb-6 bg-gray-200 rounded-full h-2">
         <div
           className="bg-blue-600 h-2 rounded-full transition-all"
-          style={{ width: `${((currentQuestionIndex + 1) / quizData.questions.length) * 100}%` }}
+          style={{ width: `${((currentQuestionIndex + 1) / quizDataState.questions.length) * 100}%` }}
         />
       </div>
 
@@ -398,15 +505,44 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
         {/* Question Counter - Centered at top */}
         <div className="text-center mb-4">
           <span className="text-sm font-medium text-gray-600">
-            Question {currentQuestionIndex + 1} of {quizData.questions.length}
+            Question {currentQuestionIndex + 1} of {quizDataState.questions.length}
           </span>
         </div>
 
-        {/* Difficulty Badge */}
-        <div className="mb-4">
+        {/* Difficulty Badge and Menu */}
+        <div className="mb-4 flex items-center justify-between">
           <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(currentQuestion.difficulty)}`}>
             {currentQuestion.difficulty.toUpperCase()}
           </span>
+          <div className="relative">
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="px-3 py-1 text-gray-700 rounded-md hover:bg-gray-100 text-lg font-medium"
+            >
+              ⋮
+            </button>
+            {showMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                <button
+                  onClick={() => {
+                    setEditingQuestionId(currentQuestionIndex);
+                    setShowMenu(false);
+                  }}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700 rounded-t-lg"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => {
+                    handleQuestionDelete();
+                  }}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600 rounded-b-lg"
+                >
+                  Delete
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Question */}
@@ -560,6 +696,25 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
             Submit
           </button>
         </div>
+      )}
+
+      {/* Question Edit Modal */}
+      {editingQuestionId !== null && (
+        <QuestionEditModal
+          questionId={questionIds[currentQuestionIndex]}
+          initialData={{
+            question: currentQuestion.question,
+            options: currentQuestion.options,
+            correct_answer: currentQuestion.correct_answer,
+            explanation: currentQuestion.explanation,
+            citation: currentQuestion.citation,
+            hint: currentQuestion.hint,
+            difficulty: currentQuestion.difficulty
+          }}
+          onSave={handleQuestionUpdate}
+          onDelete={handleQuestionDelete}
+          onClose={() => setEditingQuestionId(null)}
+        />
       )}
     </div>
   );

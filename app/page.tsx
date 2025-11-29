@@ -27,6 +27,7 @@ export default function Home() {
     answers: AnswerRecord[];
     sessionScore: { correct: number; total: number };
   } | null>(null);
+  const [reviewContext, setReviewContext] = useState<'generation' | 'browser' | null>(null);
   const [showInfoBubble, setShowInfoBubble] = useState(false);
   const [gridDirection, setGridDirection] = useState('40px 40px');
 
@@ -104,6 +105,9 @@ export default function Home() {
       if (response.ok) {
         console.log('✅ Quiz generated successfully:', data);
         setQuizData(data);
+
+        // Set context to generation
+        setReviewContext('generation');
 
         // Go to review/approval state instead of saving immediately
         setAppState('reviewing-approval');
@@ -189,15 +193,24 @@ export default function Home() {
 
   const handleApproveAndSave = async (finalQuizData: QuizGenerationResponse) => {
     try {
-      // Save the approved quiz to database
+      // Save the quiz to database
       await saveQuizToDatabase(finalQuizData);
       console.log('💾 Quiz saved to database');
 
       // Update local state with final data
       setQuizData(finalQuizData);
 
-      // Go to approved screen
-      setAppState('quiz-approved');
+      // Navigate based on context
+      if (reviewContext === 'browser') {
+        // Came from quiz browser - go back to browser
+        setAppState('quizzes');
+      } else {
+        // Came from generation - go to approved screen
+        setAppState('quiz-approved');
+      }
+
+      // Clear context
+      setReviewContext(null);
     } catch (error) {
       console.error('⚠️ Failed to save quiz to database:', error);
       alert('Failed to save quiz. Please try again.');
@@ -206,7 +219,18 @@ export default function Home() {
 
   const handleCancelReview = () => {
     setQuizData(null);
-    setAppState('generate');
+
+    // Navigate based on context
+    if (reviewContext === 'browser') {
+      // Came from quiz browser - go back to browser (changes discarded)
+      setAppState('quizzes');
+    } else {
+      // Came from generation - go back to generate screen (quiz not saved)
+      setAppState('generate');
+    }
+
+    // Clear context
+    setReviewContext(null);
   };
 
   const handleTakeApprovedQuiz = () => {
@@ -222,6 +246,20 @@ export default function Home() {
 
   const handleCheckQuizzesAfterApproval = () => {
     setAppState('quizzes');
+  };
+
+  const handleReviewQuestionsFromBrowser = async (quizId: string) => {
+    try {
+      const quiz = await getQuizById(quizId);
+      if (quiz) {
+        setQuizData(quiz);
+        setReviewContext('browser');
+        setAppState('reviewing-approval');
+      }
+    } catch (error) {
+      console.error('Failed to load quiz for review:', error);
+      alert('Failed to load quiz. Please try again.');
+    }
   };
 
   return (
@@ -456,6 +494,7 @@ export default function Home() {
             <QuizBrowser
               onSelectQuiz={handleSelectQuizFromBrowser}
               onBack={handleBackToHome}
+              onReviewQuestions={handleReviewQuestionsFromBrowser}
             />
           </div>
         )}

@@ -71,6 +71,7 @@ export interface QuizGenerationResponse {
   course?: string;
   course_code?: string;
   questions: {
+    question_id?: number; // Optional for backward compatibility, but included when fetched from DB
     question: string;
     options: string[];
     correct_answer: string;
