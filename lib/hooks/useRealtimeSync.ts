@@ -74,29 +74,31 @@ export function useRealtimeSync(
 
   // Subscribe to realtime changes when user logs in
   useEffect(() => {
+    let currentChannels: {
+      quizChannel: RealtimeChannel
+      sessionChannel: RealtimeChannel
+    } | null = null
+
     if (!user || !enabled) {
       // Clean up if user logs out or sync is disabled
-      if (channels) {
-        unsubscribeAll(channels)
-        setChannels(null)
-        setSyncStatus({
-          isConnected: false,
-          lastSync: null,
-          error: null
-        })
-      }
+      setChannels(null)
+      setSyncStatus({
+        isConnected: false,
+        lastSync: null,
+        error: null
+      })
       return
     }
 
     try {
       console.log('🔌 Setting up real-time sync for user:', user.id)
 
-      const newChannels = subscribeToAllChanges(user.id, {
+      currentChannels = subscribeToAllChanges(user.id, {
         onQuizChange: handleQuizChange,
         onSessionChange: handleSessionChange
       })
 
-      setChannels(newChannels)
+      setChannels(currentChannels)
       setSyncStatus(prev => ({
         ...prev,
         isConnected: true,
@@ -115,9 +117,9 @@ export function useRealtimeSync(
 
     // Cleanup on unmount or user change
     return () => {
-      if (channels) {
+      if (currentChannels) {
         console.log('🔌 Cleaning up real-time sync')
-        unsubscribeAll(channels)
+        unsubscribeAll(currentChannels)
       }
     }
   }, [user?.id, enabled, handleQuizChange, handleSessionChange, onError])

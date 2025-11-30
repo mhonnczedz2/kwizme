@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getAllQuizzes, deleteQuiz, updateQuizMetadata, getQuizQuestionCount } from '@/lib/storage-router';
 import { deleteSessionsForQuiz, getRecentQuizSessions } from '@/lib/session-storage-router';
 import { Quiz } from '@/lib/db/types';
@@ -38,6 +38,18 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
     difficulty_level: 'medium'
   });
 
+  // Memoize loadQuizzes to prevent it from changing on every render
+  const loadQuizzes = useCallback(async () => {
+    try {
+      const allQuizzes = await getAllQuizzes(user);
+      setQuizzes(allQuizzes);
+    } catch (error) {
+      console.error('Failed to load quizzes:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
   // Enable real-time sync for logged-in users
   const syncStatus = useRealtimeSync(user, {
     enabled: !!user,
@@ -53,7 +65,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
 
   useEffect(() => {
     loadQuizzes();
-  }, []);
+  }, [loadQuizzes]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -66,17 +78,6 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, [openMenuId]);
-
-  const loadQuizzes = async () => {
-    try {
-      const allQuizzes = await getAllQuizzes(user);
-      setQuizzes(allQuizzes);
-    } catch (error) {
-      console.error('Failed to load quizzes:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDeleteQuiz = async (quizId: string, event: React.MouseEvent) => {
     event.stopPropagation();

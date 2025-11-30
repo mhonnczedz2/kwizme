@@ -37,6 +37,7 @@ CREATE POLICY "Users can insert own profile"
     WITH CHECK (auth.uid() = id);
 
 -- Create quizzes table
+-- Note: Using TEXT for quiz_id to match application's string-based ID format
 CREATE TABLE IF NOT EXISTS public.quizzes (
     quiz_id TEXT PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
