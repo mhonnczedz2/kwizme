@@ -88,7 +88,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
 
     try {
       // Delete all sessions for this quiz first
-      await deleteSessionsForQuiz(quizId);
+      await deleteSessionsForQuiz(quizId, user);
 
       // Delete the quiz
       await deleteQuiz(quizId, user);
