@@ -1,6 +1,10 @@
 import './globals.css'
 import type { Metadata } from 'next'
 
+// Force dynamic rendering for entire app - uses Supabase client components
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export const metadata: Metadata = {
   title: 'QuizMe - AI Quiz Generator',
   description: 'Generate practice quizzes from your PDFs',
