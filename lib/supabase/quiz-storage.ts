@@ -20,7 +20,7 @@ export async function saveQuizToSupabase(
     // Check if quiz already exists
     const { data: existing, error: checkError } = await supabase
       .from('quizzes')
-      .select('id')
+      .select('quiz_id')
       .eq('quiz_id', quizData.quiz_id)
       .eq('user_id', userId)
       .single()
