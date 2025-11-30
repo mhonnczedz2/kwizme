@@ -4,9 +4,8 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
-import MigrationPanel from './MigrationPanel'
-import { hasLocalQuizzes } from '@/lib/migration-helper'
 import { useSyncStatus } from '@/lib/hooks/useRealtimeSync'
+import { useAutoMigration } from '@/lib/hooks/useAutoMigration'
 
 interface SidePanelProps {
   isOpen: boolean
@@ -19,8 +18,6 @@ export default function SidePanel({ isOpen, onClose, user, onLogout }: SidePanel
   const router = useRouter()
   const supabase = createClient()
   const [isEditing, setIsEditing] = useState(false)
-  const [showMigration, setShowMigration] = useState(false)
-  const [needsMigration, setNeedsMigration] = useState(false)
   const [fullName, setFullName] = useState('')
   const [institution, setInstitution] = useState('')
   const [program, setProgram] = useState('')
@@ -30,6 +27,13 @@ export default function SidePanel({ isOpen, onClose, user, onLogout }: SidePanel
   // Check real-time sync status
   const isSyncActive = useSyncStatus(user)
 
+  // Automatic migration hook - migrates local quizzes automatically
+  const migration = useAutoMigration(user, {
+    enabled: true,
+    delayOnLogin: 3000, // Wait 3 seconds after login
+    checkInterval: 60000, // Check every minute
+  })
+
   // Load user metadata when panel opens or user changes
   useEffect(() => {
     if (user && isOpen) {
@@ -38,22 +42,6 @@ export default function SidePanel({ isOpen, onClose, user, onLogout }: SidePanel
       setProgram(user.user_metadata?.program || '')
     }
   }, [user, isOpen])
-
-  // Check for migration needs when user logs in
-  useEffect(() => {
-    if (user && isOpen) {
-      checkMigrationNeeded()
-    }
-  }, [user, isOpen])
-
-  const checkMigrationNeeded = async () => {
-    try {
-      const hasLocal = await hasLocalQuizzes()
-      setNeedsMigration(hasLocal)
-    } catch (error) {
-      console.error('Error checking migration status:', error)
-    }
-  }
 
   const handleLogin = () => {
     onClose()
@@ -170,82 +158,113 @@ export default function SidePanel({ isOpen, onClose, user, onLogout }: SidePanel
                         {user.email}
                       </p>
                       {user.user_metadata?.institution && (
-                        <p className="text-sm text-gray-500">
+                        <div className="text-sm text-gray-500">
+                          <span className="font-medium text-gray-600">Institution: </span>
                           {user.user_metadata.institution}
-                        </p>
+                        </div>
                       )}
                       {user.user_metadata?.program && (
-                        <p className="text-sm text-gray-500">
+                        <div className="text-sm text-gray-500">
+                          <span className="font-medium text-gray-600">Program: </span>
                           {user.user_metadata.program}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Status Badge */}
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${isSyncActive ? 'bg-green-500 animate-pulse' : 'bg-green-500'}`}></div>
-                        <span className="text-sm font-medium text-green-700">
-                          {isSyncActive ? 'Synced' : 'Signed In'}
-                        </span>
-                      </div>
-                      <p className="text-xs text-green-600 mt-1">
-                        {isSyncActive ? 'Real-time sync active' : 'Your data syncs across devices'}
-                      </p>
-                    </div>
-
-                    {/* Divider */}
-                    <div className="border-t border-gray-200"></div>
-
-                    {/* Migration Notice */}
-                    {needsMigration && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                        <div className="flex items-start gap-2">
-                          <svg className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                          </svg>
-                          <div>
-                            <p className="text-sm font-medium text-yellow-900">Local quizzes detected</p>
-                            <p className="text-xs text-yellow-700 mt-1">
-                              Migrate your quizzes to the cloud for cross-device access
-                            </p>
-                          </div>
                         </div>
-                      </div>
-                    )}
-
-                    {/* Account Actions */}
-                    <div className="space-y-3">
-                      {needsMigration && (
-                        <button
-                          onClick={() => setShowMigration(true)}
-                          className="w-full bg-yellow-50 hover:bg-yellow-100 text-yellow-700 font-medium py-3 px-4 rounded-lg transition flex items-center justify-center gap-2 border border-yellow-200"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                          </svg>
-                          Migrate to Cloud
-                        </button>
                       )}
+                    </div>
+
+                    {/* Account Actions - Compact */}
+                    <div className="flex gap-2">
                       <button
                         onClick={() => setIsEditing(true)}
-                        className="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium py-3 px-4 rounded-lg transition flex items-center justify-center gap-2"
+                        className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium py-2 px-3 rounded-lg transition flex items-center justify-center gap-1.5"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                         Edit Profile
                       </button>
                       <button
                         onClick={handleLogoutClick}
-                        className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-lg transition flex items-center justify-center gap-2"
+                        className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium py-2 px-3 rounded-lg transition flex items-center justify-center gap-1.5"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
                         Sign Out
                       </button>
                     </div>
+
+                    {/* Divider */}
+                    <div className="border-t border-gray-200"></div>
+
+                    {/* Status Badge */}
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${isSyncActive ? 'bg-green-500 animate-pulse' : 'bg-green-500'}`}></div>
+                            <span className="text-sm font-medium text-green-700">
+                              {isSyncActive ? 'Synced' : 'Signed In'}
+                            </span>
+                          </div>
+                          {migration.migrationStatus &&
+                           migration.migrationStatus.completed === migration.migrationStatus.total &&
+                           migration.migrationStatus.failed === 0 &&
+                           !migration.isMigrating && (
+                            <p className="text-xs text-green-600 mt-1">
+                              {migration.migrationStatus.total} {migration.migrationStatus.total === 1 ? 'quiz' : 'quizzes'} synced
+                            </p>
+                          )}
+                        </div>
+                        {migration.migrationStatus &&
+                         migration.migrationStatus.completed === migration.migrationStatus.total &&
+                         migration.migrationStatus.failed === 0 &&
+                         !migration.isMigrating && (
+                          <svg className="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Auto-Migration Status */}
+                    {migration.isMigrating && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <div className="flex items-start gap-2">
+                          <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-blue-900">Migrating quizzes to cloud...</p>
+                            {migration.migrationStatus && (
+                              <p className="text-xs text-blue-700 mt-1">
+                                {migration.migrationStatus.completed} of {migration.migrationStatus.total} completed
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Migration Error */}
+                    {migration.error && (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                        <div className="flex items-start gap-2">
+                          <svg className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <div>
+                            <p className="text-sm font-medium text-red-900">Migration issue</p>
+                            <p className="text-xs text-red-700 mt-1">{migration.error}</p>
+                            <button
+                              onClick={() => migration.triggerMigration()}
+                              className="text-xs text-red-600 underline mt-1 hover:text-red-800"
+                            >
+                              Retry migration
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </>
                 ) : (
                   /* Edit Mode */
@@ -428,19 +447,6 @@ export default function SidePanel({ isOpen, onClose, user, onLogout }: SidePanel
           </div>
         </div>
       </div>
-
-      {/* Migration Modal */}
-      {showMigration && user && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <MigrationPanel
-            user={user}
-            onClose={() => {
-              setShowMigration(false)
-              checkMigrationNeeded() // Refresh migration status
-            }}
-          />
-        </div>
-      )}
     </>
   )
 }
