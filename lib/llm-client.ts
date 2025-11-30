@@ -100,7 +100,15 @@ Keep it concise (2-4 sentences max).`;
     }
     jsonText = jsonText.trim();
 
-    const parsed = JSON.parse(jsonText);
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonText);
+    } catch (parseError: any) {
+      console.error('Description validation JSON parse error:', parseError.message);
+      console.error('Raw JSON text:', jsonText.substring(0, 500));
+      // Fallback: return user description or a generic message
+      return userDescription || 'Educational content for quiz generation';
+    }
 
     // Log the validation result
     if (userDescription) {
@@ -108,7 +116,7 @@ Keep it concise (2-4 sentences max).`;
     }
     console.log('✨ Enhanced description:', parsed.enhanced_description);
 
-    return parsed.enhanced_description;
+    return parsed.enhanced_description || userDescription || 'Educational content for quiz generation';
   } catch (error) {
     console.error('Description validation error:', error);
     // Fallback: return user description or a generic message
