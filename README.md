@@ -32,74 +32,73 @@ quizme/
 │   ├── page.tsx          # Home page
 │   └── globals.css       # Global styles
 ├── components/            # React components
-│   └── FileUploadZone.tsx
 ├── lib/                   # Utilities and libraries
-│   └── db/               # Database utilities
-│       ├── client.ts     # SQL.js client
-│       ├── schema.ts     # Database schema
-│       └── types.ts      # TypeScript types
-├── Pre_Validation/       # Planning documentation
-└── Post_Validation/      # Growth plan
+│   ├── db/               # Database utilities
+│   ├── supabase/         # Supabase integration
+│   └── hooks/            # Custom React hooks
+├── archive/               # Archived documentation
+│   └── planning/         # Planning and validation docs
+└── supabase/             # Supabase migrations and config
 ```
 
 ## 🗄️ Database Architecture
 
-QuizMe uses **SQL.js** (client-side SQLite) for local data storage:
+QuizMe uses **Supabase** (PostgreSQL) for cloud data storage:
 
-- **No server required** - All quiz data stored in browser
-- **Offline-capable** - Works without internet after quiz generation
-- **Privacy-first** - Your data never leaves your device
+- **Cloud-based** - Data syncs across all your devices
+- **Real-time sync** - Changes appear instantly on all devices
+- **Secure** - Row-level security ensures data privacy
+- **User authentication** - Secure login with email/password
 
 ### Schema
 
-See `/lib/db/schema.ts` for complete database schema including:
-- `quizzes` - Generated quiz metadata
+See `/supabase_complete_schema.sql` for complete database schema including:
+- `quizzes` - Generated quiz metadata with user ownership
 - `questions` - Quiz questions with text-based answers
 - `review_sessions` - Quiz attempt history with configuration
 - `answer_records` - Individual answer tracking
 
-## 🎯 Development Roadmap
+## 🎯 Current Status
 
-### Week 1-2: Project Setup & Database ✅
-- [x] Next.js + TypeScript + TailwindCSS setup
-- [x] SQL.js database initialization
-- [x] Database schema implementation
-- [x] Basic file upload component
+**Phase:** UX Improvements (December 2024)
+**MVP Completion:** ~95%
+**Status:** Production Ready ✅
 
-### Week 3-4: Core Features ✅
-- [x] PDF text extraction (pdfjs-dist)
-- [x] LLM API integration (Gemini 2.5 Flash)
-- [x] Quiz generation endpoint
-- [x] Quiz display interface
-- [x] Answer checking logic
-- [x] Results screen with scoring
+### What's Working ✅
+- ✅ PDF upload and text extraction
+- ✅ AI quiz generation (Gemini 2.5 Flash)
+- ✅ Quiz taking with instant feedback
+- ✅ Session configuration (Learn/Test/Fast Learn modes)
+- ✅ Quiz browser with filtering
+- ✅ Quiz history and review
+- ✅ User authentication (Supabase Auth)
+- ✅ Cloud storage with real-time sync
+- ✅ Cross-device synchronization
+- ✅ Mobile responsive design
+- ✅ Question editing and management
 
-### Week 5-6: Organization & Configuration ✅
-- [x] Quiz configuration modal
-- [x] Session presets (Learn/Test/Fast Learn/Custom)
-- [x] Quiz browser with filtering
-- [x] Quiz history view
-- [x] Organizational metadata (institution, program, course, topic)
-- [x] Edit quiz functionality
-
-### Week 7-8: Polish & PWA (Current)
-- [x] Testing and bug fixes
-- [x] Performance optimization
-- [ ] PWA manifest and service worker
-- [ ] Offline support
-- [ ] Beta user onboarding
-- [ ] Feedback collection
+### What's Next 🚧
+See **[IMMEDIATE_ACTION_PLAN.md](./IMMEDIATE_ACTION_PLAN.md)** for current priorities:
+1. Question/Option Randomization
+2. Review Mistakes Mode
+3. Better Loading States
+4. Keyboard Shortcuts
+5. Dark Mode
 
 ## 📖 Documentation
 
-Comprehensive planning documentation available in `/Pre_Validation/`:
+### Current Documentation
+- **[IMMEDIATE_ACTION_PLAN.md](./IMMEDIATE_ACTION_PLAN.md)** - Current tasks and implementation plan
+- **[README.md](./README.md)** - This file (project overview)
 
-- **01_Executive_Summary.md** - Overview and timeline
-- **02_Product_Definition.md** - Features and scope
-- **03_Technical_Architecture.md** - Tech stack and schema
-- **04_AI_Integration.md** - LLM provider and prompts
-- **05_User_Flow_UX.md** - Complete user journey
-- **12_Implementation_Checklist.md** - Day-by-day tasks
+### Archived Documentation
+All planning and validation documents are in `/archive/planning/`:
+- **Development guides** - Setup, testing, and quick reference
+- **Pre-validation planning** - MVP planning and technical architecture
+- **Phase summaries** - Completion reports for each phase
+- **Feature roadmap** - Long-term feature planning
+
+See **[archive/planning/README.md](./archive/planning/README.md)** for full index.
 
 ## 🔧 Configuration
 
@@ -108,12 +107,14 @@ Comprehensive planning documentation available in `/Pre_Validation/`:
 Create `.env.local` file (not committed to git):
 
 ```bash
-# LLM API (choose one)
-GEMINI_API_KEY=your_gemini_api_key
-# OR
-OPENAI_API_KEY=your_openai_api_key
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
-# Rate limiting
+# AI Integration
+GEMINI_API_KEY=your_gemini_api_key
+
+# Optional: Rate limiting
 RATE_LIMIT_MAX_REQUESTS=5
 RATE_LIMIT_WINDOW_MINUTES=60
 ```
@@ -134,9 +135,9 @@ npm start
 npm run lint
 ```
 
-## 📝 Key Features (MVP)
+## 📝 Key Features
 
-### Must-Have Features ✅
+### Core Features ✅
 - ✅ PDF upload (drag & drop)
 - ✅ AI quiz generation (15 questions per PDF)
 - ✅ Multiple choice questions with explanations
@@ -145,26 +146,51 @@ npm run lint
 - ✅ Quiz browser with tag-based filtering
 - ✅ Session configuration (Learn/Test/Fast Learn modes)
 - ✅ Organizational metadata (institution, program, course, topic)
-- ✅ Edit quiz metadata
+- ✅ Question editing and management
 - ✅ Hint system
 - ✅ Citation tracking
+- ✅ User authentication
+- ✅ Cloud storage
+- ✅ Real-time cross-device sync
 
-### Nice-to-Have (Phase 2)
-- PWA offline support (service worker)
-- Export quiz to PDF
-- Dark mode
+### In Progress 🚧
 - Question/option randomization
-- Per-question timer
-- Social sharing
+- Review mistakes mode
+- Better loading states
+- Keyboard shortcuts
+- Dark mode
+
+### Future Features
+- PWA offline support
+- Export quiz to PDF
+- Spaced repetition system
 - Analytics dashboard
+- Collaborative features
 
 ## 🏗️ Tech Stack
 
-- **Frontend**: React 19, Next.js 16, TypeScript, TailwindCSS
-- **Database**: SQL.js (client-side SQLite)
+- **Frontend**: React 19, Next.js 15, TypeScript, TailwindCSS
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Supabase Auth
+- **Real-time**: Supabase Realtime
 - **Backend**: Vercel Serverless Functions
-- **AI**: Google Gemini Flash or OpenAI GPT-4o-mini
-- **Hosting**: Vercel (free tier)
+- **AI**: Google Gemini 2.5 Flash
+- **Hosting**: Vercel
+- **PDF Processing**: pdfjs-dist (browser-based)
+
+## 🚀 Deployment
+
+The app is deployed on Vercel with automatic deployments from the main branch.
+
+**Production URL**: [Your Vercel URL]
+
+### Manual Deploy
+```bash
+# Deploy to production
+vercel --prod
+
+# Set environment variables in Vercel dashboard
+```
 
 ## 📄 License
 
@@ -172,7 +198,7 @@ Private project - All rights reserved.
 
 ## 🤝 Contributing
 
-This is currently a private MVP project. Contributions will be opened after validation phase.
+This is currently a private project. Contributions may be opened in the future.
 
 ## 📞 Support
 
@@ -180,10 +206,8 @@ For questions or issues, create an issue in the GitHub repository.
 
 ---
 
-**Status**: 🚀 MVP Complete - Ready for Beta Testing
+**Status**: 🚀 Production Ready - Active Development
 
-**Current Phase**: Week 7-8 (Polish & PWA)
+**Current Focus**: UX Improvements (see [IMMEDIATE_ACTION_PLAN.md](./IMMEDIATE_ACTION_PLAN.md))
 
-**MVP Completion**: ~90% (Core features complete, PWA optimization remaining)
-
-**Next Milestone**: Add PWA features (service worker, offline support) and beta user testing
+**Next Milestone**: Complete UX improvements, then beta user feedback collection
