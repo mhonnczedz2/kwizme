@@ -1,12 +1,13 @@
 import { QuizGenerationResponse } from '@/lib/db/types';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleAIFileManager } from '@google/generative-ai/server';
 
 /**
  * Validate and improve the user's description of the PDF content
  * If no description provided, generate one automatically
  */
 export async function validateAndImproveDescription(
-  pdfText: string,
+  pdfFile: File,
   userDescription: string | null
 ): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -19,17 +20,27 @@ export async function validateAndImproveDescription(
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
+    // Upload PDF file to Gemini
+    const fileManager = new GoogleAIFileManager(apiKey);
+    const arrayBuffer = await pdfFile.arrayBuffer();
+    const uploadResult = await fileManager.uploadFile(
+      Buffer.from(arrayBuffer),
+      {
+        mimeType: pdfFile.type,
+        displayName: pdfFile.name,
+      }
+    );
+
+    console.log('📤 Uploaded PDF to Gemini:', uploadResult.file.uri);
+
     const prompt = userDescription
       ? `You are an expert educational content analyst.
 
 A user uploaded a PDF and provided this description:
 "${userDescription}"
 
-Here is a sample of the PDF content (first 5000 characters):
-${pdfText.substring(0, 5000)}
-
 Your tasks:
-1. Verify if the user's description matches the actual content
+1. Verify if the user's description matches the actual PDF content
 2. If it matches: Enhance and improve the description to be more specific and helpful for quiz generation
 3. If it doesn't match or is vague: Create an accurate description based on the actual content
 
@@ -50,9 +61,6 @@ Keep it concise (2-4 sentences max).`
 
 A user uploaded a PDF but didn't provide a description.
 
-Here is a sample of the PDF content (first 5000 characters):
-${pdfText.substring(0, 5000)}
-
 Analyze the content and create a comprehensive description that will help generate relevant quiz questions.
 
 Return a JSON object with this structure:
@@ -71,7 +79,15 @@ Keep it concise (2-4 sentences max).`;
     const result = await model.generateContent({
       contents: [{
         role: 'user',
-        parts: [{ text: prompt }]
+        parts: [
+          { text: prompt },
+          {
+            fileData: {
+              mimeType: uploadResult.file.mimeType,
+              fileUri: uploadResult.file.uri,
+            }
+          }
+        ]
       }],
       generationConfig: {
         temperature: 0.3,
@@ -82,6 +98,14 @@ Keep it concise (2-4 sentences max).`;
 
     const response = result.response;
     const generatedText = response.text();
+
+    // Clean up uploaded file
+    try {
+      await fileManager.deleteFile(uploadResult.file.name);
+      console.log('🗑️ Cleaned up uploaded file');
+    } catch (cleanupError) {
+      console.warn('Warning: Could not delete uploaded file:', cleanupError);
+    }
 
     if (!generatedText) {
       throw new Error('No response from Gemini API for description validation');
@@ -128,7 +152,6 @@ Keep it concise (2-4 sentences max).`;
  * Build the prompt for quiz generation
  */
 function buildPrompt(
-  pdfText: string,
   numQuestions: number,
   difficulty: string,
   enhancedDescription?: string
@@ -147,7 +170,7 @@ function buildPrompt(
     : '';
 
   return `You are an expert educator creating multiple choice questions for students.
-Generate ${numQuestions} multiple choice questions from the following document.
+Generate ${numQuestions} multiple choice questions from the provided PDF document.
 ${contextSection}
 ${instruction}
 
@@ -155,7 +178,7 @@ Each question must have:
 - 1 correct answer (provide the actual answer text)
 - 3 plausible distractors (wrong answers that seem reasonable)
 - Brief explanation of why the answer is correct
-- Citation showing where the answer can be found in the source (e.g., "FileName.pdf, Page 1, paragraph 2" or "Introduction section")
+- Citation showing where the answer can be found in the source (e.g., "Page 1, paragraph 2" or "Introduction section")
 - Optional hint (helpful clue without giving away the answer)
 - Difficulty rating based on cognitive complexity
 
@@ -178,17 +201,14 @@ Expected JSON format:
       "difficulty": "easy"
     }
   ]
-}
-
-Document text:
-${pdfText.substring(0, 30000)}`;
+}`;
 }
 
 /**
- * Generate quiz using Gemini Flash
+ * Generate quiz using Gemini Flash with direct PDF upload
  */
 export async function generateQuizWithGemini(
-  pdfText: string,
+  pdfFile: File,
   numQuestions: number = 15,
   difficulty: string = 'medium',
   enhancedDescription?: string
@@ -204,13 +224,34 @@ export async function generateQuizWithGemini(
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-    const prompt = buildPrompt(pdfText, numQuestions, difficulty, enhancedDescription);
+    // Upload PDF file to Gemini
+    const fileManager = new GoogleAIFileManager(apiKey);
+    const arrayBuffer = await pdfFile.arrayBuffer();
+    const uploadResult = await fileManager.uploadFile(
+      Buffer.from(arrayBuffer),
+      {
+        mimeType: pdfFile.type,
+        displayName: pdfFile.name,
+      }
+    );
 
-    // Generate content using the SDK
+    console.log('📤 Uploaded PDF to Gemini for quiz generation:', uploadResult.file.uri);
+
+    const prompt = buildPrompt(numQuestions, difficulty, enhancedDescription);
+
+    // Generate content using the SDK with file reference
     const result = await model.generateContent({
       contents: [{
         role: 'user',
-        parts: [{ text: prompt }]
+        parts: [
+          { text: prompt },
+          {
+            fileData: {
+              mimeType: uploadResult.file.mimeType,
+              fileUri: uploadResult.file.uri,
+            }
+          }
+        ]
       }],
       generationConfig: {
         temperature: 0.7,
@@ -220,6 +261,14 @@ export async function generateQuizWithGemini(
     });
 
     const response = result.response;
+
+    // Clean up uploaded file
+    try {
+      await fileManager.deleteFile(uploadResult.file.name);
+      console.log('🗑️ Cleaned up uploaded file');
+    } catch (cleanupError) {
+      console.warn('Warning: Could not delete uploaded file:', cleanupError);
+    }
 
     // Debug: log the response structure
     console.log('Gemini response candidates:', JSON.stringify(response.candidates?.slice(0, 1), null, 2));

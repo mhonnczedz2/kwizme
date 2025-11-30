@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { extractTextFromPDF } from '@/lib/pdf-parser';
 import { generateQuizWithGemini, validateQuizResponse, validateAndImproveDescription } from '@/lib/llm-client';
 
 export async function POST(request: NextRequest) {
@@ -51,26 +50,15 @@ export async function POST(request: NextRequest) {
 
     console.log('📄 Processing PDF:', file.name);
 
-    // Step 1: Extract text from PDF
-    const pdfText = await extractTextFromPDF(file);
-    console.log('✅ Extracted text length:', pdfText.length, 'characters');
-
-    if (pdfText.length < 100) {
-      return NextResponse.json(
-        { error: 'PDF contains insufficient text for quiz generation' },
-        { status: 400 }
-      );
-    }
-
-    // Step 2: Validate and improve description
+    // Step 1: Validate and improve description using Gemini's direct PDF support
     console.log('📝 Validating and enhancing description...');
-    const enhancedDescription = await validateAndImproveDescription(pdfText, file_description);
+    const enhancedDescription = await validateAndImproveDescription(file, file_description);
 
-    // Step 3: Generate quiz using LLM
+    // Step 2: Generate quiz using Gemini with direct PDF upload
     console.log('🤖 Generating quiz with Gemini Flash...');
-    const quizData = await generateQuizWithGemini(pdfText, numQuestions, difficulty, enhancedDescription);
+    const quizData = await generateQuizWithGemini(file, numQuestions, difficulty, enhancedDescription);
 
-    // Step 4: Validate response
+    // Step 3: Validate response
     if (!validateQuizResponse(quizData)) {
       console.error('❌ Quiz validation failed');
       return NextResponse.json(
@@ -109,13 +97,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Failed to connect to AI service. Please try again.' },
         { status: 503 }
-      );
-    }
-
-    if (error.message?.includes('Failed to extract text')) {
-      return NextResponse.json(
-        { error: 'Could not read PDF file. Please try a different file.' },
-        { status: 400 }
       );
     }
 
