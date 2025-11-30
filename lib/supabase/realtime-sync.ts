@@ -46,7 +46,7 @@ export function subscribeToQuizChanges(
 
         const event: QuizSyncEvent = {
           type: payload.eventType as SyncEventType,
-          quizId: payload.new?.quiz_id || payload.old?.quiz_id,
+          quizId: (payload.new as any)?.quiz_id || (payload.old as any)?.quiz_id,
           timestamp: new Date().toISOString()
         }
 
@@ -89,8 +89,8 @@ export function subscribeToSessionChanges(
 
         const event: SessionSyncEvent = {
           type: payload.eventType as SyncEventType,
-          sessionId: payload.new?.session_id || payload.old?.session_id,
-          quizId: payload.new?.quiz_id || payload.old?.quiz_id,
+          sessionId: (payload.new as any)?.session_id || (payload.old as any)?.session_id,
+          quizId: (payload.new as any)?.quiz_id || (payload.old as any)?.quiz_id,
           timestamp: new Date().toISOString()
         }
 
@@ -133,7 +133,7 @@ export function subscribeToQuestionChanges(
 
         const event = {
           type: payload.eventType as SyncEventType,
-          questionId: payload.new?.question_id || payload.old?.question_id
+          questionId: (payload.new as any)?.question_id || (payload.old as any)?.question_id
         }
 
         onQuestionChange(event)
