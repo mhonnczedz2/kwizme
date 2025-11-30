@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import type { User } from '@supabase/supabase-js';
 
 export interface OrganizationMetadata {
   quiz_title?: string;
@@ -15,6 +16,7 @@ export interface OrganizationMetadata {
 interface FileUploadZoneProps {
   onFileSelect: (file: File) => void;
   onMetadataChange: (metadata: OrganizationMetadata) => void;
+  user: User | null;
 }
 
 // Tooltip component for info icons
@@ -40,7 +42,7 @@ function InfoTooltip({ text }: { text: string }) {
   );
 }
 
-export default function FileUploadZone({ onFileSelect, onMetadataChange }: FileUploadZoneProps) {
+export default function FileUploadZone({ onFileSelect, onMetadataChange, user }: FileUploadZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [metadata, setMetadata] = useState<OrganizationMetadata>({
@@ -48,6 +50,19 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange }: FileU
   });
   const [numQuestionsError, setNumQuestionsError] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-populate institution and program from user profile
+  useEffect(() => {
+    if (user && user.user_metadata) {
+      const newMetadata: OrganizationMetadata = {
+        ...metadata,
+        institution: user.user_metadata.institution || metadata.institution,
+        program: user.user_metadata.program || metadata.program
+      };
+      setMetadata(newMetadata);
+      onMetadataChange(newMetadata);
+    }
+  }, [user]); // Only run when user changes
 
   const handleMetadataChange = (field: keyof OrganizationMetadata, value: string) => {
     const newMetadata = { ...metadata, [field]: value || undefined };

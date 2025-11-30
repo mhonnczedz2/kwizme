@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import type { User } from '@supabase/supabase-js';
+import { useRouter } from 'next/navigation';
 import FileUploadZone, { OrganizationMetadata } from '@/components/FileUploadZone';
 import QuizDisplay from '@/components/QuizDisplay';
 import QuizResults from '@/components/QuizResults';
@@ -9,13 +12,19 @@ import QuizHistory from '@/components/QuizHistory';
 import QuizReview from '@/components/QuizReview';
 import QuizReviewApproval from '@/components/QuizReviewApproval';
 import QuizApprovedScreen from '@/components/QuizApprovedScreen';
+import SidePanel from '@/components/SidePanel';
 import { QuizGenerationResponse, AnswerRecord } from '@/lib/db/types';
 import { SessionConfig } from '@/components/QuizConfigModal';
-import { saveQuizToDatabase, getQuizById, seedDefaultQuizzes } from '@/lib/db/quiz-storage';
+import { saveQuiz, getQuizById } from '@/lib/storage-router';
+import { seedDefaultQuizzes } from '@/lib/db/quiz-storage';
 
 type AppState = 'home' | 'generate' | 'quizzes' | 'history' | 'reviewing-approval' | 'quiz-approved' | 'taking-quiz' | 'reviewing-quiz' | 'results';
 
 export default function Home() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loadingAuth, setLoadingAuth] = useState(true);
+  const router = useRouter();
+  const supabase = createClient();
   const [appState, setAppState] = useState<AppState>('home');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [organizationMetadata, setOrganizationMetadata] = useState<OrganizationMetadata>({});
@@ -29,7 +38,39 @@ export default function Home() {
   } | null>(null);
   const [reviewContext, setReviewContext] = useState<'generation' | 'browser' | null>(null);
   const [showInfoBubble, setShowInfoBubble] = useState(false);
+  const [showSidePanel, setShowSidePanel] = useState(false);
   const [gridDirection, setGridDirection] = useState('40px 40px');
+
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user ?? null);
+      } catch (error) {
+        console.error('Error checking auth:', error);
+      } finally {
+        setLoadingAuth(false);
+      }
+    };
+
+    checkAuth();
+
+    // Listen for auth state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase]);
+
+  // Handle logout
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.refresh();
+  };
 
   // Seed database with default quizzes on every load
   useEffect(() => {
@@ -173,7 +214,7 @@ export default function Home() {
 
   const handleSelectQuizFromBrowser = async (quizId: string, config: SessionConfig) => {
     try {
-      const quiz = await getQuizById(quizId);
+      const quiz = await getQuizById(quizId, user);
       if (quiz) {
         setQuizData(quiz);
         setSessionConfig(config);
@@ -193,9 +234,9 @@ export default function Home() {
 
   const handleApproveAndSave = async (finalQuizData: QuizGenerationResponse) => {
     try {
-      // Save the quiz to database
-      await saveQuizToDatabase(finalQuizData);
-      console.log('💾 Quiz saved to database');
+      // Save the quiz to database (automatically routes to localStorage or Supabase)
+      await saveQuiz(finalQuizData, user);
+      console.log('💾 Quiz saved successfully');
 
       // Update local state with final data
       setQuizData(finalQuizData);
@@ -212,7 +253,7 @@ export default function Home() {
       // Clear context
       setReviewContext(null);
     } catch (error) {
-      console.error('⚠️ Failed to save quiz to database:', error);
+      console.error('⚠️ Failed to save quiz:', error);
       alert('Failed to save quiz. Please try again.');
     }
   };
@@ -250,7 +291,7 @@ export default function Home() {
 
   const handleReviewQuestionsFromBrowser = async (quizId: string) => {
     try {
-      const quiz = await getQuizById(quizId);
+      const quiz = await getQuizById(quizId, user);
       if (quiz) {
         setQuizData(quiz);
         setReviewContext('browser');
@@ -279,6 +320,27 @@ export default function Home() {
 
       {/* Content */}
       <div className="relative z-10">
+      {/* Side Panel */}
+      <SidePanel
+        isOpen={showSidePanel}
+        onClose={() => setShowSidePanel(false)}
+        user={user}
+        onLogout={handleLogout}
+      />
+
+      {/* Hamburger Menu Button - Top left */}
+      <div className="fixed top-4 left-4 z-30">
+        <button
+          onClick={() => setShowSidePanel(true)}
+          className="bg-white hover:bg-gray-50 text-gray-700 rounded-full w-10 h-10 md:w-12 md:h-12 flex items-center justify-center shadow-lg transition-colors"
+          aria-label="Menu"
+        >
+          <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+
       {/* Info Bubble - Always visible in upper right */}
       <div className="fixed top-4 right-4 z-50">
         <div className="relative">
@@ -422,6 +484,7 @@ export default function Home() {
               <FileUploadZone
                 onFileSelect={handleFileSelect}
                 onMetadataChange={setOrganizationMetadata}
+                user={user}
               />
 
               {/* Generate Button */}
@@ -495,6 +558,7 @@ export default function Home() {
               onSelectQuiz={handleSelectQuizFromBrowser}
               onBack={handleBackToHome}
               onReviewQuestions={handleReviewQuestionsFromBrowser}
+              user={user}
             />
           </div>
         )}
@@ -526,6 +590,7 @@ export default function Home() {
             config={sessionConfig ?? undefined}
             onComplete={handleQuizComplete}
             onBack={handleBackToHome}
+            user={user}
           />
         )}
 
@@ -556,6 +621,7 @@ export default function Home() {
             <QuizHistory
               onSelectQuiz={handleSelectQuizFromHistory}
               onBack={handleBackToHome}
+              user={user}
             />
           </div>
         )}

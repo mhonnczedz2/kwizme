@@ -1,18 +1,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAllQuizzes, deleteQuiz, updateQuizMetadata, getQuizQuestionCount } from '@/lib/db/quiz-storage';
-import { deleteSessionsForQuiz, getRecentQuizSessions } from '@/lib/db/session-storage';
+import { getAllQuizzes, deleteQuiz, updateQuizMetadata, getQuizQuestionCount } from '@/lib/storage-router';
+import { deleteSessionsForQuiz, getRecentQuizSessions } from '@/lib/session-storage-router';
 import { Quiz } from '@/lib/db/types';
 import QuizConfigModal, { SessionConfig } from './QuizConfigModal';
+import type { User } from '@supabase/supabase-js';
+import { useRealtimeSync } from '@/lib/hooks/useRealtimeSync';
 
 interface QuizBrowserProps {
   onSelectQuiz: (quizId: string, config: SessionConfig) => void;
   onBack: () => void;
   onReviewQuestions?: (quizId: string) => void;
+  user: User | null;
 }
 
-export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions }: QuizBrowserProps) {
+export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, user }: QuizBrowserProps) {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc'); // desc = newest first
@@ -35,6 +38,19 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions }:
     difficulty_level: 'medium'
   });
 
+  // Enable real-time sync for logged-in users
+  const syncStatus = useRealtimeSync(user, {
+    enabled: !!user,
+    onQuizChange: (event) => {
+      console.log('🔄 Quiz changed, reloading quizzes...', event)
+      loadQuizzes()
+    },
+    onSessionChange: (event) => {
+      console.log('🔄 Session changed', event)
+      // Sessions changes don't affect quiz browser, but we log them
+    }
+  })
+
   useEffect(() => {
     loadQuizzes();
   }, []);
@@ -53,7 +69,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions }:
 
   const loadQuizzes = async () => {
     try {
-      const allQuizzes = await getAllQuizzes();
+      const allQuizzes = await getAllQuizzes(user);
       setQuizzes(allQuizzes);
     } catch (error) {
       console.error('Failed to load quizzes:', error);
@@ -75,7 +91,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions }:
       await deleteSessionsForQuiz(quizId);
 
       // Delete the quiz
-      await deleteQuiz(quizId);
+      await deleteQuiz(quizId, user);
 
       console.log(`✅ Deleted quiz: ${quizId}`);
 
@@ -118,7 +134,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions }:
     if (!editingQuiz) return;
 
     try {
-      await updateQuizMetadata(editingQuiz.quiz_id, editForm);
+      await updateQuizMetadata(editingQuiz.quiz_id, editForm, user);
 
       // Reload quizzes to reflect changes
       await loadQuizzes();
@@ -364,7 +380,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions }:
         <div
           key={quiz.quiz_id}
           onClick={async () => {
-            const count = await getQuizQuestionCount(quiz.quiz_id);
+            const count = await getQuizQuestionCount(quiz.quiz_id, user);
             setQuestionCount(count);
             setConfiguringQuizId(quiz.quiz_id);
           }}
