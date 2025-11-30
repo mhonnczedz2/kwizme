@@ -2,15 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { Quiz, ReviewSession } from '@/lib/db/types';
-import { getAllQuizzes, getQuizById, deleteQuiz, getQuizQuestionCount } from '@/lib/db/quiz-storage';
-import { getSessionsForQuiz, getAnswersForSession, deleteSessionsForQuiz } from '@/lib/db/session-storage';
+import { getAllQuizzes, getQuizById, deleteQuiz, getQuizQuestionCount } from '@/lib/storage-router';
+import { getSessionsForQuiz, getAnswersForSession, deleteSessionsForQuiz } from '@/lib/session-storage-router';
 import { initDatabase, executeUpdate } from '@/lib/db/client';
 import { QuizGenerationResponse, AnswerRecord } from '@/lib/db/types';
 import QuizConfigModal, { SessionConfig } from './QuizConfigModal';
+import type { User } from '@supabase/supabase-js';
+import { useRealtimeSync } from '@/lib/hooks/useRealtimeSync';
 
 interface QuizHistoryProps {
   onSelectQuiz: (quiz: QuizGenerationResponse, config?: SessionConfig, answers?: AnswerRecord[], sessionScore?: { correct: number; total: number }) => void;
   onBack: () => void;
+  user: User | null;
 }
 
 interface QuizWithSessions {
@@ -18,7 +21,7 @@ interface QuizWithSessions {
   sessions: ReviewSession[];
 }
 
-export default function QuizHistory({ onSelectQuiz, onBack }: QuizHistoryProps) {
+export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryProps) {
   const [quizzesWithSessions, setQuizzesWithSessions] = useState<QuizWithSessions[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedQuizId, setExpandedQuizId] = useState<string | null>(null);
@@ -26,18 +29,31 @@ export default function QuizHistory({ onSelectQuiz, onBack }: QuizHistoryProps) 
   const [questionCount, setQuestionCount] = useState<number>(15);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
+  // Enable real-time sync for logged-in users
+  const syncStatus = useRealtimeSync(user, {
+    enabled: !!user,
+    onQuizChange: (event) => {
+      console.log('🔄 Quiz changed, reloading history...', event)
+      loadQuizzesWithSessions()
+    },
+    onSessionChange: (event) => {
+      console.log('🔄 Session changed, reloading history...', event)
+      loadQuizzesWithSessions()
+    }
+  })
+
   useEffect(() => {
     loadQuizzesWithSessions();
   }, []);
 
   const loadQuizzesWithSessions = async () => {
     try {
-      const allQuizzes = await getAllQuizzes();
+      const allQuizzes = await getAllQuizzes(user);
 
       // Load sessions for each quiz
       const quizzesWithSessionsData = await Promise.all(
         allQuizzes.map(async (quiz) => {
-          const sessions = await getSessionsForQuiz(quiz.quiz_id);
+          const sessions = await getSessionsForQuiz(quiz.quiz_id, user);
           return { quiz, sessions };
         })
       );
@@ -52,14 +68,14 @@ export default function QuizHistory({ onSelectQuiz, onBack }: QuizHistoryProps) 
 
   const handleSessionClick = async (quizId: string, sessionId: string) => {
     try {
-      const quiz = await getQuizById(quizId);
+      const quiz = await getQuizById(quizId, user);
       if (!quiz) {
         alert('Quiz not found');
         return;
       }
 
       // Load the answers for this specific session
-      const answers = await getAnswersForSession(sessionId);
+      const answers = await getAnswersForSession(sessionId, user);
 
       // Find the session to get the score
       const quizWithSessions = quizzesWithSessions.find(q => q.quiz.quiz_id === quizId);
@@ -81,7 +97,7 @@ export default function QuizHistory({ onSelectQuiz, onBack }: QuizHistoryProps) 
   const handleTakeQuiz = async (quizId: string) => {
     try {
       // Show config modal
-      const count = await getQuizQuestionCount(quizId);
+      const count = await getQuizQuestionCount(quizId, user);
       setQuestionCount(count);
       setConfiguringQuizId(quizId);
     } catch (error) {
@@ -409,7 +425,7 @@ export default function QuizHistory({ onSelectQuiz, onBack }: QuizHistoryProps) 
           totalQuestions={questionCount}
           onStart={async (config) => {
             try {
-              const quiz = await getQuizById(configuringQuizId);
+              const quiz = await getQuizById(configuringQuizId, user);
               if (quiz) {
                 onSelectQuiz(quiz, config);
                 setConfiguringQuizId(null);

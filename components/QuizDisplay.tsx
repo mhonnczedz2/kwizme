@@ -2,19 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import { QuizGenerationResponse } from '@/lib/db/types';
-import { createSession, saveAnswer, completeSession } from '@/lib/db/session-storage';
-import { getQuizById, updateQuestion, deleteQuestion } from '@/lib/db/quiz-storage';
+import { createSession, saveAnswer, completeSession } from '@/lib/session-storage-router';
+import { getQuizById, updateQuestion, deleteQuestion } from '@/lib/storage-router';
 import { SessionConfig } from './QuizConfigModal';
 import QuestionEditModal from './QuestionEditModal';
+import type { User } from '@supabase/supabase-js';
 
 interface QuizDisplayProps {
   quizData: QuizGenerationResponse;
   config?: SessionConfig;
   onComplete: (score: number, total: number) => void;
   onBack: () => void;
+  user: User | null;
 }
 
-export default function QuizDisplay({ quizData, config, onComplete, onBack }: QuizDisplayProps) {
+export default function QuizDisplay({ quizData, config, onComplete, onBack, user }: QuizDisplayProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
@@ -40,12 +42,13 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
         // Create a new session
         const newSessionId = await createSession(
           quizData.quiz_id,
-          quizData.questions.length
+          quizData.questions.length,
+          user
         );
         setSessionId(newSessionId);
 
         // Fetch the full quiz with question IDs from database
-        const fullQuiz = await getQuizById(quizData.quiz_id);
+        const fullQuiz = await getQuizById(quizData.quiz_id, user);
         if (fullQuiz) {
           // Extract actual question IDs from the database
           const ids = fullQuiz.questions.map(q => q.question_id).filter((id): id is number => id !== undefined);
@@ -100,7 +103,8 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
             sessionId,
             questionId,
             selectedAnswerIndex,
-            isCorrect
+            isCorrect,
+            user
           );
         }
       } catch (error) {
@@ -136,7 +140,8 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
               sessionId,
               questionId,
               selectedAnswerIndex,
-              isCorrect
+              isCorrect,
+              user
             );
           }
         } catch (error) {
@@ -148,7 +153,8 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
           await completeSession(
             sessionId,
             tempCorrectCount,
-            quizData.questions.length
+            quizData.questions.length,
+            user
           );
         } catch (error) {
           console.error('Failed to complete session:', error);
@@ -162,7 +168,8 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
           await completeSession(
             sessionId,
             correctCount,
-            quizData.questions.length
+            quizData.questions.length,
+            user
           );
         } catch (error) {
           console.error('Failed to complete session:', error);
@@ -206,7 +213,8 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
           sessionId,
           questionId,
           selectedAnswerIndex,
-          isCorrect
+          isCorrect,
+          user
         );
       }
     } catch (error) {
@@ -240,7 +248,8 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
             sessionId,
             questionId,
             selectedAnswerIndex,
-            isCorrect
+            isCorrect,
+            user
           );
         }
       } catch (error) {
@@ -275,7 +284,8 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
           await completeSession(
             sessionId,
             correctCount,
-            quizData.questions.length
+            quizData.questions.length,
+            user
           );
         } catch (error) {
           console.error('Failed to complete session:', error);
@@ -395,7 +405,7 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
 
     try {
       // Update in database
-      await updateQuestion(questionId, updates);
+      await updateQuestion(questionId, updates, user);
 
       // Update local state
       const updatedQuestions = [...quizDataState.questions];
@@ -447,7 +457,7 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack }: Qu
 
     try {
       // Delete from database
-      await deleteQuestion(questionId);
+      await deleteQuestion(questionId, user);
 
       // Update local state - remove the question
       const updatedQuestions = quizDataState.questions.filter((_, idx) => idx !== currentQuestionIndex);
