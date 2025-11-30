@@ -29,32 +29,51 @@ export async function POST(request: NextRequest) {
     // Validate file
     if (!file) {
       return NextResponse.json(
-        { error: 'No PDF file provided' },
+        { error: 'No file provided' },
         { status: 400 }
       );
     }
 
-    if (file.type !== 'application/pdf') {
+    // Supported file types for Gemini 2.5 Flash
+    const supportedTypes = [
+      'application/pdf',                                                          // PDF
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation', // PPTX
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',       // XLSX
+      'text/plain',                                                               // TXT
+      'text/markdown',                                                            // MD
+      'text/html',                                                                // HTML
+      'text/csv',                                                                 // CSV
+      'image/png',                                                                // PNG
+      'image/jpeg',                                                               // JPEG/JPG
+      'image/webp',                                                               // WebP
+      'image/gif',                                                                // GIF
+    ];
+
+    if (!supportedTypes.includes(file.type)) {
       return NextResponse.json(
-        { error: 'File must be a PDF' },
+        {
+          error: 'Unsupported file type. Supported formats: PDF, Word (DOCX), PowerPoint (PPTX), Excel (XLSX), Images (PNG, JPEG, WebP, GIF), Text (TXT, MD, HTML, CSV)'
+        },
         { status: 400 }
       );
     }
 
-    if (file.size > 10 * 1024 * 1024) {
+    // Increased size limit to 20MB to accommodate presentations and images
+    if (file.size > 20 * 1024 * 1024) {
       return NextResponse.json(
-        { error: 'File size must be less than 10MB' },
+        { error: 'File size must be less than 20MB' },
         { status: 400 }
       );
     }
 
-    console.log('📄 Processing PDF:', file.name);
+    console.log('📄 Processing file:', file.name, `(${file.type})`);
 
-    // Step 1: Validate and improve description using Gemini's direct PDF support
+    // Step 1: Validate and improve description using Gemini's native file support
     console.log('📝 Validating and enhancing description...');
     const enhancedDescription = await validateAndImproveDescription(file, file_description);
 
-    // Step 2: Generate quiz using Gemini with direct PDF upload
+    // Step 2: Generate quiz using Gemini with direct file upload
     console.log('🤖 Generating quiz with Gemini Flash...');
     const quizData = await generateQuizWithGemini(file, numQuestions, difficulty, enhancedDescription);
 

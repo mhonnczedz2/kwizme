@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
@@ -13,6 +13,7 @@ import QuizReview from '@/components/QuizReview';
 import QuizReviewApproval from '@/components/QuizReviewApproval';
 import QuizApprovedScreen from '@/components/QuizApprovedScreen';
 import SidePanel from '@/components/SidePanel';
+import FeedbackDrawer from '@/components/FeedbackDrawer';
 import { QuizGenerationResponse, AnswerRecord } from '@/lib/db/types';
 import { SessionConfig } from '@/components/QuizConfigModal';
 import { saveQuiz, getQuizById } from '@/lib/storage-router';
@@ -40,6 +41,7 @@ export default function Home() {
   const [showInfoBubble, setShowInfoBubble] = useState(false);
   const [showSidePanel, setShowSidePanel] = useState(false);
   const [gridDirection, setGridDirection] = useState('40px 40px');
+  const [helpfulTip, setHelpfulTip] = useState('');
 
   // Check authentication status
   useEffect(() => {
@@ -76,6 +78,179 @@ export default function Home() {
   useEffect(() => {
     seedDefaultQuizzes().catch(console.error);
   }, []);
+
+  // Pool of helpful tips, motivational messages, and jokes (175 total)
+  const helpfulTips = [
+    // App usage tips (8)
+    "💡 You can upload PDFs, Word docs, PowerPoint presentations, Excel files, images, and text files to generate quizzes!",
+    "🎯 Review your quiz questions before saving - you can edit them to better match your learning goals.",
+    "📊 Check your Quiz History to track your progress and see which topics need more practice.",
+    "🔄 Retake quizzes as many times as you want - repetition is key to mastering the material!",
+    "✏️ Add institution, program, and course details when generating quizzes to keep them organized.",
+    "📝 The app supports files up to 20MB - perfect for comprehensive study materials.",
+    "🎲 Use the quiz browser to find all your saved quizzes in one place.",
+    "⚡ Generate multiple quizzes from the same material with different difficulty levels for progressive learning.",
+
+    // Study and learning tips (17)
+    "📚 Active recall through quizzing is proven to be more effective than passive reading.",
+    "🧠 Study tip: Space out your practice sessions over several days for better long-term retention.",
+    "⏰ Take quizzes at different times of day to strengthen memory formation.",
+    "🎓 Research shows that testing yourself is one of the most effective study techniques.",
+    "💪 Making mistakes is part of learning - review wrong answers to understand concepts better.",
+    "🌟 Break large topics into smaller quizzes to avoid cognitive overload.",
+    "🔍 Review explanations for both correct and incorrect answers to deepen understanding.",
+    "📖 Combine quiz practice with other study methods like summarizing and teaching others.",
+    "🎯 Focus on understanding 'why' an answer is correct, not just memorizing facts.",
+    "⭐ Regular short quiz sessions are more effective than long cramming sessions.",
+    "🚀 Use quiz results to identify weak areas and target your study time efficiently.",
+    "💡 Explain quiz answers out loud to yourself - teaching reinforces learning.",
+    "🔄 Revisit quizzes weeks later to test long-term retention.",
+    "📊 Track your scores over time to see your improvement and stay motivated.",
+    "🎨 Mix different subjects and topics in your study sessions for better learning.",
+    "⚡ Take quizzes before exams to boost confidence and identify last-minute review needs.",
+    "🌈 Learning is a journey - celebrate small wins and progress along the way!",
+
+    // Additional motivational tips (25)
+    "🌟 Every expert was once a beginner - you're on the right path!",
+    "💎 Your mind is like a muscle - the more you exercise it, the stronger it becomes!",
+    "🎯 Consistency beats intensity - small daily efforts lead to big results!",
+    "🌱 Growth happens outside your comfort zone. Embrace the challenge!",
+    "✨ Believe in yourself - you're capable of more than you think!",
+    "🔥 Your only competition is the person you were yesterday!",
+    "🎓 Education is not preparation for life - education IS life!",
+    "💫 The secret of getting ahead is getting started!",
+    "🌈 Difficult roads often lead to beautiful destinations!",
+    "⚡ Success is the sum of small efforts repeated day in and day out!",
+    "🎪 Make learning fun - curiosity is the engine of achievement!",
+    "🏆 You don't have to be perfect to be amazing!",
+    "🌻 Every question you answer is a step closer to your goals!",
+    "💪 You're not here to be average, you're here to be awesome!",
+    "🎨 Your potential is endless - keep pushing forward!",
+    "🚀 Dream big, study hard, stay focused!",
+    "🌟 The future belongs to those who believe in their dreams!",
+    "💝 Be patient with yourself - progress is progress, no matter how small!",
+    "🎯 You miss 100% of the quizzes you don't take!",
+    "🔮 Your breakthrough is on the other side of your breakthrough effort!",
+    "🌸 Strive for progress, not perfection!",
+    "⭐ The only way to do great work is to love what you learn!",
+    "🎭 Turn your can'ts into cans and your dreams into plans!",
+    "🌺 You are braver than you believe and smarter than you think!",
+    "💖 Keep going - you're doing better than you realize!",
+
+    // Light-hearted jokes in English (50)
+    "😄 Why did the student eat their homework? The teacher said it was a piece of cake!",
+    "🤣 What's a math teacher's favorite place? Times Square!",
+    "😂 Why don't scientists trust atoms? Because they make up everything!",
+    "😆 What do you call a bear with no teeth? A gummy bear!",
+    "😄 Why did the scarecrow become a successful student? He was outstanding in his field!",
+    "🤣 What's the king of all school supplies? The ruler!",
+    "😂 Why did the book join the police? It wanted to go undercover!",
+    "😆 What do you call a snowman with a six-pack? An abdominal snowman!",
+    "😄 Why can't you trust an atom? They literally make up everything!",
+    "🤣 What do you call a fake noodle? An impasta!",
+    "😂 Why did the bicycle fall over? It was two-tired!",
+    "😆 What do you call a sleeping bull? A bulldozer!",
+    "😄 Why did the coffee file a police report? It got mugged!",
+    "🤣 What do you call a fish without eyes? A fsh!",
+    "😂 Why don't eggs tell jokes? They'd crack up!",
+    "😆 What's orange and sounds like a parrot? A carrot!",
+    "😄 Why did the math book look so sad? It had too many problems!",
+    "🤣 What do you call a dinosaur that crashes his car? Tyrannosaurus Wrecks!",
+    "😂 Why couldn't the bicycle stand up? It was two tired!",
+    "😆 What do you call cheese that isn't yours? Nacho cheese!",
+    "😄 Why did the golfer bring two pairs of pants? In case he got a hole in one!",
+    "🤣 What do you call a can opener that doesn't work? A can't opener!",
+    "😂 Why did the computer go to the doctor? It had a virus!",
+    "😆 What do you call a belt made of watches? A waist of time!",
+    "😄 Why did the tomato turn red? Because it saw the salad dressing!",
+    "🤣 What do you call a lazy kangaroo? A pouch potato!",
+    "😂 Why don't skeletons fight each other? They don't have the guts!",
+    "😆 What do you call a boomerang that won't come back? A stick!",
+    "😄 Why did the cookie go to the hospital? It felt crumbly!",
+    "🤣 What do you call a train that sneezes? Achoo-choo train!",
+    "😂 Why did the banana go to the doctor? It wasn't peeling well!",
+    "😆 What do you call a bear in the rain? A drizzly bear!",
+    "😄 Why did the stadium get hot? All the fans left!",
+    "🤣 What do you call a pile of cats? A meowtain!",
+    "😂 Why don't oysters donate to charity? Because they're shellfish!",
+    "😆 What do you call a singing laptop? A Dell!",
+    "😄 Why did the chicken go to the seance? To talk to the other side!",
+    "🤣 What do you call a group of musical whales? An orca-stra!",
+    "😂 Why did the picture go to jail? It was framed!",
+    "😆 What do you call a nervous javelin thrower? Shakespeare!",
+    "😄 Why don't calendars ever win races? They always have too many dates!",
+    "🤣 What do you call a cow with no legs? Ground beef!",
+    "😂 Why did the smartphone need glasses? It lost all its contacts!",
+    "😆 What do you call a sleeping pizza? A piZZZa!",
+    "😄 Why don't some couples go to the gym? Because some relationships don't work out!",
+    "🤣 What do you call a magical dog? A labracadabrador!",
+    "😂 Why did the invisible man turn down the job? He couldn't see himself doing it!",
+    "😆 What do you call a sad coffee? A depresso!",
+    "😄 Why don't mountains ever get cold? They have snow caps!",
+    "🤣 What do you call a sleeping dinosaur? A dino-snore!",
+
+    // Light-hearted jokes in Filipino - Pure Tagalog (25)
+    "😄 Bakit laging natatalo ang kalabaw sa quiz? Kasi siya ay bago sa lahat!",
+    "🤣 Ano ang tawag sa estudyanteng mahilig sa sayaw? Mag-aaral na may ritmo!",
+    "😂 Bakit ayaw mag-aral ng ibon? Kasi gusto niya mag-fly lang ng grades!",
+    "😆 Ano ang paboritong subject ng bampira? Dugo-nometry!",
+    "😄 Bakit mahilig mag-aral ang pusa? Para maging honors-cat!",
+    "🤣 Ano ang tawag sa masipag na isda? Grade-conscious na tilapia!",
+    "😂 Bakit nag-aaral ang mangga? Para hindi maging hinog na walang alam!",
+    "😆 Ano ang paboritong libro ng manok? Kwentong may saysay!",
+    "😄 Bakit sumama ang lapis sa eskwela? Gusto niyang maging sharp!",
+    "🤣 Ano ang tawag sa ulan na mahilig sa math? Precipi-tayo ng problema!",
+    "😂 Bakit masaya ang eraser? Kasi marunong siyang mag-move on!",
+    "😆 Ano ang ginagawa ng plantsa sa library? Nag-aaral ng pressed issues!",
+    "😄 Bakit nag-aaral ang tsokolate? Para maging bitter-sweet success!",
+    "🤣 Ano ang tawag sa bato na matalino? Rock-olar!",
+    "😂 Bakit sumama ang hangin sa quiz bee? Para ipakita ang hangin-aling niya!",
+    "😆 Ano ang paboritong subject ng asin? Chemis-try niya lahat!",
+    "😄 Bakit ayaw mag-exam ng kamatis? Takot siyang ma-crush!",
+    "🤣 Ano ang tawag sa matalinong patatas? Brainy chips!",
+    "😂 Bakit nag-aaral ang bola? Para hindi maging bilog lang ang ulo!",
+    "😆 Ano ang ginagawa ng bituin sa klase? Sumasagot ng twinkling stars!",
+    "😄 Bakit masipag ang prutas? Gusto nilang maging fruitful ang buhay!",
+    "🤣 Ano ang tawag sa matalinong bubuyog? Bee-yani!",
+    "😂 Bakit nag-aaral ang ulap? Para hindi maging malabo ang kinabukasan!",
+    "😆 Ano ang paboritong subject ng dilim? Shadow-nomics!",
+    "😄 Bakit sumama ang tuwa sa eskwela? Para mag-enjoy habang nag-aaral!",
+
+    // Light-hearted jokes in Filipino - Taglish (25)
+    "😄 Bakit late si Juan sa exam? Nag-cram kasi siya sa cram-poline!",
+    "🤣 Ano ang tawag sa student na mahilig sa Japanese food? Honor roll na may tempura-ment!",
+    "😂 Teacher: Bakit wala kang assignment? Student: Sorry ma'am, na-save ko kasi sa cloud... yung rain cloud!",
+    "😆 Bakit nag-aaral si Pedro ng English? Para ma-gets niya ang memes!",
+    "😄 Ano ang favorite subject ng Pinoy? Recess, kasi break time na!",
+    "🤣 Bakit pumasa si Maria sa Math? Kasi nag-pray siya na mag-multiply ang blessings!",
+    "😂 What's the difference between homework at home work? Isa pinapasa, isa hindi tapos-tapos!",
+    "😆 Bakit favorite ng students ang Friday? Kasi feel na feel na nila ang weekend vibes!",
+    "😄 Teacher: Anong formula ng success? Student: Ma'am, Ctrl+C plus Ctrl+V... joke lang po!",
+    "🤣 Bakit nag-fail si Dodong? Nag-focus kasi siya sa camera instead of books!",
+    "😂 Ano ang study habit ng millennial? Mag-scroll ng TikTok habang may textbook sa tabi!",
+    "😆 Bakit ayaw mag-recite ni Berto? Kasi introvert siya, gusto niya chat lang!",
+    "😄 What's a Filipino student's prayer? Sana mag-curve ang grades!",
+    "🤣 Bakit happy si Inday sa quiz? Kasi multiple choice - may fifty-fifty pa!",
+    "😂 Teacher: Submit your paper! Student: Ma'am wait, nag-lo-load pa po!",
+    "😆 Ano ang motto ng students? Bahala na si Batman, pero sana si Superman na lang!",
+    "😄 Bakit mahilig sa group study ang Pinoy? Para may ma-copy... I mean, ma-collaborate!",
+    "🤣 What do you call a Filipino student's favorite button? The snooze button!",
+    "😂 Bakit nag-aaral ng Science si Tony? Para ma-gets niya why may chemistry sila ni Maria!",
+    "😆 Teacher: Early bird gets the worm! Student: Ma'am, pwede na po yung late night snack!",
+    "😄 Ano ang battle cry ng students? Kaya natin 'to! After ng one more episode!",
+    "🤣 Bakit nag-attend ng class si Gina? Para ma-justify ang WiFi bill!",
+    "😂 What's a student's favorite exercise? Mental gymnastics para sa excuses!",
+    "😆 Bakit nag-aaral si Carlo ng History? Para hindi mag-repeat ang kamalian... ng grades niya!",
+    "😄 Teacher: Think outside the box! Student: Ma'am, pwede po bang think inside the aircon room?"
+  ];
+
+  // Select random tip on component mount and when returning to home
+  useEffect(() => {
+    if (appState === 'home') {
+      const randomTip = helpfulTips[Math.floor(Math.random() * helpfulTips.length)];
+      setHelpfulTip(randomTip);
+    }
+  }, [appState]);
 
   // Change grid direction randomly every animation cycle (8s)
   useEffect(() => {
@@ -116,7 +291,7 @@ export default function Home() {
       formData.append('difficulty', 'medium');
 
       // Add quiz_title (use filename if not provided)
-      const quizTitle = organizationMetadata.quiz_title || selectedFile.name.replace('.pdf', '');
+      const quizTitle = organizationMetadata.quiz_title || selectedFile.name.replace(/\.[^/.]+$/, '');
       formData.append('quiz_title', quizTitle);
 
       // Add organization metadata if provided
@@ -304,7 +479,10 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <main className="min-h-screen">
+      {/* Fixed Background Layer */}
+      <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-100"></div>
+
       {/* Background Pattern */}
       <div
         className="fixed inset-0 opacity-[0.15] pointer-events-none animate-grid-pan"
@@ -328,67 +506,42 @@ export default function Home() {
         onLogout={handleLogout}
       />
 
-      {/* Hamburger Menu Button - Top left */}
-      <div className="fixed top-4 left-4 z-30">
-        <button
-          onClick={() => setShowSidePanel(true)}
-          className="bg-white hover:bg-gray-50 text-gray-700 rounded-full w-10 h-10 md:w-12 md:h-12 flex items-center justify-center shadow-lg transition-colors"
-          aria-label="Menu"
-        >
-          <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-      </div>
+      {/* Feedback Drawer */}
+      <FeedbackDrawer
+        isOpen={showInfoBubble}
+        onClose={() => setShowInfoBubble(false)}
+      />
 
-      {/* Info Bubble - Always visible in upper right */}
-      <div className="fixed top-4 right-4 z-50">
-        <div className="relative">
-          {/* Info Icon Button - Smaller on mobile */}
+      {/* Top Bar - Visible on all screen sizes */}
+      <div className="fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-200 shadow-sm">
+        <div className="flex items-center justify-between px-4 lg:px-6 py-2 lg:py-3">
           <button
-            onClick={() => setShowInfoBubble(!showInfoBubble)}
-            className="bg-blue-600 text-white rounded-full w-10 h-10 md:w-12 md:h-12 flex items-center justify-center shadow-lg hover:bg-blue-700 transition-colors"
-            aria-label="Information"
+            onClick={() => setShowSidePanel(true)}
+            className="bg-white hover:bg-gray-50 text-gray-700 rounded-full w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center shadow transition-colors"
+            aria-label="Menu"
           >
-            <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
 
-          {/* Info Popup - Responsive width and positioning */}
-          {showInfoBubble && (
-            <div className="absolute top-14 right-0 w-[calc(100vw-2rem)] max-w-[20rem] md:w-80 bg-white rounded-lg shadow-xl p-4 md:p-6 border-2 border-blue-200">
-              {/* Close button */}
-              <button
-                onClick={() => setShowInfoBubble(false)}
-                className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 min-h-[44px] min-w-[44px] flex items-center justify-center"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+          <h1 className="text-lg lg:text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            QuizMe
+          </h1>
 
-              <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-2 md:mb-3">
-                Feedback & Support
-              </h3>
-              <p className="text-xs md:text-sm text-gray-700 mb-3 md:mb-4">
-                Have feedback or a feature request? We'd love to hear from you!
-              </p>
-              <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-                <p className="text-xs text-gray-600 mb-1">Contact the developer:</p>
-                <a
-                  href="mailto:my.stationptot@gmail.com"
-                  className="text-xs md:text-sm text-blue-600 hover:text-blue-700 font-medium break-all"
-                >
-                  my.stationptot@gmail.com
-                </a>
-              </div>
-            </div>
-          )}
+          <button
+            onClick={() => setShowInfoBubble(true)}
+            className="bg-blue-600 text-white rounded-full w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center shadow hover:bg-blue-700 transition-colors"
+            aria-label="Feedback"
+          >
+            <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 pt-24 pb-16 lg:pt-32">
         {/* Home Screen - 3 Buttons */}
         {appState === 'home' && (
           <div className="max-w-4xl mx-auto px-4">
@@ -398,7 +551,7 @@ export default function Home() {
                 QuizMe
               </h1>
               <p className="text-lg md:text-xl text-gray-600">
-                Generate practice quizzes from your PDF learning materials using AI
+                Generate practice quizzes from your learning materials using AI
               </p>
             </div>
 
@@ -416,7 +569,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">Generate Quiz</h3>
                 <p className="text-sm text-gray-600">
-                  Upload a PDF and create a new quiz
+                  Upload your learning materials and create a new quiz
                 </p>
               </button>
 
@@ -452,12 +605,19 @@ export default function Home() {
                 </p>
               </button>
             </div>
+
+            {/* Helpful Tip Section */}
+            <div className="mt-8 md:mt-12">
+              <p className="text-sm md:text-base text-gray-900 text-center leading-relaxed italic font-medium px-4">
+                {helpfulTip}
+              </p>
+            </div>
           </div>
         )}
 
         {/* Generate Quiz Screen */}
         {appState === 'generate' && (
-          <div className="max-w-2xl mx-auto px-4">
+          <div className="max-w-2xl mx-auto px-4 overflow-x-hidden">
             {/* Back Button - Larger for touch */}
             <button
               onClick={handleBackToHome}
@@ -471,11 +631,11 @@ export default function Home() {
 
             {/* Header - Mobile responsive */}
             <div className="text-center mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <h2 className="text-3xl md:text-4xl font-extrabold mb-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Generate a Quiz
               </h2>
               <p className="text-sm md:text-base text-gray-600">
-                Upload a PDF and we'll create practice questions for you
+                Upload your learning materials and we'll create practice questions for you
               </p>
             </div>
 
@@ -545,7 +705,7 @@ export default function Home() {
 
             {/* Header - Mobile responsive */}
             <div className="text-center mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <h2 className="text-3xl md:text-4xl font-extrabold mb-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Available Quizzes
               </h2>
               <p className="text-sm md:text-base text-gray-600">
@@ -610,7 +770,7 @@ export default function Home() {
 
             {/* Header - Mobile responsive */}
             <div className="text-center mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <h2 className="text-3xl md:text-4xl font-extrabold mb-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Quiz History
               </h2>
               <p className="text-sm md:text-base text-gray-600">

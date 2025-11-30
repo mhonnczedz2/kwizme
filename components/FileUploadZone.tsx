@@ -72,22 +72,38 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
 
   // Update quiz title when file is selected
   const handleFile = (file: File) => {
+    // Supported file types for Gemini 2.5 Flash
+    const supportedTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation', // PPTX
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // XLSX
+      'text/plain',
+      'text/markdown',
+      'text/html',
+      'text/csv',
+      'image/png',
+      'image/jpeg',
+      'image/webp',
+      'image/gif',
+    ];
+
     // Validate file type
-    if (file.type !== 'application/pdf') {
-      alert('Please upload a PDF file');
+    if (!supportedTypes.includes(file.type)) {
+      alert('Unsupported file type. Supported formats:\n• PDF\n• Word (DOCX)\n• PowerPoint (PPTX)\n• Excel (XLSX)\n• Images (PNG, JPEG, WebP, GIF)\n• Text (TXT, MD, HTML, CSV)');
       return;
     }
 
-    // Validate file size (10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      alert('File size must be less than 10MB');
+    // Validate file size (20MB)
+    if (file.size > 20 * 1024 * 1024) {
+      alert('File size must be less than 20MB');
       return;
     }
 
     setSelectedFile(file);
 
-    // Update quiz title to filename (without .pdf extension)
-    const filenameWithoutExt = file.name.replace('.pdf', '');
+    // Update quiz title to filename (remove file extension)
+    const filenameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
     const newMetadata = { ...metadata, quiz_title: filenameWithoutExt };
     setMetadata(newMetadata);
     onMetadataChange(newMetadata);
@@ -141,7 +157,7 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
         <input
           ref={fileInputRef}
           type="file"
-          accept=".pdf"
+          accept=".pdf,.docx,.pptx,.xlsx,.txt,.md,.html,.csv,.png,.jpg,.jpeg,.webp,.gif"
           onChange={handleFileInput}
           className="hidden"
         />
@@ -175,9 +191,9 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
         ) : (
           <div>
             <p className="text-base md:text-lg text-gray-700 mb-2">
-              Drop your PDF here or click to browse
+              Drop your file here or click to browse
             </p>
-            <p className="text-sm text-gray-500">Max 10MB, .pdf only</p>
+            <p className="text-sm text-gray-500">Max 20MB • PDF, Word, PowerPoint, Excel, Images, Text</p>
           </div>
         )}
       </div>

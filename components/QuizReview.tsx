@@ -29,7 +29,7 @@ export default function QuizReview({
   const scorePercentage = (sessionScore.correct / sessionScore.total) * 100;
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto p-6 pt-8 md:pt-10">
       {/* Header */}
       <div className="mb-6 flex justify-between items-center">
         <button

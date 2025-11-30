@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -14,8 +14,34 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [gridDirection, setGridDirection] = useState('40px 40px')
   const router = useRouter()
   const supabase = createClient()
+
+  // Change grid direction randomly every animation cycle (8s)
+  useEffect(() => {
+    const directions = [
+      '40px 40px',   // diagonal down-right
+      '-40px 40px',  // diagonal down-left
+      '40px -40px',  // diagonal up-right
+      '-40px -40px', // diagonal up-left
+    ];
+
+    const changeDirection = () => {
+      const randomDirection = directions[Math.floor(Math.random() * directions.length)];
+      setGridDirection(randomDirection);
+    };
+
+    // Change direction every 8 seconds (matching animation cycle)
+    const intervalId = setInterval(changeDirection, 8000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const handleBackToHome = () => {
+    console.log('🔵 handleBackToHome called - navigating to /')
+    window.location.href = '/'
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,16 +67,44 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      {/* Background Pattern */}
+      <div
+        className="fixed inset-0 opacity-[0.15] pointer-events-none animate-grid-pan"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, #3b82f6 1px, transparent 1px),
+            linear-gradient(to bottom, #3b82f6 1px, transparent 1px)
+          `,
+          backgroundSize: '40px 40px',
+          '--grid-end-position': gridDirection,
+        } as React.CSSProperties & { '--grid-end-position': string }}
+      ></div>
+
+      {/* Back to Home - Top of page with margin */}
+      <div className="relative z-10 w-full max-w-md mt-8">
+        <button
+          onClick={handleBackToHome}
+          className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium transition text-base md:text-sm min-h-[44px]"
+        >
+          <svg className="w-6 h-6 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Home
+        </button>
+      </div>
+
+      {/* Header - Outside card */}
+      <div className="relative z-10 w-full max-w-md text-center mt-auto mb-8">
+        <h1 className="text-3xl md:text-4xl font-extrabold mb-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+          Welcome Back
+        </h1>
+        <p className="text-sm md:text-base text-gray-600">Sign in to your QuizMe account</p>
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 w-full max-w-md mb-auto">
         <div className="bg-white rounded-2xl shadow-xl p-8">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Welcome Back
-            </h1>
-            <p className="text-gray-600">Sign in to your QuizMe account</p>
-          </div>
 
           {/* Error Message */}
           {error && (
@@ -75,7 +129,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-base"
-                placeholder="you@example.com"
+                placeholder="jdc21@up.edu.ph"
               />
             </div>
 
@@ -135,16 +189,6 @@ export default function LoginPage() {
               Sign up
             </Link>
           </div>
-        </div>
-
-        {/* Back to Home */}
-        <div className="mt-6 text-center">
-          <Link
-            href="/"
-            className="text-sm text-gray-600 hover:text-gray-900 transition"
-          >
-            ← Back to Home
-          </Link>
         </div>
       </div>
     </div>

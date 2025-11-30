@@ -184,13 +184,13 @@ export default function QuizConfigModal({ totalQuestions, onStart, onCancel }: Q
                 </div>
                 <button
                   onClick={() => setCustomConfig({ ...customConfig, quick_submit: !customConfig.quick_submit })}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors min-h-[44px] flex-shrink-0 ${
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${
                     customConfig.quick_submit ? 'bg-blue-600' : 'bg-gray-300'
                   }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      customConfig.quick_submit ? 'translate-x-6' : 'translate-x-1'
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                      customConfig.quick_submit ? 'translate-x-5' : 'translate-x-1'
                     }`}
                   />
                 </button>
@@ -204,13 +204,13 @@ export default function QuizConfigModal({ totalQuestions, onStart, onCancel }: Q
                 </div>
                 <button
                   onClick={() => setCustomConfig({ ...customConfig, show_explanation: !customConfig.show_explanation })}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors min-h-[44px] flex-shrink-0 ${
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${
                     customConfig.show_explanation ? 'bg-blue-600' : 'bg-gray-300'
                   }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      customConfig.show_explanation ? 'translate-x-6' : 'translate-x-1'
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                      customConfig.show_explanation ? 'translate-x-5' : 'translate-x-1'
                     }`}
                   />
                 </button>
@@ -224,13 +224,13 @@ export default function QuizConfigModal({ totalQuestions, onStart, onCancel }: Q
                 </div>
                 <button
                   onClick={() => setCustomConfig({ ...customConfig, randomize_options: !customConfig.randomize_options })}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors min-h-[44px] flex-shrink-0 ${
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${
                     customConfig.randomize_options ? 'bg-blue-600' : 'bg-gray-300'
                   }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      customConfig.randomize_options ? 'translate-x-6' : 'translate-x-1'
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                      customConfig.randomize_options ? 'translate-x-5' : 'translate-x-1'
                     }`}
                   />
                 </button>
@@ -244,13 +244,13 @@ export default function QuizConfigModal({ totalQuestions, onStart, onCancel }: Q
                 </div>
                 <button
                   onClick={() => setCustomConfig({ ...customConfig, randomize_questions: !customConfig.randomize_questions })}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors min-h-[44px] flex-shrink-0 ${
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${
                     customConfig.randomize_questions ? 'bg-blue-600' : 'bg-gray-300'
                   }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      customConfig.randomize_questions ? 'translate-x-6' : 'translate-x-1'
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                      customConfig.randomize_questions ? 'translate-x-5' : 'translate-x-1'
                     }`}
                   />
                 </button>

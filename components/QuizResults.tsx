@@ -22,7 +22,7 @@ export default function QuizResults({ score, total, quizTitle, onTryAgain, onBac
   const grade = getGrade();
 
   return (
-    <div className="max-w-2xl mx-auto p-4 md:p-6">
+    <div className="max-w-2xl mx-auto p-4 md:p-6 pt-8 md:pt-10">
       <div className="bg-white rounded-xl shadow-lg p-6 md:p-8 text-center">
         {/* Message */}
         <h2 className="text-2xl md:text-3xl font-semibold mb-4 md:mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">

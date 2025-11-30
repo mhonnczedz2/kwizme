@@ -3,11 +3,11 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { GoogleAIFileManager } from '@google/generative-ai/server';
 
 /**
- * Validate and improve the user's description of the PDF content
+ * Validate and improve the user's description of the file content
  * If no description provided, generate one automatically
  */
 export async function validateAndImproveDescription(
-  pdfFile: File,
+  file: File,
   userDescription: string | null
 ): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -20,27 +20,27 @@ export async function validateAndImproveDescription(
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-    // Upload PDF file to Gemini
+    // Upload file to Gemini
     const fileManager = new GoogleAIFileManager(apiKey);
-    const arrayBuffer = await pdfFile.arrayBuffer();
+    const arrayBuffer = await file.arrayBuffer();
     const uploadResult = await fileManager.uploadFile(
       Buffer.from(arrayBuffer),
       {
-        mimeType: pdfFile.type,
-        displayName: pdfFile.name,
+        mimeType: file.type,
+        displayName: file.name,
       }
     );
 
-    console.log('📤 Uploaded PDF to Gemini:', uploadResult.file.uri);
+    console.log('📤 Uploaded file to Gemini:', uploadResult.file.uri);
 
     const prompt = userDescription
       ? `You are an expert educational content analyst.
 
-A user uploaded a PDF and provided this description:
+A user uploaded a file and provided this description:
 "${userDescription}"
 
 Your tasks:
-1. Verify if the user's description matches the actual PDF content
+1. Verify if the user's description matches the actual file content
 2. If it matches: Enhance and improve the description to be more specific and helpful for quiz generation
 3. If it doesn't match or is vague: Create an accurate description based on the actual content
 
@@ -59,7 +59,7 @@ The enhanced_description should include:
 Keep it concise (2-4 sentences max).`
       : `You are an expert educational content analyst.
 
-A user uploaded a PDF but didn't provide a description.
+A user uploaded a file but didn't provide a description.
 
 Analyze the content and create a comprehensive description that will help generate relevant quiz questions.
 
@@ -170,7 +170,7 @@ function buildPrompt(
     : '';
 
   return `You are an expert educator creating multiple choice questions for students.
-Generate ${numQuestions} multiple choice questions from the provided PDF document.
+Generate ${numQuestions} multiple choice questions from the provided document.
 ${contextSection}
 ${instruction}
 
@@ -178,7 +178,7 @@ Each question must have:
 - 1 correct answer (provide the actual answer text)
 - 3 plausible distractors (wrong answers that seem reasonable)
 - Brief explanation of why the answer is correct
-- Citation showing where the answer can be found in the source (e.g., "Page 1, paragraph 2" or "Introduction section")
+- Citation showing where the answer can be found in the source (e.g., "Page 1, paragraph 2" or "Slide 5" or "Introduction section")
 - Optional hint (helpful clue without giving away the answer)
 - Difficulty rating based on cognitive complexity
 
@@ -205,10 +205,10 @@ Expected JSON format:
 }
 
 /**
- * Generate quiz using Gemini Flash with direct PDF upload
+ * Generate quiz using Gemini Flash with direct file upload
  */
 export async function generateQuizWithGemini(
-  pdfFile: File,
+  file: File,
   numQuestions: number = 15,
   difficulty: string = 'medium',
   enhancedDescription?: string
@@ -224,18 +224,18 @@ export async function generateQuizWithGemini(
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-    // Upload PDF file to Gemini
+    // Upload file to Gemini
     const fileManager = new GoogleAIFileManager(apiKey);
-    const arrayBuffer = await pdfFile.arrayBuffer();
+    const arrayBuffer = await file.arrayBuffer();
     const uploadResult = await fileManager.uploadFile(
       Buffer.from(arrayBuffer),
       {
-        mimeType: pdfFile.type,
-        displayName: pdfFile.name,
+        mimeType: file.type,
+        displayName: file.name,
       }
     );
 
-    console.log('📤 Uploaded PDF to Gemini for quiz generation:', uploadResult.file.uri);
+    console.log('📤 Uploaded file to Gemini for quiz generation:', uploadResult.file.uri);
 
     const prompt = buildPrompt(numQuestions, difficulty, enhancedDescription);
 

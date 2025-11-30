@@ -2,7 +2,23 @@
 const nextConfig = {
   transpilePackages: ['sql.js'],
 
-  // Webpack configuration for production builds
+  // Turbopack configuration (required for Next.js 16)
+  turbopack: {
+    resolveAlias: {
+      // Only polyfill fs in client bundles (sql.js tries to use it)
+      fs: {
+        browser: './lib/empty.js',
+      },
+      path: {
+        browser: './lib/empty.js',
+      },
+      crypto: {
+        browser: './lib/empty.js',
+      },
+    },
+  },
+
+  // Webpack configuration for production builds (fallback)
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
@@ -13,15 +29,6 @@ const nextConfig = {
       };
     }
     return config;
-  },
-
-  // Turbopack configuration for development
-  turbopack: {
-    resolveAlias: {
-      fs: './lib/empty.js',
-      path: './lib/empty.js',
-      crypto: './lib/empty.js',
-    },
   },
 };
 

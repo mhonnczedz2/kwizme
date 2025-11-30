@@ -122,7 +122,8 @@ export function useRealtimeSync(
         unsubscribeAll(currentChannels)
       }
     }
-  }, [user?.id, enabled, handleQuizChange, handleSessionChange, onError])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, enabled])
 
   return syncStatus
 }

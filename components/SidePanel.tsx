@@ -44,13 +44,15 @@ export default function SidePanel({ isOpen, onClose, user, onLogout }: SidePanel
   }, [user, isOpen])
 
   const handleLogin = () => {
-    onClose()
+    console.log('🔵 handleLogin called - navigating to /auth/login')
     router.push('/auth/login')
+    onClose()
   }
 
   const handleSignup = () => {
-    onClose()
+    console.log('🔵 handleSignup called - navigating to /auth/signup')
     router.push('/auth/signup')
+    onClose()
   }
 
   const handleLogoutClick = () => {
@@ -111,7 +113,7 @@ export default function SidePanel({ isOpen, onClose, user, onLogout }: SidePanel
 
       {/* Side Panel */}
       <div
-        className={`fixed top-0 left-0 h-full w-80 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 h-full w-full md:w-80 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -379,8 +381,8 @@ export default function SidePanel({ isOpen, onClose, user, onLogout }: SidePanel
 
                 {/* Benefits */}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
-                  <h4 className="text-sm font-semibold text-blue-900">
-                    Benefits of signing up:
+                  <h4 className="text-sm font-semibold text-blue-900 italic">
+                    What signing up does?
                   </h4>
                   <ul className="space-y-2 text-sm text-blue-700">
                     <li className="flex items-start gap-2">

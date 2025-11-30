@@ -16,7 +16,7 @@ export default function QuizApprovedScreen({
   onCheckQuizzes
 }: QuizApprovedScreenProps) {
   return (
-    <div className="max-w-2xl mx-auto p-6">
+    <div className="max-w-2xl mx-auto p-6 pt-8 md:pt-10">
       <div className="bg-white rounded-xl shadow-lg p-8 text-center">
         {/* Success Message */}
         <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
@@ -65,7 +65,7 @@ export default function QuizApprovedScreen({
                 <div>
                   <h4 className="text-xl font-semibold mb-1">Generate Another Quiz</h4>
                   <p className="text-sm text-indigo-700">
-                    Upload a new PDF and create more practice questions
+                    Upload new learning materials and create more practice questions
                   </p>
                 </div>
                 <svg className="w-8 h-8 text-indigo-400 group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
