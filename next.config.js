@@ -2,7 +2,20 @@
 const nextConfig = {
   transpilePackages: ['sql.js'],
 
-  // Turbopack configuration to handle Node.js modules in browser
+  // Webpack configuration for production builds
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: require.resolve('./lib/empty.js'),
+        crypto: false,
+      };
+    }
+    return config;
+  },
+
+  // Turbopack configuration for development
   turbopack: {
     resolveAlias: {
       fs: './lib/empty.js',

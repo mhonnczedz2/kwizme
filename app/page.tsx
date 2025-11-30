@@ -20,10 +20,6 @@ import { seedDefaultQuizzes } from '@/lib/db/quiz-storage';
 
 type AppState = 'home' | 'generate' | 'quizzes' | 'history' | 'reviewing-approval' | 'quiz-approved' | 'taking-quiz' | 'reviewing-quiz' | 'results';
 
-// Force dynamic rendering - app uses Supabase client
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
-
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
