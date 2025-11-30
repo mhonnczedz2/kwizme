@@ -8,12 +8,22 @@ export function createClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
+  // Debug logging for production issues
+  if (typeof window !== 'undefined') {
+    console.log('Client-side Supabase client creation:', {
+      hasUrl: !!supabaseUrl,
+      hasKey: !!supabaseAnonKey,
+      urlPrefix: supabaseUrl?.substring(0, 20),
+    })
+  }
+
   // During build time, environment variables might not be available
   // Return a placeholder that will be replaced at runtime
   if (typeof window === 'undefined') {
     // Server-side during build - return a mock client
     if (!supabaseUrl || !supabaseAnonKey) {
       // This won't be used at runtime, only during SSR/build
+      console.log('Build-time: Using placeholder Supabase client')
       return createBrowserClient('https://placeholder.supabase.co', 'placeholder-key')
     }
   }
