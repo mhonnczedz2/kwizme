@@ -57,7 +57,7 @@ export function subscribeToQuizChanges(
       if (status === 'SUBSCRIBED') {
         console.log('✅ Subscribed to quiz changes')
       } else if (status === 'CHANNEL_ERROR') {
-        console.error('❌ Error subscribing to quiz changes')
+        console.warn('⚠️ Error subscribing to quiz changes (realtime disabled)')
       }
     })
 
@@ -101,7 +101,7 @@ export function subscribeToSessionChanges(
       if (status === 'SUBSCRIBED') {
         console.log('✅ Subscribed to session changes')
       } else if (status === 'CHANNEL_ERROR') {
-        console.error('❌ Error subscribing to session changes')
+        console.warn('⚠️ Error subscribing to session changes (realtime disabled)')
       }
     })
 
