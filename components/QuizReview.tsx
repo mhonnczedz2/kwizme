@@ -108,26 +108,31 @@ export default function QuizReview({
                   const isCorrectAnswer = option === question.correct_answer;
 
                   let optionClass = "w-full text-left p-3 rounded-lg border-2 ";
+                  let textClass = "";
+
                   if (isCorrectAnswer) {
                     optionClass += "border-green-500 bg-green-50 dark:border-green-600 dark:bg-green-900/20";
+                    textClass = "text-gray-900 dark:text-green-100";
                   } else if (isSelected && !isCorrect) {
                     optionClass += "border-red-500 bg-red-50 dark:border-red-600 dark:bg-red-900/20";
+                    textClass = "text-gray-900 dark:text-red-100";
                   } else {
                     optionClass += "border-gray-200 bg-gray-50 dark:border-gray-600 dark:bg-gray-700";
+                    textClass = "text-gray-900 dark:text-gray-100";
                   }
 
                   return (
                     <div key={optIndex} className={optionClass}>
                       <div className="flex items-center gap-3">
-                        <span className="font-semibold text-gray-600 dark:text-gray-400">
+                        <span className="font-semibold text-gray-600 dark:text-gray-300">
                           {String.fromCharCode(65 + optIndex)}.
                         </span>
-                        <span className="flex-1 text-gray-900 dark:text-gray-100">{option}</span>
+                        <span className={`flex-1 ${textClass}`}>{option}</span>
                         {isCorrectAnswer && (
-                          <span className="text-green-600 dark:text-green-400 font-semibold">✓ Correct Answer</span>
+                          <span className="text-green-600 dark:text-green-300 font-semibold whitespace-nowrap">✓ Correct Answer</span>
                         )}
                         {isSelected && !isCorrectAnswer && (
-                          <span className="text-red-600 dark:text-red-400 font-semibold">Your Answer</span>
+                          <span className="text-red-600 dark:text-red-300 font-semibold whitespace-nowrap">Your Answer</span>
                         )}
                       </div>
                     </div>
