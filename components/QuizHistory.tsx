@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Quiz, ReviewSession } from '@/lib/db/types';
-import { getAllQuizzes, getQuizById, deleteQuiz, getQuizQuestionCount } from '@/lib/storage-router';
-import { getSessionsForQuiz, getAnswersForSession, deleteSessionsForQuiz } from '@/lib/session-storage-router';
-import { initDatabase, executeUpdate } from '@/lib/db/client';
+import { getAllQuizzes, getQuizById, getQuizQuestionCount } from '@/lib/storage-router';
+import { getSessionsForQuiz, getAnswersForSession } from '@/lib/session-storage-router';
 import { QuizGenerationResponse, AnswerRecord } from '@/lib/db/types';
 import QuizConfigModal, { SessionConfig } from './QuizConfigModal';
 import type { User } from '@supabase/supabase-js';
@@ -25,7 +24,6 @@ interface QuizWithSessions {
 export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryProps) {
   const [quizzesWithSessions, setQuizzesWithSessions] = useState<QuizWithSessions[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
   const [expandedQuizId, setExpandedQuizId] = useState<string | null>(null);
   const [configuringQuizId, setConfiguringQuizId] = useState<string | null>(null);
   const [questionCount, setQuestionCount] = useState<number>(15);
@@ -105,37 +103,6 @@ export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryP
     } catch (error) {
       console.error('Failed to load quiz:', error);
       alert('Failed to load quiz. Please try again.');
-    }
-  };
-
-  const handleDeleteSession = async (sessionId: string, quizId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-
-    if (!confirm('Are you sure you want to delete this session?')) {
-      return;
-    }
-
-    setDeletingSessionId(sessionId);
-
-    try {
-      // Delete the specific session
-      const db = await initDatabase();
-
-      // Delete answer records first
-      executeUpdate(db, 'DELETE FROM answer_records WHERE session_id = ?', [sessionId]);
-
-      // Delete the session
-      executeUpdate(db, 'DELETE FROM review_sessions WHERE session_id = ?', [sessionId]);
-
-      console.log(`✅ Deleted session: ${sessionId}`);
-
-      // Reload to update the UI
-      await loadQuizzesWithSessions();
-    } catch (error) {
-      console.error('Failed to delete session:', error);
-      alert('Failed to delete session. Please try again.');
-    } finally {
-      setDeletingSessionId(null);
     }
   };
 
@@ -303,32 +270,36 @@ export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryP
                     </div>
                   )}
 
-                  {/* File name, date, and session count */}
-                  <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400 mt-2">
+                  {/* File name and date - Stack on mobile to prevent overlap */}
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-gray-500 dark:text-gray-400 mt-2">
                     <div className="flex items-center gap-2">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      <span className="text-xs">{quiz.file_name}</span>
+                      <span className="text-xs break-all">{quiz.file_name}</span>
                     </div>
-                    <span className="text-xs">•</span>
+                    <span className="hidden sm:inline text-xs">•</span>
                     <span className="text-xs">{formatDate(quiz.created_at)}</span>
-                    {completedSessions.length > 0 && (
-                      <>
-                        <span className="text-xs">•</span>
-                        <span className="text-xs font-medium text-blue-600">
-                          {completedSessions.length} attempt{completedSessions.length !== 1 ? 's' : ''}
-                        </span>
-                      </>
-                    )}
                   </div>
+
+                  {/* Session count - separate line on mobile */}
+                  {completedSessions.length > 0 && (
+                    <div className="flex items-center gap-2 text-blue-600 font-medium mt-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                      <span className="text-xs">
+                        {completedSessions.length} attempt{completedSessions.length !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Delete and Expand buttons */}
-                <div className="flex items-center gap-2">
+                {/* Dropdown arrow - properly positioned */}
+                <div className="flex items-start gap-2 ml-4">
                   {completedSessions.length > 0 && (
-                    <div className="text-gray-400 dark:text-gray-500">
-                      <svg className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="text-gray-400 dark:text-gray-500 mt-1">
+                      <svg className={`w-6 h-6 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </div>
@@ -348,61 +319,28 @@ export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryP
                       return (
                         <div
                           key={session.session_id}
-                          className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-sm transition-all"
+                          className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-sm transition-all cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSessionClick(quiz.quiz_id, session.session_id);
+                          }}
                         >
-                          <div className="flex items-center justify-between">
-                            <div
-                              className="flex items-center gap-4 flex-1 cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleSessionClick(quiz.quiz_id, session.session_id);
-                              }}
-                            >
-                              <div className="text-sm text-gray-500 dark:text-gray-400">
-                                #{completedSessions.length - index}
+                          <div className="flex items-center gap-4">
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                              #{completedSessions.length - index}
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                {formatShortDate(session.completed_at!)}
                               </div>
-                              <div>
-                                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                  {formatShortDate(session.completed_at!)}
-                                </div>
-                                <div className={`text-lg font-bold ${scoreColor}`}>
-                                  {session.correct_answers} / {session.total_questions}
-                                  <span className="text-sm ml-2">({scorePercentage.toFixed(1)}%)</span>
-                                </div>
-                              </div>
-                              <div className="ml-auto text-blue-600 hover:text-blue-700 text-sm font-medium">
-                                Review →
+                              <div className={`text-lg font-bold ${scoreColor}`}>
+                                {session.correct_answers} / {session.total_questions}
+                                <span className="text-sm ml-2">({scorePercentage.toFixed(1)}%)</span>
                               </div>
                             </div>
-                            <button
-                              onClick={(e) => handleDeleteSession(session.session_id, quiz.quiz_id, e)}
-                              disabled={deletingSessionId === session.session_id}
-                              className="ml-4 text-red-500 hover:text-red-700 p-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                              title="Delete session"
-                            >
-                              {deletingSessionId === session.session_id ? (
-                                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
-                                  <circle
-                                    className="opacity-25"
-                                    cx="12"
-                                    cy="12"
-                                    r="10"
-                                    stroke="currentColor"
-                                    strokeWidth="4"
-                                    fill="none"
-                                  />
-                                  <path
-                                    className="opacity-75"
-                                    fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                  />
-                                </svg>
-                              ) : (
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              )}
-                            </button>
+                            <div className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                              Review →
+                            </div>
                           </div>
                         </div>
                       );
