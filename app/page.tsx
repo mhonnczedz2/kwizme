@@ -14,6 +14,8 @@ import QuizReviewApproval from '@/components/QuizReviewApproval';
 import QuizApprovedScreen from '@/components/QuizApprovedScreen';
 import SidePanel from '@/components/SidePanel';
 import FeedbackDrawer from '@/components/FeedbackDrawer';
+import GeneratingQuiz from '@/components/GeneratingQuiz';
+import ThemeToggle from '@/components/ThemeToggle';
 import { QuizGenerationResponse, AnswerRecord } from '@/lib/db/types';
 import { SessionConfig } from '@/components/QuizConfigModal';
 import { saveQuiz, getQuizById } from '@/lib/storage-router';
@@ -30,6 +32,7 @@ export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [organizationMetadata, setOrganizationMetadata] = useState<OrganizationMetadata>({});
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
   const [quizData, setQuizData] = useState<QuizGenerationResponse | null>(null);
   const [sessionConfig, setSessionConfig] = useState<SessionConfig | null>(null);
   const [finalScore, setFinalScore] = useState<{ score: number; total: number } | null>(null);
@@ -280,6 +283,7 @@ export default function Home() {
     if (!selectedFile) return;
 
     setIsGenerating(true);
+    setGenerationError(null);
 
     try {
       const formData = new FormData();
@@ -328,11 +332,18 @@ export default function Home() {
         // Go to review/approval state instead of saving immediately
         setAppState('reviewing-approval');
       } else {
-        alert(`Error: ${data.error || 'Failed to generate quiz'}`);
+        // Set appropriate error code based on response
+        if (data.error?.includes('parse') || data.error?.includes('read')) {
+          setGenerationError('PDF_PARSE_ERROR');
+        } else if (data.error?.includes('rate') || data.error?.includes('limit')) {
+          setGenerationError('RATE_LIMIT');
+        } else {
+          setGenerationError(data.error || 'Failed to generate quiz');
+        }
       }
     } catch (error) {
       console.error('❌ Quiz generation error:', error);
-      alert('Failed to generate quiz. Please try again.');
+      setGenerationError('API_ERROR');
     } finally {
       setIsGenerating(false);
     }
@@ -350,6 +361,12 @@ export default function Home() {
     setQuizData(null);
     setFinalScore(null);
     setReviewData(null);
+    setGenerationError(null);
+  };
+
+  const handleRetryGeneration = () => {
+    setGenerationError(null);
+    handleGenerateQuiz();
   };
 
   const handleTryAgain = () => {
@@ -479,13 +496,13 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen bg-white dark:bg-gray-900">
       {/* Fixed Background Layer */}
-      <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-100"></div>
+      <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800"></div>
 
       {/* Background Pattern */}
       <div
-        className="fixed inset-0 opacity-[0.15] pointer-events-none animate-grid-pan"
+        className="fixed inset-0 opacity-[0.15] dark:opacity-[0.08] pointer-events-none animate-grid-pan"
         style={{
           backgroundImage: `
             linear-gradient(to right, #3b82f6 1px, transparent 1px),
@@ -513,31 +530,36 @@ export default function Home() {
       />
 
       {/* Top Bar - Visible on all screen sizes */}
-      <div className="fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-200 shadow-sm">
-        <div className="flex items-center justify-between px-4 lg:px-6 py-2 lg:py-3">
-          <button
-            onClick={() => setShowSidePanel(true)}
-            className="bg-white hover:bg-gray-50 text-gray-700 rounded-full w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center shadow transition-colors"
-            aria-label="Menu"
-          >
-            <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
+      <div className="fixed top-0 left-0 right-0 z-30 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="grid grid-cols-3 items-center gap-2 px-4 lg:px-6 py-2 lg:py-3">
+          <div className="flex items-center justify-start">
+            <button
+              onClick={() => setShowSidePanel(true)}
+              className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-full w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center shadow transition-colors"
+              aria-label="Menu"
+            >
+              <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
 
-          <h1 className="text-lg lg:text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-lg lg:text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent text-center">
             QuizMe
           </h1>
 
-          <button
-            onClick={() => setShowInfoBubble(true)}
-            className="bg-blue-600 text-white rounded-full w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center shadow hover:bg-blue-700 transition-colors"
-            aria-label="Feedback"
-          >
-            <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </button>
+          <div className="flex items-center justify-end gap-2">
+            <ThemeToggle />
+            <button
+              onClick={() => setShowInfoBubble(true)}
+              className="bg-blue-600 dark:bg-blue-700 text-white rounded-full w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center shadow hover:bg-blue-700 dark:hover:bg-blue-800 transition-colors"
+              aria-label="Feedback"
+            >
+              <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -550,7 +572,7 @@ export default function Home() {
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 QuizMe
               </h1>
-              <p className="text-lg md:text-xl text-gray-600">
+              <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300">
                 Generate practice quizzes from your learning materials using AI
               </p>
             </div>
@@ -560,15 +582,15 @@ export default function Home() {
               {/* Generate Quiz Button */}
               <button
                 onClick={() => setAppState('generate')}
-                className="bg-white rounded-xl shadow-lg p-6 md:p-8 hover:shadow-xl transition-all hover:-translate-y-1 text-center group"
+                className="bg-gray-50 dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8 hover:shadow-xl transition-all hover:-translate-y-1 text-center group"
               >
-                <div className="bg-blue-100 w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:bg-blue-200 transition-colors">
-                  <svg className="w-7 h-7 md:w-8 md:h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-blue-100 dark:bg-blue-900/30 w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
+                  <svg className="w-7 h-7 md:w-8 md:h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
                 </div>
-                <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">Generate Quiz</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Generate Quiz</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Upload your learning materials and create a new quiz
                 </p>
               </button>
@@ -576,15 +598,15 @@ export default function Home() {
               {/* Quizzes Button */}
               <button
                 onClick={() => setAppState('quizzes')}
-                className="bg-white rounded-xl shadow-lg p-6 md:p-8 hover:shadow-xl transition-all hover:-translate-y-1 text-center group"
+                className="bg-gray-50 dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8 hover:shadow-xl transition-all hover:-translate-y-1 text-center group"
               >
-                <div className="bg-indigo-100 w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:bg-indigo-200 transition-colors">
-                  <svg className="w-7 h-7 md:w-8 md:h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-indigo-100 dark:bg-indigo-900/30 w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:bg-indigo-200 dark:group-hover:bg-indigo-900/50 transition-colors">
+                  <svg className="w-7 h-7 md:w-8 md:h-8 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
-                <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">Quizzes</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Quizzes</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Browse and take available quizzes
                 </p>
               </button>
@@ -592,15 +614,15 @@ export default function Home() {
               {/* Quiz History Button */}
               <button
                 onClick={() => setAppState('history')}
-                className="bg-white rounded-xl shadow-lg p-6 md:p-8 hover:shadow-xl transition-all hover:-translate-y-1 text-center group"
+                className="bg-gray-50 dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8 hover:shadow-xl transition-all hover:-translate-y-1 text-center group"
               >
-                <div className="bg-purple-100 w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:bg-purple-200 transition-colors">
-                  <svg className="w-7 h-7 md:w-8 md:h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-purple-100 dark:bg-purple-900/30 w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:bg-purple-200 dark:group-hover:bg-purple-900/50 transition-colors">
+                  <svg className="w-7 h-7 md:w-8 md:h-8 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">Quiz History</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Quiz History</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   View past quiz attempts and scores
                 </p>
               </button>
@@ -608,7 +630,7 @@ export default function Home() {
 
             {/* Helpful Tip Section */}
             <div className="mt-8 md:mt-12">
-              <p className="text-sm md:text-base text-gray-900 text-center leading-relaxed italic font-medium px-4">
+              <p className="text-sm md:text-base text-gray-900 dark:text-gray-100 text-center leading-relaxed font-medium px-4">
                 {helpfulTip}
               </p>
             </div>
@@ -808,6 +830,14 @@ export default function Home() {
           />
         )}
       </div>
+
+      {/* Loading/Error Overlay - Shows during quiz generation */}
+      {(isGenerating || generationError) && (
+        <GeneratingQuiz
+          error={generationError}
+          onRetry={handleRetryGeneration}
+        />
+      )}
       </div>
     </main>
   );

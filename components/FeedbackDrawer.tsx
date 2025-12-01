@@ -11,24 +11,24 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
       {/* Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
+          className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 z-40 transition-opacity"
           onClick={onClose}
         />
       )}
 
       {/* Feedback Drawer */}
       <div
-        className={`fixed top-0 right-0 h-full w-full md:w-96 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 h-full w-full md:w-96 bg-gray-50 dark:bg-gray-900 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <h2 className="text-lg font-bold text-gray-900">Feedback & Support</h2>
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Feedback & Support</h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition p-1"
+              className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition p-1"
               aria-label="Close feedback"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,7 +39,7 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-4">
-            <p className="text-xs text-gray-700 mb-4">
+            <p className="text-xs text-gray-700 dark:text-gray-300 mb-4">
               Have feedback or a feature request? Report a bug below!
             </p>
 
@@ -88,14 +88,14 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
               <input type="hidden" name="_captcha" value="false" />
 
               <div>
-                <label htmlFor="feedback-name" className="block text-xs font-medium text-gray-700 mb-1">
+                <label htmlFor="feedback-name" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Name *
                 </label>
                 <input
                   id="feedback-name"
                   type="text"
                   name="name"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:border-blue-500 dark:focus:border-blue-400"
                   placeholder="Juan Dela Cruz"
                   required
                   onInput={(e) => {
@@ -106,14 +106,14 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
               </div>
 
               <div>
-                <label htmlFor="feedback-email" className="block text-xs font-medium text-gray-700 mb-1">
+                <label htmlFor="feedback-email" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Email *
                 </label>
                 <input
                   id="feedback-email"
                   type="email"
                   name="email"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:border-blue-500 dark:focus:border-blue-400"
                   placeholder="jdc21@up.edu.ph"
                   required
                   onInput={(e) => {
@@ -123,7 +123,7 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Feedback Type *
                 </label>
                 <div className="flex gap-2">
@@ -210,14 +210,14 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
               </div>
 
               <div>
-                <label htmlFor="feedback-message" className="block text-xs font-medium text-gray-700 mb-1">
+                <label htmlFor="feedback-message" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Message *
                 </label>
                 <textarea
                   id="feedback-message"
                   name="message"
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-blue-500 resize-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 resize-none"
                   placeholder="Describe the issue or your suggestion..."
                   required
                   onInput={(e) => {
@@ -228,17 +228,17 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
 
               <button
                 type="submit"
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md transition-colors text-sm"
+                className="w-full bg-indigo-600 dark:bg-indigo-700 hover:bg-indigo-700 dark:hover:bg-indigo-800 text-white font-medium py-2 px-4 rounded-md transition-colors text-sm"
               >
                 Send Feedback
               </button>
             </form>
 
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <p className="text-xs text-gray-600 mb-1">Or contact directly:</p>
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Or contact directly:</p>
               <a
                 href="mailto:my.stationptot@gmail.com"
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium break-all"
+                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium break-all"
               >
                 my.stationptot@gmail.com
               </a>
