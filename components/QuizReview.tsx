@@ -70,8 +70,8 @@ export default function QuizReview({
               }`}
             >
               {/* Question Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="text-lg font-semibold text-gray-700 dark:text-gray-300">
                     Question {qIndex + 1}
                   </span>
@@ -79,7 +79,7 @@ export default function QuizReview({
                     {question.difficulty.toUpperCase()}
                   </span>
                 </div>
-                <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
+                <div className={`flex items-center gap-2 px-3 py-1 rounded-full self-start ${
                   isCorrect ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                 }`}>
                   {isCorrect ? (
