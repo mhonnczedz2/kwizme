@@ -275,7 +275,7 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
             value={metadata.file_description || ''}
             onChange={(e) => handleMetadataChange('file_description', e.target.value)}
             placeholder="e.g., 'Lecture notes on thermodynamic concepts. Focus on names and definitions' or 'MCQ test with questions, options, and correct answers already compiled. Simply extract the MCQs.' Leave blank for automatic analysis."
-            rows={3}
+            rows={5}
             className="w-full px-4 py-3 md:px-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none bg-white text-gray-900 text-base"
           />
           <p className="mt-1 text-xs text-gray-500">

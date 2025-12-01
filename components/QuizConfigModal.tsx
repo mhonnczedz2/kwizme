@@ -35,8 +35,8 @@ const PRESETS: Record<string, Omit<SessionConfig, 'num_questions_selected'>> = {
   fast_learn: {
     quick_submit: true,
     show_explanation: false,
-    randomize_options: false,
-    randomize_questions: false,
+    randomize_options: true,
+    randomize_questions: true,
     preset_name: 'fast_learn'
   }
 };
