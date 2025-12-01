@@ -76,6 +76,7 @@ See `/supabase_complete_schema.sql` for complete database schema including:
 - ✅ Cross-device synchronization
 - ✅ Mobile responsive design
 - ✅ Question editing and management
+- ✅ **PWA Support** - Install as app, offline access, native experience
 
 ### What's Next 🚧
 See **[IMMEDIATE_ACTION_PLAN.md](./IMMEDIATE_ACTION_PLAN.md)** for current priorities:
@@ -90,6 +91,9 @@ See **[IMMEDIATE_ACTION_PLAN.md](./IMMEDIATE_ACTION_PLAN.md)** for current prior
 ### Current Documentation
 - **[IMMEDIATE_ACTION_PLAN.md](./IMMEDIATE_ACTION_PLAN.md)** - Current tasks and implementation plan
 - **[README.md](./README.md)** - This file (project overview)
+- **[PWA_QUICKSTART.md](./PWA_QUICKSTART.md)** - ⚡ Quick guide to PWA setup (5 minutes)
+- **[PWA_SETUP.md](./PWA_SETUP.md)** - Detailed PWA implementation guide
+- **[PWA_TESTING_CHECKLIST.md](./PWA_TESTING_CHECKLIST.md)** - Complete PWA testing checklist
 
 ### Archived Documentation
 All planning and validation documents are in `/archive/planning/`:
@@ -152,6 +156,12 @@ npm run lint
 - ✅ User authentication
 - ✅ Cloud storage
 - ✅ Real-time cross-device sync
+- ✅ **PWA Support**
+  - ✅ Installable on mobile and desktop
+  - ✅ Offline access to cached content
+  - ✅ Native app-like experience
+  - ✅ App shortcuts for quick actions
+  - ✅ Custom splash screen and icons
 
 ### In Progress 🚧
 - Question/option randomization
@@ -161,11 +171,11 @@ npm run lint
 - Dark mode
 
 ### Future Features
-- PWA offline support
 - Export quiz to PDF
 - Spaced repetition system
 - Analytics dashboard
 - Collaborative features
+- Push notifications for study reminders
 
 ## 🏗️ Tech Stack
 

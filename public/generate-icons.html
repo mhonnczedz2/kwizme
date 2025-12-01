@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>QuizMe Icon Generator</title>
+</head>
+<body>
+  <h1>QuizMe Icon Generator</h1>
+  <p>Open this file in a browser to generate placeholder icons.</p>
+
+  <canvas id="icon192" width="192" height="192"></canvas>
+  <canvas id="icon512" width="512" height="512"></canvas>
+
+  <script>
+    // Generate 192x192 icon
+    const canvas192 = document.getElementById('icon192');
+    const ctx192 = canvas192.getContext('2d');
+
+    // Background gradient
+    const gradient192 = ctx192.createLinearGradient(0, 0, 192, 192);
+    gradient192.addColorStop(0, '#2563eb');
+    gradient192.addColorStop(0.5, '#4f46e5');
+    gradient192.addColorStop(1, '#7c3aed');
+    ctx192.fillStyle = gradient192;
+    ctx192.fillRect(0, 0, 192, 192);
+
+    // White text
+    ctx192.fillStyle = '#ffffff';
+    ctx192.font = 'bold 80px system-ui, -apple-system, sans-serif';
+    ctx192.textAlign = 'center';
+    ctx192.textBaseline = 'middle';
+    ctx192.fillText('Q', 96, 96);
+
+    // Generate 512x512 icon
+    const canvas512 = document.getElementById('icon512');
+    const ctx512 = canvas512.getContext('2d');
+
+    // Background gradient
+    const gradient512 = ctx512.createLinearGradient(0, 0, 512, 512);
+    gradient512.addColorStop(0, '#2563eb');
+    gradient512.addColorStop(0.5, '#4f46e5');
+    gradient512.addColorStop(1, '#7c3aed');
+    ctx512.fillStyle = gradient512;
+    ctx512.fillRect(0, 0, 512, 512);
+
+    // White text
+    ctx512.fillStyle = '#ffffff';
+    ctx512.font = 'bold 220px system-ui, -apple-system, sans-serif';
+    ctx512.textAlign = 'center';
+    ctx512.textBaseline = 'middle';
+    ctx512.fillText('Q', 256, 256);
+
+    // Download links
+    setTimeout(() => {
+      // 192x192
+      canvas192.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'icon-192x192.png';
+        document.body.appendChild(link);
+        link.textContent = 'Download 192x192 icon';
+        link.style.display = 'block';
+        link.style.margin = '10px';
+      });
+
+      // 512x512
+      canvas512.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'icon-512x512.png';
+        document.body.appendChild(link);
+        link.textContent = 'Download 512x512 icon';
+        link.style.display = 'block';
+        link.style.margin = '10px';
+      });
+    }, 100);
+  </script>
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    canvas {
+      border: 1px solid #ccc;
+      margin: 10px;
+    }
+    a {
+      color: #2563eb;
+      text-decoration: none;
+      font-weight: bold;
+      padding: 10px 20px;
+      background: #eff6ff;
+      border-radius: 8px;
+    }
+    a:hover {
+      background: #dbeafe;
+    }
+  </style>
+</body>
+</html>
