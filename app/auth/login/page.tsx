@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ThemeToggle from '@/components/ThemeToggle'
+import FeedbackDrawer from '@/components/FeedbackDrawer'
 
 // Force dynamic rendering - don't prerender this page
 export const dynamic = 'force-dynamic'
@@ -13,6 +14,11 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [showInfoBubble, setShowInfoBubble] = useState(false)
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetLoading, setResetLoading] = useState(false)
+  const [resetMessage, setResetMessage] = useState<{type: 'success' | 'error', text: string} | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [gridDirection, setGridDirection] = useState('40px 40px')
@@ -67,6 +73,39 @@ export default function LoginPage() {
     }
   }
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setResetLoading(true)
+    setResetMessage(null)
+
+    try {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${siteUrl}/auth/reset-password`,
+      })
+
+      if (error) throw error
+
+      setResetMessage({
+        type: 'success',
+        text: 'Password reset link sent! Check your email.'
+      })
+
+      setTimeout(() => {
+        setShowForgotPassword(false)
+        setResetMessage(null)
+        setResetEmail('')
+      }, 3000)
+    } catch (err: any) {
+      setResetMessage({
+        type: 'error',
+        text: err.message || 'Failed to send reset email'
+      })
+    } finally {
+      setResetLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
       {/* Background Pattern */}
@@ -97,12 +136,24 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <h1 className="text-lg lg:text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent text-center">
+          <button
+            onClick={handleBackToHome}
+            className="text-lg lg:text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent text-center cursor-pointer hover:opacity-80 transition-opacity"
+          >
             QuizMe
-          </h1>
+          </button>
 
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-end gap-2">
             <ThemeToggle />
+            <button
+              onClick={() => setShowInfoBubble(true)}
+              className="bg-blue-600 dark:bg-blue-700 text-white rounded-full w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center shadow hover:bg-blue-700 dark:hover:bg-blue-800 transition-colors"
+              aria-label="Feedback"
+            >
+              <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
@@ -196,6 +247,17 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Forgot Password Link */}
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+              >
+                Forgot Password?
+              </button>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
@@ -217,6 +279,76 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+
+      {/* Feedback Drawer */}
+      <FeedbackDrawer
+        isOpen={showInfoBubble}
+        onClose={() => setShowInfoBubble(false)}
+      />
+
+      {/* Forgot Password Modal */}
+      {showForgotPassword && (
+        <>
+          {/* Overlay */}
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 z-50"
+            onClick={() => setShowForgotPassword(false)}
+          />
+
+          {/* Modal */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 max-w-md w-full relative">
+              <button
+                onClick={() => setShowForgotPassword(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+                Reset Password
+              </h2>
+
+              {resetMessage && (
+                <div className={`mb-4 p-4 rounded-lg ${
+                  resetMessage.type === 'success'
+                    ? 'bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300'
+                    : 'bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300'
+                }`}>
+                  {resetMessage.text}
+                </div>
+              )}
+
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <div>
+                  <label htmlFor="reset-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Email Address
+                  </label>
+                  <input
+                    id="reset-email"
+                    type="email"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="jdc21@up.edu.ph"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={resetLoading}
+                  className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white font-semibold py-3 px-4 rounded-lg transition disabled:opacity-50"
+                >
+                  {resetLoading ? 'Sending...' : 'Send Reset Link'}
+                </button>
+              </form>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

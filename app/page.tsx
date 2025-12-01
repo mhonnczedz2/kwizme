@@ -544,9 +544,12 @@ export default function Home() {
             </button>
           </div>
 
-          <h1 className="text-lg lg:text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent text-center">
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="text-lg lg:text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent text-center cursor-pointer hover:opacity-80 transition-opacity"
+          >
             QuizMe
-          </h1>
+          </button>
 
           <div className="flex items-center justify-end gap-2">
             <ThemeToggle />
