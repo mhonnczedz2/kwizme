@@ -9,6 +9,7 @@ import { QuizGenerationResponse, AnswerRecord } from '@/lib/db/types';
 import QuizConfigModal, { SessionConfig } from './QuizConfigModal';
 import type { User } from '@supabase/supabase-js';
 import { useRealtimeSync } from '@/lib/hooks/useRealtimeSync';
+import LoadingSkeleton from './LoadingSkeleton';
 
 interface QuizHistoryProps {
   onSelectQuiz: (quiz: QuizGenerationResponse, config?: SessionConfig, answers?: AnswerRecord[], sessionScore?: { correct: number; total: number }) => void;
@@ -24,6 +25,7 @@ interface QuizWithSessions {
 export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryProps) {
   const [quizzesWithSessions, setQuizzesWithSessions] = useState<QuizWithSessions[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
   const [expandedQuizId, setExpandedQuizId] = useState<string | null>(null);
   const [configuringQuizId, setConfiguringQuizId] = useState<string | null>(null);
   const [questionCount, setQuestionCount] = useState<number>(15);
@@ -113,6 +115,8 @@ export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryP
       return;
     }
 
+    setDeletingSessionId(sessionId);
+
     try {
       // Delete the specific session
       const db = await initDatabase();
@@ -130,6 +134,8 @@ export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryP
     } catch (error) {
       console.error('Failed to delete session:', error);
       alert('Failed to delete session. Please try again.');
+    } finally {
+      setDeletingSessionId(null);
     }
   };
 
@@ -205,10 +211,7 @@ export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryP
 
       {/* Loading State */}
       {isLoading && (
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600 mt-4">Loading quizzes...</p>
-        </div>
+        <LoadingSkeleton variant="history-list" count={5} />
       )}
 
       {/* Empty State */}
@@ -373,12 +376,32 @@ export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryP
                             </div>
                             <button
                               onClick={(e) => handleDeleteSession(session.session_id, quiz.quiz_id, e)}
-                              className="ml-4 text-red-500 hover:text-red-700 p-2"
+                              disabled={deletingSessionId === session.session_id}
+                              className="ml-4 text-red-500 hover:text-red-700 p-2 disabled:opacity-50 disabled:cursor-not-allowed"
                               title="Delete session"
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
+                              {deletingSessionId === session.session_id ? (
+                                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                                  <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                    fill="none"
+                                  />
+                                  <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                  />
+                                </svg>
+                              ) : (
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              )}
                             </button>
                           </div>
                         </div>

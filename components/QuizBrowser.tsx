@@ -7,6 +7,7 @@ import { Quiz } from '@/lib/db/types';
 import QuizConfigModal, { SessionConfig } from './QuizConfigModal';
 import type { User } from '@supabase/supabase-js';
 import { useRealtimeSync } from '@/lib/hooks/useRealtimeSync';
+import LoadingSkeleton from './LoadingSkeleton';
 
 interface QuizBrowserProps {
   onSelectQuiz: (quizId: string, config: SessionConfig) => void;
@@ -18,6 +19,7 @@ interface QuizBrowserProps {
 export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, user }: QuizBrowserProps) {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingQuizId, setDeletingQuizId] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc'); // desc = newest first
   const [filters, setFilters] = useState({
     difficulty_level: '',
@@ -87,6 +89,8 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
       return;
     }
 
+    setDeletingQuizId(quizId);
+
     try {
       // Delete all sessions for this quiz first
       await deleteSessionsForQuiz(quizId, user);
@@ -101,6 +105,8 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
     } catch (error) {
       console.error('Failed to delete quiz:', error);
       alert('Failed to delete quiz. Please try again.');
+    } finally {
+      setDeletingQuizId(null);
     }
   };
 
@@ -197,9 +203,8 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
 
   if (loading) {
     return (
-      <div className="text-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="mt-4 text-gray-600">Loading quizzes...</p>
+      <div>
+        <LoadingSkeleton variant="quiz-grid" count={6} />
       </div>
     );
   }
@@ -424,12 +429,37 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
                 </button>
                 <button
                   onClick={(e) => handleDeleteQuiz(quiz.quiz_id, e)}
-                  className="w-full px-4 py-3 md:py-2 text-left text-sm md:text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                  disabled={deletingQuizId === quiz.quiz_id}
+                  className="w-full px-4 py-3 md:py-2 text-left text-sm md:text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <svg className="w-5 h-5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  Delete
+                  {deletingQuizId === quiz.quiz_id ? (
+                    <>
+                      <svg className="w-5 h-5 md:w-4 md:h-4 animate-spin" viewBox="0 0 24 24">
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          fill="none"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Delete
+                    </>
+                  )}
                 </button>
               </div>
             )}
