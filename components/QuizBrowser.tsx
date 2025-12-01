@@ -211,14 +211,14 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
 
   if (quizzes.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-lg p-12 text-center">
-        <div className="text-gray-400 mb-4">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg shadow-lg p-12 text-center">
+        <div className="text-gray-400 dark:text-gray-500 mb-4">
           <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         </div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">No Quizzes Yet</h3>
-        <p className="text-gray-600 mb-6">
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No Quizzes Yet</h3>
+        <p className="text-gray-600 dark:text-gray-400 mb-6">
           Generate your first quiz to get started!
         </p>
         <button
@@ -234,10 +234,10 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
   return (
     <div className="space-y-4">
       {/* Filters and Sort Section */}
-      <div className="bg-white rounded-lg shadow p-4 md:p-5 mb-6">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg shadow p-4 md:p-5 mb-6">
         {/* Header Row with Sort Buttons */}
         <div className="flex items-center gap-3 mb-4">
-          <h3 className="text-sm font-semibold text-gray-700">Categories</h3>
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Categories</h3>
 
           {/* Sort Buttons - Circular with icons only */}
           <div className="flex items-center gap-1.5">
@@ -362,14 +362,14 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
 
       {/* No results message */}
       {filteredQuizzes.length === 0 && hasActiveFilters && (
-        <div className="bg-white rounded-lg shadow-lg p-12 text-center">
-          <div className="text-gray-400 mb-4">
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg shadow-lg p-12 text-center">
+          <div className="text-gray-400 dark:text-gray-500 mb-4">
             <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No Quizzes Found</h3>
-          <p className="text-gray-600 mb-6">
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No Quizzes Found</h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
             No quizzes match your current filters.
           </p>
           <button
@@ -390,16 +390,16 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
             setQuestionCount(count);
             setConfiguringQuizId(quiz.quiz_id);
           }}
-          className="bg-white rounded-lg shadow-lg p-4 md:p-6 hover:shadow-xl transition-shadow cursor-pointer relative"
+          className="bg-gray-50 dark:bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 hover:shadow-xl transition-shadow cursor-pointer relative"
         >
           {/* Three-dot menu button - Larger for touch */}
           <div className="absolute top-4 md:top-6 right-4 md:right-6">
             <button
               onClick={(e) => toggleMenu(quiz.quiz_id, e)}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
               aria-label="More options"
             >
-              <svg className="w-5 h-5 md:w-4 md:h-4 text-gray-600" fill="currentColor" viewBox="0 0 16 16">
+              <svg className="w-5 h-5 md:w-4 md:h-4 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 16 16">
                 <circle cx="8" cy="2" r="1.5" />
                 <circle cx="8" cy="8" r="1.5" />
                 <circle cx="8" cy="14" r="1.5" />
@@ -408,10 +408,10 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
 
             {/* Dropdown menu - Wider on mobile for easier tapping */}
             {openMenuId === quiz.quiz_id && (
-              <div className="absolute right-0 mt-1 w-56 md:w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+              <div className="absolute right-0 mt-1 w-56 md:w-48 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-10">
                 <button
                   onClick={(e) => handleReviewQuestions(quiz.quiz_id, e)}
-                  className="w-full px-4 py-3 md:py-2 text-left text-sm md:text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  className="w-full px-4 py-3 md:py-2 text-left text-sm md:text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
                 >
                   <svg className="w-5 h-5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
@@ -420,7 +420,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
                 </button>
                 <button
                   onClick={(e) => handleEditQuiz(quiz.quiz_id, e)}
-                  className="w-full px-4 py-3 md:py-2 text-left text-sm md:text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  className="w-full px-4 py-3 md:py-2 text-left text-sm md:text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
                 >
                   <svg className="w-5 h-5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -430,7 +430,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
                 <button
                   onClick={(e) => handleDeleteQuiz(quiz.quiz_id, e)}
                   disabled={deletingQuizId === quiz.quiz_id}
-                  className="w-full px-4 py-3 md:py-2 text-left text-sm md:text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3 md:py-2 text-left text-sm md:text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {deletingQuizId === quiz.quiz_id ? (
                     <>
@@ -467,7 +467,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
 
           {/* Topic | Quiz Title with Difficulty Badge - Stack on very small screens */}
           <div className="mb-2 pr-12 md:pr-10 flex flex-col sm:flex-row sm:items-center gap-2">
-            <h3 className="text-lg md:text-xl font-semibold text-gray-900">
+            <h3 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100">
               {quiz.topic && (
                 <span>{quiz.topic} | </span>
               )}
@@ -487,7 +487,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
 
           {/* Institution • Program • Course - Stack on mobile */}
           {(quiz.institution || quiz.program || quiz.course_code) && (
-            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm text-gray-600 mb-2">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
               {quiz.institution && (
                 <div className="flex items-center gap-1">
                   <span>🏛️</span>
@@ -512,7 +512,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
           )}
 
           {/* File name */}
-          <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-2">
             <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
@@ -520,7 +520,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
           </div>
 
           {/* Date - Lower Left */}
-          <div className="text-xs text-gray-400">
+          <div className="text-xs text-gray-400 dark:text-gray-500">
             {new Date(quiz.created_at).toLocaleDateString()}
           </div>
         </div>
@@ -529,14 +529,14 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
     {/* Edit Modal */}
     {editingQuiz && (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           <div className="p-6">
             {/* Modal Header */}
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Edit Quiz Categorization</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Edit Quiz Categorization</h2>
               <button
                 onClick={handleCancelEdit}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -548,7 +548,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
             <div className="space-y-4">
               {/* Quiz Title */}
               <div>
-                <label htmlFor="edit_quiz_title" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="edit_quiz_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Quiz Title
                 </label>
                 <input
@@ -556,13 +556,13 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
                   type="text"
                   value={editForm.quiz_title}
                   onChange={(e) => setEditForm({ ...editForm, quiz_title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               {/* Topic */}
               <div>
-                <label htmlFor="edit_topic" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="edit_topic" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Topic
                 </label>
                 <input
@@ -571,13 +571,13 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
                   value={editForm.topic}
                   onChange={(e) => setEditForm({ ...editForm, topic: e.target.value })}
                   placeholder="e.g., Cell Biology - Chapter 5"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               {/* Difficulty Level */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Difficulty Level
                 </label>
                 <div className="flex gap-2">
@@ -619,7 +619,7 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
 
               {/* Institution */}
               <div>
-                <label htmlFor="edit_institution" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="edit_institution" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Institution
                 </label>
                 <input
@@ -628,13 +628,13 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
                   value={editForm.institution}
                   onChange={(e) => setEditForm({ ...editForm, institution: e.target.value })}
                   placeholder="e.g., UC Berkeley"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               {/* Program */}
               <div>
-                <label htmlFor="edit_program" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="edit_program" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Program
                 </label>
                 <input
@@ -643,13 +643,13 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
                   value={editForm.program}
                   onChange={(e) => setEditForm({ ...editForm, program: e.target.value })}
                   placeholder="e.g., Biology Major"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               {/* Course Code */}
               <div>
-                <label htmlFor="edit_course_code" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="edit_course_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Course
                 </label>
                 <input
@@ -658,16 +658,16 @@ export default function QuizBrowser({ onSelectQuiz, onBack, onReviewQuestions, u
                   value={editForm.course_code}
                   onChange={(e) => setEditForm({ ...editForm, course_code: e.target.value })}
                   placeholder="e.g., BIO 101"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
 
             {/* Modal Actions */}
-            <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
+            <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
               <button
                 onClick={handleCancelEdit}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >
                 Cancel
               </button>

@@ -2,104 +2,407 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>QuizMe Icon Generator</title>
+  <title>QuizMe Custom Icon Generator</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #f3f4f6;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    h1 {
+      background: linear-gradient(to right, #2563eb, #4f46e5, #7c3aed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin: 30px 0;
+      padding: 20px;
+      background: #f9fafb;
+      border-radius: 8px;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    label {
+      font-weight: 600;
+      font-size: 14px;
+      color: #374151;
+    }
+    input[type="text"],
+    input[type="color"],
+    select {
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    input[type="file"] {
+      padding: 8px;
+      border: 2px dashed #d1d5db;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    input[type="file"]:hover {
+      border-color: #2563eb;
+      background: #eff6ff;
+    }
+    .preview-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin: 30px 0;
+    }
+    .preview-box {
+      text-align: center;
+    }
+    .preview-box h3 {
+      margin-bottom: 15px;
+      color: #374151;
+    }
+    canvas {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      max-width: 100%;
+      height: auto;
+    }
+    .buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 30px;
+    }
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+    .btn-primary {
+      background: linear-gradient(to right, #2563eb, #4f46e5);
+      color: white;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+    }
+    .btn-secondary {
+      background: #6b7280;
+      color: white;
+    }
+    .btn-secondary:hover {
+      background: #4b5563;
+    }
+    .tips {
+      background: #eff6ff;
+      border-left: 4px solid #2563eb;
+      padding: 15px 20px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .tips h4 {
+      margin-top: 0;
+      color: #1e40af;
+    }
+    .tips ul {
+      margin: 10px 0;
+      padding-left: 20px;
+    }
+    .tips li {
+      margin: 5px 0;
+      color: #1e40af;
+    }
+  </style>
 </head>
 <body>
-  <h1>QuizMe Icon Generator</h1>
-  <p>Open this file in a browser to generate placeholder icons.</p>
+  <div class="container">
+    <h1>QuizMe Icon Generator</h1>
+    <p style="color: #6b7280; margin-bottom: 30px;">
+      Create custom app icons for your PWA. Generate simple text-based icons or upload your own logo.
+    </p>
 
-  <canvas id="icon192" width="192" height="192"></canvas>
-  <canvas id="icon512" width="512" height="512"></canvas>
+    <div class="tips">
+      <h4>💡 Icon Design Tips</h4>
+      <ul>
+        <li><strong>Keep it simple</strong> - Icons are displayed at small sizes</li>
+        <li><strong>High contrast</strong> - Make sure text/logo stands out from background</li>
+        <li><strong>Center your design</strong> - Leave padding around edges</li>
+        <li><strong>Test at small sizes</strong> - Icons will be 48x48 to 512x512</li>
+        <li><strong>Use PNG with transparency</strong> - Or solid background color</li>
+      </ul>
+    </div>
+
+    <div class="controls">
+      <div class="control-group">
+        <label for="iconText">Icon Text</label>
+        <input type="text" id="iconText" value="Q" maxlength="3" placeholder="Q or QM">
+        <small style="color: #6b7280;">1-3 characters work best</small>
+      </div>
+
+      <div class="control-group">
+        <label for="fontSize">Font Size</label>
+        <input type="range" id="fontSize" min="60" max="300" value="80" step="10">
+        <span id="fontSizeValue">80px</span>
+      </div>
+
+      <div class="control-group">
+        <label for="textColor">Text Color</label>
+        <input type="color" id="textColor" value="#ffffff">
+      </div>
+
+      <div class="control-group">
+        <label for="bgType">Background Type</label>
+        <select id="bgType">
+          <option value="gradient">Gradient (Blue to Purple)</option>
+          <option value="solid">Solid Color</option>
+          <option value="transparent">Transparent</option>
+        </select>
+      </div>
+
+      <div class="control-group" id="gradientControls">
+        <label for="gradientStart">Gradient Start</label>
+        <input type="color" id="gradientStart" value="#2563eb">
+      </div>
+
+      <div class="control-group" id="gradientEndControls">
+        <label for="gradientEnd">Gradient End</label>
+        <input type="color" id="gradientEnd" value="#7c3aed">
+      </div>
+
+      <div class="control-group" id="solidColorControls" style="display: none;">
+        <label for="bgColor">Background Color</label>
+        <input type="color" id="bgColor" value="#2563eb">
+      </div>
+
+      <div class="control-group">
+        <label for="fontFamily">Font Style</label>
+        <select id="fontFamily">
+          <option value="system-ui, -apple-system, sans-serif">System (Default)</option>
+          <option value="'Courier New', monospace">Monospace</option>
+          <option value="'Times New Roman', serif">Serif</option>
+          <option value="'Arial', sans-serif">Arial</option>
+          <option value="'Impact', sans-serif">Impact</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="fontWeight">Font Weight</label>
+        <select id="fontWeight">
+          <option value="normal">Normal</option>
+          <option value="bold" selected>Bold</option>
+          <option value="900">Extra Bold</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="logoUpload">Or Upload Logo Image</label>
+        <input type="file" id="logoUpload" accept="image/*">
+        <small style="color: #6b7280;">PNG recommended</small>
+      </div>
+    </div>
+
+    <div class="preview-section">
+      <div class="preview-box">
+        <h3>192×192 Preview</h3>
+        <canvas id="icon192" width="192" height="192"></canvas>
+      </div>
+      <div class="preview-box">
+        <h3>512×512 Preview</h3>
+        <canvas id="icon512" width="512" height="512"></canvas>
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button class="btn-primary" onclick="downloadIcons()">
+        📥 Download Both Icons
+      </button>
+      <button class="btn-secondary" onclick="resetToDefaults()">
+        🔄 Reset to Defaults
+      </button>
+    </div>
+
+    <div class="tips" style="margin-top: 30px;">
+      <h4>📝 Next Steps</h4>
+      <ol style="margin: 10px 0; padding-left: 20px; color: #1e40af;">
+        <li>Customize your icon using the controls above</li>
+        <li>Click "Download Both Icons" button</li>
+        <li>Save both files to your <code>public/</code> folder</li>
+        <li>Rebuild and deploy your app</li>
+        <li>Test installation on your device!</li>
+      </ol>
+    </div>
+  </div>
 
   <script>
-    // Generate 192x192 icon
     const canvas192 = document.getElementById('icon192');
-    const ctx192 = canvas192.getContext('2d');
-
-    // Background gradient
-    const gradient192 = ctx192.createLinearGradient(0, 0, 192, 192);
-    gradient192.addColorStop(0, '#2563eb');
-    gradient192.addColorStop(0.5, '#4f46e5');
-    gradient192.addColorStop(1, '#7c3aed');
-    ctx192.fillStyle = gradient192;
-    ctx192.fillRect(0, 0, 192, 192);
-
-    // White text
-    ctx192.fillStyle = '#ffffff';
-    ctx192.font = 'bold 80px system-ui, -apple-system, sans-serif';
-    ctx192.textAlign = 'center';
-    ctx192.textBaseline = 'middle';
-    ctx192.fillText('Q', 96, 96);
-
-    // Generate 512x512 icon
     const canvas512 = document.getElementById('icon512');
+    const ctx192 = canvas192.getContext('2d');
     const ctx512 = canvas512.getContext('2d');
+    let uploadedImage = null;
 
-    // Background gradient
-    const gradient512 = ctx512.createLinearGradient(0, 0, 512, 512);
-    gradient512.addColorStop(0, '#2563eb');
-    gradient512.addColorStop(0.5, '#4f46e5');
-    gradient512.addColorStop(1, '#7c3aed');
-    ctx512.fillStyle = gradient512;
-    ctx512.fillRect(0, 0, 512, 512);
+    // Update controls visibility
+    document.getElementById('bgType').addEventListener('change', function() {
+      const bgType = this.value;
+      document.getElementById('gradientControls').style.display = bgType === 'gradient' ? 'flex' : 'none';
+      document.getElementById('gradientEndControls').style.display = bgType === 'gradient' ? 'flex' : 'none';
+      document.getElementById('solidColorControls').style.display = bgType === 'solid' ? 'flex' : 'none';
+      generateIcons();
+    });
 
-    // White text
-    ctx512.fillStyle = '#ffffff';
-    ctx512.font = 'bold 220px system-ui, -apple-system, sans-serif';
-    ctx512.textAlign = 'center';
-    ctx512.textBaseline = 'middle';
-    ctx512.fillText('Q', 256, 256);
+    // Font size slider
+    document.getElementById('fontSize').addEventListener('input', function() {
+      document.getElementById('fontSizeValue').textContent = this.value + 'px';
+      generateIcons();
+    });
 
-    // Download links
-    setTimeout(() => {
-      // 192x192
+    // Real-time updates
+    document.getElementById('iconText').addEventListener('input', generateIcons);
+    document.getElementById('textColor').addEventListener('input', generateIcons);
+    document.getElementById('gradientStart').addEventListener('input', generateIcons);
+    document.getElementById('gradientEnd').addEventListener('input', generateIcons);
+    document.getElementById('bgColor').addEventListener('input', generateIcons);
+    document.getElementById('fontFamily').addEventListener('change', generateIcons);
+    document.getElementById('fontWeight').addEventListener('change', generateIcons);
+
+    // Image upload
+    document.getElementById('logoUpload').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const img = new Image();
+          img.onload = function() {
+            uploadedImage = img;
+            generateIcons();
+          };
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function generateIcons() {
+      const text = document.getElementById('iconText').value || 'Q';
+      const fontSize = parseInt(document.getElementById('fontSize').value);
+      const textColor = document.getElementById('textColor').value;
+      const bgType = document.getElementById('bgType').value;
+      const gradientStart = document.getElementById('gradientStart').value;
+      const gradientEnd = document.getElementById('gradientEnd').value;
+      const bgColor = document.getElementById('bgColor').value;
+      const fontFamily = document.getElementById('fontFamily').value;
+      const fontWeight = document.getElementById('fontWeight').value;
+
+      // Generate 192x192 icon
+      drawIcon(ctx192, 192, text, fontSize, textColor, bgType, gradientStart, gradientEnd, bgColor, fontFamily, fontWeight);
+
+      // Generate 512x512 icon (scale font size)
+      const scaledFontSize = Math.floor(fontSize * (512 / 192));
+      drawIcon(ctx512, 512, text, scaledFontSize, textColor, bgType, gradientStart, gradientEnd, bgColor, fontFamily, fontWeight);
+    }
+
+    function drawIcon(ctx, size, text, fontSize, textColor, bgType, gradientStart, gradientEnd, bgColor, fontFamily, fontWeight) {
+      // Clear canvas
+      ctx.clearRect(0, 0, size, size);
+
+      // Draw background
+      if (bgType === 'gradient') {
+        const gradient = ctx.createLinearGradient(0, 0, size, size);
+        gradient.addColorStop(0, gradientStart);
+        gradient.addColorStop(0.5, blendColors(gradientStart, gradientEnd));
+        gradient.addColorStop(1, gradientEnd);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, size, size);
+      } else if (bgType === 'solid') {
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, size, size);
+      }
+
+      // Draw uploaded image or text
+      if (uploadedImage) {
+        const scale = Math.min(size / uploadedImage.width, size / uploadedImage.height) * 0.8;
+        const x = (size - uploadedImage.width * scale) / 2;
+        const y = (size - uploadedImage.height * scale) / 2;
+        ctx.drawImage(uploadedImage, x, y, uploadedImage.width * scale, uploadedImage.height * scale);
+      } else {
+        // Draw text
+        ctx.fillStyle = textColor;
+        ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, size / 2, size / 2);
+      }
+    }
+
+    function blendColors(color1, color2) {
+      const c1 = parseInt(color1.slice(1), 16);
+      const c2 = parseInt(color2.slice(1), 16);
+      const r = Math.floor(((c1 >> 16) + (c2 >> 16)) / 2);
+      const g = Math.floor((((c1 >> 8) & 0xff) + ((c2 >> 8) & 0xff)) / 2);
+      const b = Math.floor(((c1 & 0xff) + (c2 & 0xff)) / 2);
+      return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+    }
+
+    function downloadIcons() {
+      // Download 192x192
       canvas192.toBlob((blob) => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
         link.download = 'icon-192x192.png';
-        document.body.appendChild(link);
-        link.textContent = 'Download 192x192 icon';
-        link.style.display = 'block';
-        link.style.margin = '10px';
+        link.click();
       });
 
-      // 512x512
-      canvas512.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'icon-512x512.png';
-        document.body.appendChild(link);
-        link.textContent = 'Download 512x512 icon';
-        link.style.display = 'block';
-        link.style.margin = '10px';
-      });
-    }, 100);
+      // Download 512x512
+      setTimeout(() => {
+        canvas512.toBlob((blob) => {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'icon-512x512.png';
+          link.click();
+        });
+      }, 500);
+
+      alert('✅ Both icons downloaded! Save them to your public/ folder.');
+    }
+
+    function resetToDefaults() {
+      document.getElementById('iconText').value = 'Q';
+      document.getElementById('fontSize').value = 80;
+      document.getElementById('fontSizeValue').textContent = '80px';
+      document.getElementById('textColor').value = '#ffffff';
+      document.getElementById('bgType').value = 'gradient';
+      document.getElementById('gradientStart').value = '#2563eb';
+      document.getElementById('gradientEnd').value = '#7c3aed';
+      document.getElementById('logoUpload').value = '';
+      uploadedImage = null;
+      generateIcons();
+    }
+
+    // Initial generation
+    generateIcons();
   </script>
-
-  <style>
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      padding: 20px;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    canvas {
-      border: 1px solid #ccc;
-      margin: 10px;
-    }
-    a {
-      color: #2563eb;
-      text-decoration: none;
-      font-weight: bold;
-      padding: 10px 20px;
-      background: #eff6ff;
-      border-radius: 8px;
-    }
-    a:hover {
-      background: #dbeafe;
-    }
-  </style>
 </body>
 </html>

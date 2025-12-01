@@ -196,10 +196,10 @@ export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryP
             placeholder="Search quizzes by title, topic, institution, program, course, or difficulty..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-3 pl-12 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           <svg
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -216,10 +216,10 @@ export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryP
 
       {/* Empty State */}
       {!isLoading && quizzesWithSessions.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+        <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm">
           <div className="text-6xl mb-4">📚</div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">No Quizzes Yet</h2>
-          <p className="text-gray-600 mb-6">Generate your first quiz to see it here</p>
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">No Quizzes Yet</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">Generate your first quiz to see it here</p>
           <button
             onClick={onBack}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -231,10 +231,10 @@ export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryP
 
       {/* No Search Results */}
       {!isLoading && quizzesWithSessions.length > 0 && filteredQuizzes.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+        <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm">
           <div className="text-6xl mb-4">🔍</div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">No Matches Found</h2>
-          <p className="text-gray-600 mb-6">Try a different search term</p>
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">No Matches Found</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">Try a different search term</p>
           <button
             onClick={() => setSearchQuery('')}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -254,17 +254,17 @@ export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryP
             return (
             <div
               key={quiz.quiz_id}
-              className="bg-white rounded-lg shadow-sm border border-gray-200"
+              className="bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
             >
               {/* Quiz Header - Clickable to expand/collapse */}
               <div
                 onClick={() => toggleExpanded(quiz.quiz_id)}
-                className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+                className="p-6 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                       {quiz.quiz_title}
                     </h3>
                     <span className={`px-2 py-1 rounded text-xs font-medium ${getDifficultyColor(quiz.difficulty_level)}`}>
@@ -274,7 +274,7 @@ export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryP
 
                   {/* Institution and Program */}
                   {(quiz.institution || quiz.program) && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-1">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                       </svg>
@@ -286,7 +286,7 @@ export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryP
 
                   {/* Course and Course Code */}
                   {quiz.course_code && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-1">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                       </svg>
@@ -295,7 +295,7 @@ export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryP
                   )}
 
                   {quiz.topic && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-1">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                       </svg>
@@ -304,7 +304,7 @@ export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryP
                   )}
 
                   {/* File name, date, and session count */}
-                  <div className="flex items-center gap-3 text-gray-500 mt-2">
+                  <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400 mt-2">
                     <div className="flex items-center gap-2">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -327,7 +327,7 @@ export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryP
                 {/* Delete and Expand buttons */}
                 <div className="flex items-center gap-2">
                   {completedSessions.length > 0 && (
-                    <div className="text-gray-400">
+                    <div className="text-gray-400 dark:text-gray-500">
                       <svg className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
@@ -339,7 +339,7 @@ export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryP
 
               {/* Expanded Sessions List */}
               {isExpanded && completedSessions.length > 0 && (
-                <div className="border-t border-gray-200 bg-gray-50 p-4">
+                <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 p-4">
                   <div className="space-y-2">
                     {completedSessions.map((session, index) => {
                       const scorePercentage = session.score_percentage || 0;
@@ -348,7 +348,7 @@ export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryP
                       return (
                         <div
                           key={session.session_id}
-                          className="bg-white p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all"
+                          className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-sm transition-all"
                         >
                           <div className="flex items-center justify-between">
                             <div
@@ -358,11 +358,11 @@ export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryP
                                 handleSessionClick(quiz.quiz_id, session.session_id);
                               }}
                             >
-                              <div className="text-sm text-gray-500">
+                              <div className="text-sm text-gray-500 dark:text-gray-400">
                                 #{completedSessions.length - index}
                               </div>
                               <div>
-                                <div className="text-sm font-medium text-gray-900">
+                                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                   {formatShortDate(session.completed_at!)}
                                 </div>
                                 <div className={`text-lg font-bold ${scoreColor}`}>
@@ -424,7 +424,7 @@ export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryP
 
               {/* No sessions - show take quiz button */}
               {!isExpanded && completedSessions.length === 0 && (
-                <div className="border-t border-gray-200 p-4 bg-gray-50">
+                <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-100 dark:bg-gray-900">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

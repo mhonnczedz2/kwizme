@@ -662,7 +662,7 @@ export default function Home() {
             </div>
 
             {/* Upload Zone */}
-            <div className="bg-white rounded-lg shadow-lg p-8">
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg shadow-lg p-8">
               <FileUploadZone
                 onFileSelect={handleFileSelect}
                 onMetadataChange={setOrganizationMetadata}
