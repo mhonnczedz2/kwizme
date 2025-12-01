@@ -319,7 +319,7 @@ export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryP
                       return (
                         <div
                           key={session.session_id}
-                          className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-sm transition-all cursor-pointer"
+                          className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-md transition-all cursor-pointer group"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleSessionClick(quiz.quiz_id, session.session_id);
@@ -338,7 +338,7 @@ export default function QuizHistory({ onSelectQuiz, onBack, user }: QuizHistoryP
                                 <span className="text-sm ml-2">({scorePercentage.toFixed(1)}%)</span>
                               </div>
                             </div>
-                            <div className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                            <div className="text-blue-600 group-hover:text-blue-700 text-sm font-medium group-hover:translate-x-1 transition-transform">
                               Review →
                             </div>
                           </div>
