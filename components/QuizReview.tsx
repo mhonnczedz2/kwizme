@@ -128,12 +128,6 @@ export default function QuizReview({
                           {String.fromCharCode(65 + optIndex)}.
                         </span>
                         <span className={`flex-1 ${textClass}`}>{option}</span>
-                        {isCorrectAnswer && (
-                          <span className="text-green-600 dark:text-green-300 font-semibold whitespace-nowrap">✓ Correct Answer</span>
-                        )}
-                        {isSelected && !isCorrectAnswer && (
-                          <span className="text-red-600 dark:text-red-300 font-semibold whitespace-nowrap">Your Answer</span>
-                        )}
                       </div>
                     </div>
                   );
