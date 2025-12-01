@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ThemeToggle from '@/components/ThemeToggle'
+import FeedbackDrawer from '@/components/FeedbackDrawer'
 
 // Force dynamic rendering - don't prerender this page
 export const dynamic = 'force-dynamic'
@@ -18,6 +19,8 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
+  const [showInfoBubble, setShowInfoBubble] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -54,6 +57,13 @@ export default function SignupPage() {
     e.preventDefault()
     setError(null)
     setLoading(true)
+
+    // Validate terms agreement
+    if (!agreedToTerms) {
+      setError('You must agree to the Terms of Service and Privacy Policy to continue')
+      setLoading(false)
+      return
+    }
 
     // Validate passwords match
     if (password !== confirmPassword) {
@@ -95,11 +105,7 @@ export default function SignupPage() {
       // Show success message
       setSuccess(true)
 
-      // Redirect to home after a short delay
-      setTimeout(() => {
-        router.push('/')
-        router.refresh()
-      }, 2000)
+      // Don't auto-redirect - let user read the message and navigate manually
     } catch (err: any) {
       // Handle specific error messages
       if (err.message.includes('already registered') || err.message.includes('already been registered')) {
@@ -145,9 +151,12 @@ export default function SignupPage() {
               </button>
             </div>
 
-            <h1 className="text-lg lg:text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent text-center">
+            <button
+              onClick={handleBackToHome}
+              className="text-lg lg:text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent text-center cursor-pointer hover:opacity-80 transition-opacity"
+            >
               QuizMe
-            </h1>
+            </button>
 
             <div className="flex items-center justify-end">
               <ThemeToggle />
@@ -158,9 +167,10 @@ export default function SignupPage() {
         {/* Content */}
         <div className="relative z-10 w-full max-w-md mt-20">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
-            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            {/* Email Icon */}
+            <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
-                className="w-8 h-8 text-green-600 dark:text-green-400"
+                className="w-8 h-8 text-blue-600 dark:text-blue-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -169,16 +179,36 @@ export default function SignupPage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M5 13l4 4L19 7"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                 />
               </svg>
             </div>
+
+            {/* Main Message */}
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-              Account Created!
+              Please Verify Your Email
             </h2>
             <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Welcome to QuizMe! Redirecting you to the app...
+              We've sent a confirmation link to <strong className="text-gray-900 dark:text-gray-100">{email}</strong>
             </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+              Click the link in the email to verify your account. You can start using QuizMe after verification.
+            </p>
+
+            {/* Info Box */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                💡 <strong>Tip:</strong> Check your spam folder if you don't see the email within a few minutes.
+              </p>
+            </div>
+
+            {/* Back to Login Button */}
+            <Link
+              href="/auth/login"
+              className="w-full inline-block px-6 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white font-semibold rounded-lg transition-colors"
+            >
+              Back to Login
+            </Link>
           </div>
         </div>
       </div>
@@ -215,12 +245,24 @@ export default function SignupPage() {
             </button>
           </div>
 
-          <h1 className="text-lg lg:text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent text-center">
+          <button
+            onClick={handleBackToHome}
+            className="text-lg lg:text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent text-center cursor-pointer hover:opacity-80 transition-opacity"
+          >
             QuizMe
-          </h1>
+          </button>
 
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-end gap-2">
             <ThemeToggle />
+            <button
+              onClick={() => setShowInfoBubble(true)}
+              className="bg-blue-600 dark:bg-blue-700 text-white rounded-full w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center shadow hover:bg-blue-700 dark:hover:bg-blue-800 transition-colors"
+              aria-label="Feedback"
+            >
+              <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
@@ -414,9 +456,38 @@ export default function SignupPage() {
               </div>
             </div>
 
+            {/* Terms and Privacy Policy Agreement */}
+            <div className="flex items-start gap-3">
+              <input
+                id="terms"
+                type="checkbox"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <label htmlFor="terms" className="text-sm text-gray-700 dark:text-gray-300">
+                I agree to the{' '}
+                <Link
+                  href="/legal/terms"
+                  target="_blank"
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium underline"
+                >
+                  Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link
+                  href="/legal/privacy"
+                  target="_blank"
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium underline"
+                >
+                  Privacy Policy
+                </Link>
+              </label>
+            </div>
+
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !agreedToTerms}
               className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white font-semibold py-3 px-4 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Creating account...' : 'Create Account'}
@@ -435,6 +506,12 @@ export default function SignupPage() {
           </div>
         </div>
       </div>
+
+      {/* Feedback Drawer */}
+      <FeedbackDrawer
+        isOpen={showInfoBubble}
+        onClose={() => setShowInfoBubble(false)}
+      />
     </div>
   )
 }
