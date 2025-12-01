@@ -7,6 +7,9 @@ import { getQuizById, updateQuestion, deleteQuestion } from '@/lib/storage-route
 import { SessionConfig } from './QuizConfigModal';
 import QuestionEditModal from './QuestionEditModal';
 import type { User } from '@supabase/supabase-js';
+import { shuffle, shuffleWithMapping } from '@/lib/utils/shuffle';
+import { useKeyboardShortcuts } from '@/lib/hooks/useKeyboardShortcuts';
+import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 
 interface QuizDisplayProps {
   quizData: QuizGenerationResponse;
@@ -29,6 +32,12 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack, user
   const [editingQuestionId, setEditingQuestionId] = useState<number | null>(null);
   const [quizDataState, setQuizDataState] = useState<QuizGenerationResponse>(quizData);
   const [showMenu, setShowMenu] = useState(false);
+  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+
+  // Randomization state
+  const [displayQuestions, setDisplayQuestions] = useState<typeof quizData.questions>([]);
+  const [questionIndexMap, setQuestionIndexMap] = useState<number[]>([]);
+  const [optionIndexMaps, setOptionIndexMaps] = useState<number[][]>([]);
 
   // Test mode: track answers but don't show results until end
   const isTestMode = config?.preset_name === 'test';
@@ -65,8 +74,114 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack, user
     initSession();
   }, [quizData.quiz_id, quizData.questions.length]);
 
-  const currentQuestion = quizDataState.questions[currentQuestionIndex];
-  const isLastQuestion = currentQuestionIndex === quizDataState.questions.length - 1;
+  // Apply randomization based on config
+  useEffect(() => {
+    const randomizeQuestions = config?.randomize_questions ?? false;
+    const randomizeOptions = config?.randomize_options ?? false;
+
+    let questionsToDisplay = quizDataState.questions;
+    let qIndexMap: number[] = [];
+    let optMaps: number[][] = [];
+
+    // Shuffle questions if enabled
+    if (randomizeQuestions) {
+      const { shuffled, indexMap } = shuffleWithMapping(quizDataState.questions);
+      questionsToDisplay = shuffled;
+      qIndexMap = indexMap;
+    } else {
+      // No shuffling, just maintain original order
+      questionsToDisplay = quizDataState.questions;
+      qIndexMap = quizDataState.questions.map((_, idx) => idx);
+    }
+
+    // Shuffle options for each question if enabled
+    if (randomizeOptions) {
+      optMaps = questionsToDisplay.map(question => {
+        const { indexMap } = shuffleWithMapping(question.options);
+        return indexMap;
+      });
+
+      // Apply option shuffling to the questions
+      questionsToDisplay = questionsToDisplay.map((question, qIdx) => {
+        const optIndexMap = optMaps[qIdx];
+        const shuffledOptions = optIndexMap.map(originalIdx => question.options[originalIdx]);
+
+        // Find the new position of the correct answer
+        const originalCorrectIndex = question.options.indexOf(question.correct_answer);
+        const newCorrectIndex = optIndexMap.indexOf(originalCorrectIndex);
+
+        return {
+          ...question,
+          options: shuffledOptions,
+          correct_answer: shuffledOptions[newCorrectIndex]
+        };
+      });
+    } else {
+      // No option shuffling, just create identity mappings
+      optMaps = questionsToDisplay.map(question =>
+        question.options.map((_, idx) => idx)
+      );
+    }
+
+    setDisplayQuestions(questionsToDisplay);
+    setQuestionIndexMap(qIndexMap);
+    setOptionIndexMaps(optMaps);
+  }, [quizDataState.questions, config?.randomize_questions, config?.randomize_options]);
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    onSelect: (index) => {
+      if (index < currentQuestion?.options.length && !isAnswered) {
+        const option = currentQuestion.options[index];
+        handleAnswerSelect(option);
+      }
+    },
+    onSubmit: () => {
+      if (!isAnswered && selectedAnswer) {
+        handleSubmitAnswer();
+      } else if (isAnswered && !isLastQuestion) {
+        handleNextQuestion();
+      }
+    },
+    onNext: () => {
+      if (isAnswered || isTestMode) {
+        handleNextQuestion();
+      }
+    },
+    onPrevious: () => {
+      if (currentQuestionIndex > 0) {
+        handlePreviousQuestion();
+      }
+    },
+    onHint: () => {
+      if (currentQuestion?.hint && !isAnswered) {
+        handleToggleHint();
+      }
+    },
+    onHelp: () => {
+      setShowKeyboardHelp(true);
+    },
+    onEscape: () => {
+      if (showKeyboardHelp) {
+        setShowKeyboardHelp(false);
+      }
+    }
+  }, !showKeyboardHelp && !editingQuestionId); // Disable when modals are open
+
+  const currentQuestion = displayQuestions[currentQuestionIndex] || quizDataState.questions[currentQuestionIndex];
+  const isLastQuestion = currentQuestionIndex === displayQuestions.length - 1 || currentQuestionIndex === quizDataState.questions.length - 1;
+
+  // Safety check: if no current question, show loading or return early
+  if (!currentQuestion) {
+    return (
+      <div className="max-w-4xl mx-auto p-4 md:p-6 pt-6 md:pt-8">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="text-gray-600 mt-4">Loading quiz...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleAnswerSelect = async (option: string) => {
     if (isAnswered) return;
@@ -96,7 +211,9 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack, user
       // Save answer to database
       try {
         const selectedAnswerIndex = currentQuestion.options.indexOf(option);
-        const questionId = questionIds[currentQuestionIndex];
+        // Map displayed question index back to original question index
+        const originalQuestionIndex = questionIndexMap[currentQuestionIndex] ?? currentQuestionIndex;
+        const questionId = questionIds[originalQuestionIndex];
 
         if (questionId && sessionId) {
           await saveAnswer(
@@ -133,7 +250,9 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack, user
         // Save answer to database
         try {
           const selectedAnswerIndex = currentQuestion.options.indexOf(selectedAnswer);
-          const questionId = questionIds[currentQuestionIndex];
+          // Map displayed question index back to original question index
+          const originalQuestionIndex = questionIndexMap[currentQuestionIndex] ?? currentQuestionIndex;
+          const questionId = questionIds[originalQuestionIndex];
 
           if (questionId) {
             await saveAnswer(
@@ -206,7 +325,9 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack, user
     // Save answer to database
     try {
       const selectedAnswerIndex = currentQuestion.options.indexOf(selectedAnswer);
-      const questionId = questionIds[currentQuestionIndex];
+      // Map displayed question index back to original question index
+      const originalQuestionIndex = questionIndexMap[currentQuestionIndex] ?? currentQuestionIndex;
+      const questionId = questionIds[originalQuestionIndex];
 
       if (questionId) {
         await saveAnswer(
@@ -241,7 +362,9 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack, user
       // Save answer to database
       try {
         const selectedAnswerIndex = currentQuestion.options.indexOf(selectedAnswer);
-        const questionId = questionIds[currentQuestionIndex];
+        // Map displayed question index back to original question index
+        const originalQuestionIndex = questionIndexMap[currentQuestionIndex] ?? currentQuestionIndex;
+        const questionId = questionIds[originalQuestionIndex];
 
         if (questionId && sessionId) {
           await saveAnswer(
@@ -358,32 +481,32 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack, user
   };
 
   const getOptionClassName = (option: string) => {
-    const baseClasses = "w-full text-left p-4 md:p-4 rounded-lg border-2 transition-all text-gray-900 text-base md:text-base min-h-[56px]";
+    const baseClasses = "w-full text-left p-4 md:p-4 rounded-lg border-2 transition-all text-gray-900 dark:text-gray-100 text-base md:text-base min-h-[56px]";
 
     if (!isAnswered || isTestMode) {
       // Before answering OR in test mode (hide correct/incorrect)
       if (selectedAnswer === option) {
-        return `${baseClasses} border-blue-500 bg-blue-50`;
+        return `${baseClasses} border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30`;
       }
-      return `${baseClasses} border-gray-300 hover:border-blue-300 hover:bg-blue-50`;
+      return `${baseClasses} border-gray-300 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20`;
     } else {
       // After answering (non-test mode)
       if (option === currentQuestion.correct_answer) {
-        return `${baseClasses} border-green-500 bg-green-50`;
+        return `${baseClasses} border-green-500 dark:border-green-400 bg-green-50 dark:bg-green-900/30`;
       }
       if (selectedAnswer === option && option !== currentQuestion.correct_answer) {
-        return `${baseClasses} border-red-500 bg-red-50`;
+        return `${baseClasses} border-red-500 dark:border-red-400 bg-red-50 dark:bg-red-900/30`;
       }
-      return `${baseClasses} border-gray-300 bg-gray-50 opacity-60`;
+      return `${baseClasses} border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 opacity-60`;
     }
   };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'easy': return 'text-green-600 bg-green-100';
-      case 'medium': return 'text-yellow-600 bg-yellow-100';
-      case 'hard': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
+      case 'easy': return 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30';
+      case 'medium': return 'text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30';
+      case 'hard': return 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30';
+      default: return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700/50';
     }
   };
 
@@ -396,7 +519,9 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack, user
     hint?: string;
     difficulty: 'easy' | 'medium' | 'hard';
   }) => {
-    const questionId = questionIds[currentQuestionIndex];
+    // Map displayed question index back to original question index
+    const originalQuestionIndex = questionIndexMap[currentQuestionIndex] ?? currentQuestionIndex;
+    const questionId = questionIds[originalQuestionIndex];
 
     if (!questionId) {
       alert('Unable to edit question - question ID not found');
@@ -407,10 +532,10 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack, user
       // Update in database
       await updateQuestion(questionId, updates, user);
 
-      // Update local state
+      // Update local state - update in the original questions array
       const updatedQuestions = [...quizDataState.questions];
-      updatedQuestions[currentQuestionIndex] = {
-        ...currentQuestion,
+      updatedQuestions[originalQuestionIndex] = {
+        ...quizDataState.questions[originalQuestionIndex],
         question: updates.question_text,
         options: updates.options,
         correct_answer: updates.correct_answer,
@@ -439,7 +564,9 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack, user
   };
 
   const handleQuestionDelete = async () => {
-    const questionId = questionIds[currentQuestionIndex];
+    // Map displayed question index back to original question index
+    const originalQuestionIndex = questionIndexMap[currentQuestionIndex] ?? currentQuestionIndex;
+    const questionId = questionIds[originalQuestionIndex];
 
     if (!questionId) {
       alert('Unable to delete question - question ID not found');
@@ -459,15 +586,15 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack, user
       // Delete from database
       await deleteQuestion(questionId, user);
 
-      // Update local state - remove the question
-      const updatedQuestions = quizDataState.questions.filter((_, idx) => idx !== currentQuestionIndex);
+      // Update local state - remove the question from original array
+      const updatedQuestions = quizDataState.questions.filter((_, idx) => idx !== originalQuestionIndex);
       setQuizDataState({
         ...quizDataState,
         questions: updatedQuestions
       });
 
-      // Update questionIds array
-      const updatedQuestionIds = questionIds.filter((_, idx) => idx !== currentQuestionIndex);
+      // Update questionIds array - remove from original position
+      const updatedQuestionIds = questionIds.filter((_, idx) => idx !== originalQuestionIndex);
       setQuestionIds(updatedQuestionIds);
 
       // Adjust current index if needed
@@ -494,7 +621,7 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack, user
         <div className="flex justify-between items-center mb-4">
           <button
             onClick={onBack}
-            className="text-blue-600 hover:text-blue-700 flex items-center gap-2 min-h-[44px] text-base md:text-sm font-medium"
+            className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-2 min-h-[44px] text-base md:text-sm font-medium"
           >
             <svg className="w-6 h-6 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -505,25 +632,25 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack, user
 
         {/* Score Badge - Centered */}
         <div className="flex justify-center mb-4">
-          <div className="text-sm md:text-sm font-semibold text-gray-700 bg-white px-4 py-2 rounded-full shadow">
+          <div className="text-sm md:text-sm font-semibold text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-800 px-4 py-2 rounded-full shadow">
             Score: {correctCount} / {quizDataState.questions.length}
           </div>
         </div>
 
         {/* Progress Bar */}
-        <div className="bg-gray-200 rounded-full h-2">
+        <div className="bg-gray-200 dark:bg-gray-700 rounded-full h-2">
           <div
-            className="bg-blue-600 h-2 rounded-full transition-all"
+            className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full transition-all"
             style={{ width: `${((currentQuestionIndex + 1) / quizDataState.questions.length) * 100}%` }}
           />
         </div>
       </div>
 
       {/* Quiz Card */}
-      <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl shadow-lg p-4 md:p-8">
         {/* Question Counter - Centered at top */}
         <div className="text-center mb-2">
-          <span className="text-sm font-medium text-gray-600">
+          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
             Question {currentQuestionIndex + 1} of {quizDataState.questions.length}
           </span>
         </div>
@@ -536,18 +663,18 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack, user
           <div className="relative">
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-700 rounded-md hover:bg-gray-100 text-xl font-medium"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-xl font-medium"
             >
               ⋮
             </button>
             {showMenu && (
-              <div className="absolute right-0 mt-2 w-56 md:w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+              <div className="absolute right-0 mt-2 w-56 md:w-48 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 z-10">
                 <button
                   onClick={() => {
                     setEditingQuestionId(currentQuestionIndex);
                     setShowMenu(false);
                   }}
-                  className="w-full text-left px-4 py-3 md:py-2 hover:bg-gray-100 text-gray-700 rounded-t-lg text-sm"
+                  className="w-full text-left px-4 py-3 md:py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-t-lg text-sm"
                 >
                   Edit
                 </button>
@@ -555,7 +682,7 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack, user
                   onClick={() => {
                     handleQuestionDelete();
                   }}
-                  className="w-full text-left px-4 py-3 md:py-2 hover:bg-gray-100 text-red-600 rounded-b-lg text-sm"
+                  className="w-full text-left px-4 py-3 md:py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-red-600 dark:text-red-400 rounded-b-lg text-sm"
                 >
                   Delete
                 </button>
@@ -565,7 +692,7 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack, user
         </div>
 
         {/* Question */}
-        <h2 className="text-xl md:text-2xl font-semibold mb-2 text-gray-800 pl-1">
+        <h2 className="text-xl md:text-2xl font-semibold mb-2 text-gray-800 dark:text-gray-100 pl-1">
           {currentQuestion.question}
         </h2>
 
@@ -574,12 +701,12 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack, user
           <div className="mb-2">
             <button
               onClick={handleToggleHint}
-              className="text-blue-600 hover:text-blue-700 text-sm md:text-sm flex items-center gap-2 min-h-[44px]"
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm md:text-sm flex items-center gap-2 min-h-[44px]"
             >
               💡 {showHint ? 'Hide Hint' : 'Show Hint'}
             </button>
             {showHint && (
-              <div className="mt-2 p-3 md:p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-gray-700">
+              <div className="mt-2 p-3 md:p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg text-sm text-gray-700 dark:text-gray-300">
                 {currentQuestion.hint}
               </div>
             )}
@@ -704,7 +831,7 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack, user
       {/* Question Edit Modal */}
       {editingQuestionId !== null && (
         <QuestionEditModal
-          questionId={questionIds[currentQuestionIndex]}
+          questionId={questionIds[questionIndexMap[currentQuestionIndex] ?? currentQuestionIndex]}
           initialData={{
             question: currentQuestion.question,
             options: currentQuestion.options,
@@ -719,6 +846,20 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack, user
           onClose={() => setEditingQuestionId(null)}
         />
       )}
+
+      {/* Keyboard Shortcuts Help Modal */}
+      {showKeyboardHelp && (
+        <KeyboardShortcutsHelp onClose={() => setShowKeyboardHelp(false)} />
+      )}
+
+      {/* Keyboard Shortcuts Hint - Fixed position */}
+      <button
+        onClick={() => setShowKeyboardHelp(true)}
+        className="fixed bottom-6 right-6 w-10 h-10 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700 transition-colors flex items-center justify-center text-lg font-semibold z-40"
+        title="Keyboard Shortcuts (Press ?)"
+      >
+        ?
+      </button>
     </div>
   );
 }
