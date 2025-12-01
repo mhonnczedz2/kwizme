@@ -34,9 +34,9 @@ function InfoTooltip({ text }: { text: string }) {
           clipRule="evenodd"
         />
       </svg>
-      <div className="invisible group-hover:visible absolute z-10 w-64 px-3 py-2 text-sm text-white bg-gray-900 rounded-lg shadow-lg -top-2 left-6 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="invisible group-hover:visible absolute z-10 w-64 px-3 py-2 text-sm text-white bg-gray-900 dark:bg-gray-700 rounded-lg shadow-lg -top-2 left-6 opacity-0 group-hover:opacity-100 transition-opacity">
         {text}
-        <div className="absolute w-2 h-2 bg-gray-900 transform rotate-45 -left-1 top-3"></div>
+        <div className="absolute w-2 h-2 bg-gray-900 dark:bg-gray-700 transform rotate-45 -left-1 top-3"></div>
       </div>
     </div>
   );
@@ -146,8 +146,8 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
       <div
         className={`border-2 border-dashed rounded-lg p-8 md:p-12 text-center transition-colors cursor-pointer ${
           isDragging
-            ? 'border-primary bg-blue-50'
-            : 'border-gray-300 hover:border-primary'
+            ? 'border-primary bg-blue-50 dark:bg-blue-900/30'
+            : 'border-gray-300 dark:border-gray-600 hover:border-primary dark:hover:border-blue-500'
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -190,10 +190,10 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
           </div>
         ) : (
           <div>
-            <p className="text-base md:text-lg text-gray-700 mb-2">
+            <p className="text-base md:text-lg text-gray-700 dark:text-gray-300 mb-2">
               Drop your file here or click to browse
             </p>
-            <p className="text-sm text-gray-500">Max 20MB • PDF, Word, PowerPoint, Excel, Images, Text</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Max 20MB • PDF, Word, PowerPoint, Excel, Images, Text</p>
           </div>
         )}
       </div>
@@ -202,7 +202,7 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
       <div className="mt-6 md:mt-8" onClick={(e) => e.stopPropagation()}>
         {/* Quiz Title Field */}
         <div className="mb-4 md:mb-6">
-          <label htmlFor="quiz_title" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="quiz_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Quiz Title
             <InfoTooltip text="Give your quiz a descriptive name. This helps you identify quizzes later." />
           </label>
@@ -212,13 +212,13 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
             value={metadata.quiz_title || ''}
             onChange={(e) => handleMetadataChange('quiz_title', e.target.value)}
             placeholder="Prelims Quiz 1"
-            className="w-full px-4 py-3 md:px-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 text-base"
+            className="w-full px-4 py-3 md:px-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base"
           />
         </div>
 
         {/* Number of Questions Field */}
         <div className="mb-4 md:mb-6">
-          <label htmlFor="num_questions" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="num_questions" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Number of Questions
             <InfoTooltip text="How many questions to generate (10-50). More questions take longer to generate but provide more comprehensive coverage." />
           </label>
@@ -252,21 +252,21 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
               }
             }}
             placeholder="15"
-            className={`w-full px-4 py-3 md:px-3 md:py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 text-base ${
-              numQuestionsError ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-4 py-3 md:px-3 md:py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base ${
+              numQuestionsError ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
             }`}
           />
           {numQuestionsError && (
-            <p className="mt-1 text-xs text-red-600">{numQuestionsError}</p>
+            <p className="mt-1 text-xs text-red-600 dark:text-red-400">{numQuestionsError}</p>
           )}
           {!numQuestionsError && (
-            <p className="mt-1 text-xs text-gray-500">Minimum: 10, Maximum: 50</p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Minimum: 10, Maximum: 50</p>
           )}
         </div>
 
         {/* File Description Field */}
         <div className="mb-4 md:mb-6">
-          <label htmlFor="file_description" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="file_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Content Description (optional)
             <InfoTooltip text="Describe the content and what kind of questions you want. AI will verify and improve your description. If left blank, AI will analyze and describe the content automatically." />
           </label>
@@ -276,20 +276,20 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
             onChange={(e) => handleMetadataChange('file_description', e.target.value)}
             placeholder="e.g., 'Lecture notes on thermodynamic concepts. Focus on names and definitions' or 'MCQ test with questions, options, and correct answers already compiled. Simply extract the MCQs.' Leave blank for automatic analysis."
             rows={5}
-            className="w-full px-4 py-3 md:px-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none bg-white text-gray-900 text-base"
+            className="w-full px-4 py-3 md:px-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base"
           />
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             AI will analyze the document and enhance your description (or create one if blank)
           </p>
         </div>
 
-        <h3 className="text-sm font-semibold text-gray-700 mb-3 md:mb-4">
+        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 md:mb-4">
           Categorization (optional)
         </h3>
 
         <div className="grid grid-cols-1 gap-4 mb-4">
           <div>
-            <label htmlFor="institution" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="institution" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Institution
               <InfoTooltip text="Optional: The school or university. Helps organize quizzes by institution." />
             </label>
@@ -299,12 +299,12 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
               value={metadata.institution || ''}
               onChange={(e) => handleMetadataChange('institution', e.target.value)}
               placeholder="e.g., TIP-QC"
-              className="w-full px-4 py-3 md:px-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 text-base"
+              className="w-full px-4 py-3 md:px-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base"
             />
           </div>
 
           <div>
-            <label htmlFor="program" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="program" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Program
               <InfoTooltip text="Optional: Your major or program. Helps group quizzes by field of study." />
             </label>
@@ -314,12 +314,12 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
               value={metadata.program || ''}
               onChange={(e) => handleMetadataChange('program', e.target.value)}
               placeholder="e.g., BSME"
-              className="w-full px-4 py-3 md:px-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 text-base"
+              className="w-full px-4 py-3 md:px-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base"
             />
           </div>
 
           <div>
-            <label htmlFor="course_code" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="course_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Course
               <InfoTooltip text="Optional: Course name or code (e.g., 'BIO 101' or 'Introduction to Biology'). Makes it easy to filter quizzes by course." />
             </label>
@@ -329,12 +329,12 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
               value={metadata.course_code || ''}
               onChange={(e) => handleMetadataChange('course_code', e.target.value)}
               placeholder="e.g., PPD"
-              className="w-full px-4 py-3 md:px-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 text-base"
+              className="w-full px-4 py-3 md:px-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base"
             />
           </div>
 
           <div>
-            <label htmlFor="topic" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="topic" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Topic
               <InfoTooltip text="Optional: Specific chapter or topic covered (e.g., 'Cell Biology - Chapter 5'). Useful for organizing study materials." />
             </label>
@@ -344,7 +344,7 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
               value={metadata.topic || ''}
               onChange={(e) => handleMetadataChange('topic', e.target.value)}
               placeholder="e.g., Diesel Power Plants"
-              className="w-full px-4 py-3 md:px-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 text-base"
+              className="w-full px-4 py-3 md:px-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base"
             />
           </div>
         </div>
