@@ -81,7 +81,7 @@ This checklist covers all changes made in the recent deployment fixes. Test thes
 
 ### Terms of Service & Privacy Policy
 
-**Test Scenario T.1: Terms Page Accessibility**
+**Test Scenario T.1: Terms Page Accessibility** ✅ PASSED
 1. Navigate to `/legal/terms`
 2. **Expected:** Terms of Service page loads with proper styling
 3. **Expected:** Dark mode works correctly
@@ -89,14 +89,14 @@ This checklist covers all changes made in the recent deployment fixes. Test thes
 5. Scroll through entire page
 6. **Expected:** All sections are readable and properly formatted
 
-**Test Scenario T.2: Privacy Page Accessibility**
+**Test Scenario T.2: Privacy Page Accessibility** ✅ PASSED
 1. Navigate to `/legal/privacy`
 2. **Expected:** Privacy Policy page loads
 3. **Expected:** All 11 sections are visible and readable
 4. **Expected:** Contact email link works
 5. **Expected:** Dark mode support
 
-**Test Scenario T.3: Terms Agreement on Signup**
+**Test Scenario T.3: Terms Agreement on Signup** ✅ PASSED
 1. Go to `/auth/signup`
 2. Fill out form but DON'T check terms checkbox
 3. Try to submit
@@ -136,7 +136,7 @@ This checklist covers all changes made in the recent deployment fixes. Test thes
 
 ### Issue #3: Forgot Password
 
-**Test Scenario 3.1: Forgot Password Flow - Happy Path**
+**Test Scenario 3.1: Forgot Password Flow - Happy Path** ✅ PASSED
 1. Go to `/auth/login`
 2. Look below the password field
 3. **Expected:** "Forgot Password?" link is visible
@@ -159,7 +159,7 @@ This checklist covers all changes made in the recent deployment fixes. Test thes
 20. Try logging in with new password
 21. **Expected:** Login succeeds
 
-**Test Scenario 3.2: Forgot Password - Validation Errors**
+**Test Scenario 3.2: Forgot Password - Validation Errors** ✅ PASSED
 1. Open forgot password modal
 2. Enter invalid email format
 3. **Expected:** Browser validation error
@@ -171,7 +171,7 @@ This checklist covers all changes made in the recent deployment fixes. Test thes
 9. Enter valid password but different confirm password
 10. **Expected:** Error: "Passwords do not match"
 
-**Test Scenario 3.3: Forgot Password Modal - UI/UX**
+**Test Scenario 3.3: Forgot Password Modal - UI/UX** ✅ PASSED
 1. Open forgot password modal
 2. Click X button in top right
 3. **Expected:** Modal closes
@@ -184,7 +184,7 @@ This checklist covers all changes made in the recent deployment fixes. Test thes
 10. **Expected:** Success message in green box
 11. **Expected:** Modal auto-closes after 3 seconds
 
-**Test Scenario 3.4: Reset Password Page - Direct Access**
+**Test Scenario 3.4: Reset Password Page - Direct Access** ✅ PASSED
 1. Navigate directly to `/auth/reset-password` without token
 2. Try to reset password
 3. **Expected:** Should show error (no valid session)
