@@ -88,7 +88,7 @@ export default function LoginPage() {
 
       setResetMessage({
         type: 'success',
-        text: 'Password reset link sent! Check your email.'
+        text: 'If an account exists with that email, we\'ve sent a password reset link. Please check your email.'
       })
 
       setTimeout(() => {
