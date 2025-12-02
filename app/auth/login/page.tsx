@@ -161,8 +161,21 @@ export default function LoginPage() {
         onInfoClick={() => setShowInfoBubble(true)}
       />
 
+      {/* Back Button - Larger for touch */}
+      <div className="relative z-10 w-full max-w-md mx-auto px-4 mt-24 mb-6">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 min-h-[44px] text-base md:text-sm font-medium"
+        >
+          <svg className="w-6 h-6 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Home
+        </Link>
+      </div>
+
       {/* Header - Outside card */}
-      <div className="relative z-10 w-full max-w-md text-center mt-24 mb-8">
+      <div className="relative z-10 w-full max-w-md text-center mx-auto px-4 mb-8">
         <h1 className="text-3xl md:text-4xl font-extrabold mb-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
           Welcome Back
         </h1>

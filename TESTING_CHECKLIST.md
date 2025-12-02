@@ -193,7 +193,7 @@ This checklist covers all changes made in the recent deployment fixes. Test thes
 
 ### Issue #4: Clickable QuizMe Banner
 
-**Test Scenario 4.1: Banner Click on Main Page**
+**Test Scenario 4.1: Banner Click on Main Page** ✅ PASSED
 1. Go to home page `/`
 2. Scroll down to middle or bottom of page
 3. Click "QuizMe" text in the top bar
@@ -201,13 +201,13 @@ This checklist covers all changes made in the recent deployment fixes. Test thes
 5. **Expected:** Hover over banner shows cursor pointer
 6. **Expected:** Hover shows opacity change
 
-**Test Scenario 4.2: Banner Click on Login Page**
+**Test Scenario 4.2: Banner Click on Login Page** ✅ PASSED
 1. Go to `/auth/login`
 2. Click "QuizMe" text in top bar
 3. **Expected:** Navigates to home page `/`
 4. **Expected:** Hover shows cursor pointer and opacity change
 
-**Test Scenario 4.3: Banner Click on Signup Page**
+**Test Scenario 4.3: Banner Click on Signup Page** ✅ PASSED
 1. Go to `/auth/signup`
 2. Click "QuizMe" banner
 3. **Expected:** Navigates to home page
@@ -215,16 +215,179 @@ This checklist covers all changes made in the recent deployment fixes. Test thes
 5. Click "QuizMe" banner
 6. **Expected:** Still navigates to home (form data lost - this is expected behavior)
 
-**Test Scenario 4.4: Banner Click on Signup Success Screen**
+**Test Scenario 4.4: Banner Click on Signup Success Screen** ✅ PASSED
 1. Complete signup successfully
 2. On "Please Verify Your Email" screen
 3. Click "QuizMe" banner in top bar
 4. **Expected:** Navigates to home page
 
-**Test Scenario 4.5: Banner Click on Reset Password Page**
+**Test Scenario 4.5: Banner Click on Reset Password Page** ✅ PASSED
 1. Go to `/auth/reset-password` (with valid token)
 2. Click "QuizMe" banner
 3. **Expected:** Navigates to home page
+
+---
+
+### Issue #8: Unified Top Banner Across All Pages
+
+**Test Scenario 8.1: Top Banner Consistency** ✅ PASSED
+1. Visit the following pages and verify the top banner is identical on all:
+   - Home page `/`
+   - Login page `/auth/login`
+   - Signup page `/auth/signup`
+   - Reset password page `/auth/reset-password`
+   - Terms page `/legal/terms`
+   - Privacy page `/legal/privacy`
+2. **Expected:** All pages have the same top banner layout
+3. **Expected:** Left side has menu burger button (not back button)
+4. **Expected:** Center has "QuizMe" title
+5. **Expected:** Right side has theme toggle and blue info button
+
+**Test Scenario 8.2: Menu Drawer from All Pages** ✅ PASSED
+1. On home page, click menu burger button
+2. **Expected:** Side panel drawer opens from left
+3. Close drawer and navigate to login page
+4. Click menu burger button
+5. **Expected:** Same side panel drawer opens
+6. **Expected:** If logged out, shows "Sign In" button
+7. Repeat on signup, reset-password, terms, and privacy pages
+8. **Expected:** Menu works consistently on all pages
+
+**Test Scenario 8.3: Info Button from All Pages** ✅ PASSED
+1. On home page, click blue info button
+2. **Expected:** Feedback drawer opens from right
+3. Close drawer and navigate to login page
+4. Click blue info button
+5. **Expected:** Same feedback drawer opens
+6. Repeat on signup, reset-password, terms, and privacy pages
+7. **Expected:** Feedback button works consistently on all pages
+
+**Test Scenario 8.4: QuizMe Banner Navigation from App States** ✅ PASSED
+1. Navigate to home page
+2. Click "Generate Quiz" button
+3. **Expected:** On Generate Quiz screen
+4. Click "QuizMe" banner in top bar
+5. **Expected:** Navigates back to home page (not scroll)
+6. Return to home and click "Quizzes" button
+7. **Expected:** On Available Quizzes screen
+8. Click "QuizMe" banner
+9. **Expected:** Navigates back to home page
+10. Return to home and click "Quiz History" button
+11. **Expected:** On Quiz History screen
+12. Click "QuizMe" banner
+13. **Expected:** Navigates back to home page
+14. Take a quiz and during quiz-taking, click "QuizMe" banner
+15. **Expected:** Navigates back to home page
+16. Review a past quiz attempt and click "QuizMe" banner
+17. **Expected:** Navigates back to home page
+
+**Test Scenario 8.5: Back to Home Button on Auth Pages**
+1. Visit login page `/auth/login`
+2. **Expected:** "Back to Home" button is present below the banner
+3. **Expected:** Button style matches other "Back to Home" buttons (blue text, left arrow icon)
+4. Click "Back to Home" button
+5. **Expected:** Navigates to home page
+6. Visit signup page `/auth/signup`
+7. **Expected:** "Back to Home" button is present below the banner
+8. Click "Back to Home" button
+9. **Expected:** Navigates to home page
+10. Visit reset password page `/auth/reset-password`
+11. **Expected:** "Back to Home" button is present below the banner
+12. Click "Back to Home" button
+13. **Expected:** Navigates to home page
+
+---
+
+### Issue #9: Menu Drawer Improvements
+
+**Test Scenario 9.1: Email Verified Badge**
+1. Sign up with a new account
+2. Open menu drawer before verifying email
+3. **Expected:** Email is shown but no "Verified" badge
+4. Verify email through confirmation link
+5. Login to the account
+6. Open menu drawer
+7. **Expected:** Green "Verified" badge appears next to email
+8. **Expected:** Badge has green checkmark icon
+9. **Expected:** Badge text says "Verified"
+10. **Expected:** Badge has green background and border
+
+**Test Scenario 9.2: Sign In Button Contrast**
+1. Log out of the app (if logged in)
+2. Open menu drawer from any page
+3. Scroll to bottom of drawer
+4. **Expected:** "Sign In" button has white background
+5. **Expected:** "Sign In" button has gray border (2px)
+6. **Expected:** "Sign In" button text is dark and readable
+7. **Expected:** Button has font-semibold weight
+8. Hover over "Sign In" button
+9. **Expected:** Background changes to light gray
+10. **Expected:** Text remains readable with good contrast
+11. Test in dark mode
+12. **Expected:** Button adapts to dark mode with appropriate contrast
+
+---
+
+### Issue #10: Feedback Confirmation UI
+
+**Test Scenario 10.1: Feedback Success Message**
+1. Open feedback drawer from any page
+2. Fill in name, email, and message
+3. Click "Send Feedback"
+4. **Expected:** Success screen appears immediately
+5. **Expected:** Green checkmark icon is shown
+6. **Expected:** "Feedback Sent!" heading is visible
+7. **Expected:** "Thank you for your feedback. We'll review it shortly." message appears
+8. **Expected:** Drawer auto-closes after 2 seconds
+9. **Expected:** No browser alert popup
+
+**Test Scenario 10.2: Feedback Error Handling**
+1. Open feedback drawer
+2. Disconnect from internet (airplane mode)
+3. Fill in feedback form
+4. Click "Send Feedback"
+5. **Expected:** Error message appears (not success)
+6. Reconnect to internet
+7. Submit feedback again
+8. **Expected:** Success message appears
+
+---
+
+### Issue #11: Terms and Privacy Pages Banner
+
+**Test Scenario 11.1: Terms Page with Banner**
+1. Navigate to `/legal/terms`
+2. **Expected:** Top banner is present (same as all pages)
+3. **Expected:** Menu burger button works
+4. **Expected:** Info button works
+5. **Expected:** QuizMe banner click navigates to home
+6. **Expected:** No separate "Back to Home" link
+7. Scroll through terms content
+8. **Expected:** Banner stays fixed at top
+
+**Test Scenario 11.2: Privacy Page with Banner**
+1. Navigate to `/legal/privacy`
+2. **Expected:** Top banner is present (same as all pages)
+3. **Expected:** Menu burger button works
+4. **Expected:** Info button works
+5. **Expected:** QuizMe banner click navigates to home
+6. **Expected:** No separate "Back to Home" link
+7. Scroll through privacy content
+8. **Expected:** Banner stays fixed at top
+
+**Test Scenario 11.3: Banner from Terms/Privacy Links in Signup**
+1. Go to signup page
+2. Click "Terms of Service" link (opens in new tab)
+3. **Expected:** Terms page has full banner
+4. Click menu button on terms page
+5. **Expected:** Menu drawer works
+6. Click QuizMe banner
+7. **Expected:** Navigates to home in same tab
+8. Return to signup tab
+9. Click "Privacy Policy" link (opens in new tab)
+10. **Expected:** Privacy page has full banner
+11. Test menu and QuizMe navigation
+12. **Expected:** All functionality works
 
 ---
 
@@ -511,6 +674,13 @@ Use this quick checklist for final verification:
 - [ ] Reset password page works
 - [ ] Password reset emails received
 - [ ] QuizMe banner clickable on all pages
+- [ ] **NEW: Unified top banner on all pages (home, auth, legal)**
+- [ ] **NEW: Menu burger button on all pages (not back button on auth pages)**
+- [ ] **NEW: QuizMe banner navigates to home from all app states**
+- [ ] **NEW: Email verified badge shows in menu drawer**
+- [ ] **NEW: Sign in button has good contrast in menu drawer**
+- [ ] **NEW: Feedback confirmation UI shows (no browser alert)**
+- [ ] **NEW: Terms and privacy pages have full banner**
 - [ ] Quiz History hover effects work
 - [ ] All features work in dark mode
 - [ ] Mobile responsive on all pages
@@ -533,12 +703,18 @@ Use this quick checklist for final verification:
 - Feedback submission
 - Forgot password flow
 - QuizMe banner navigation
+- **NEW: Unified top banner on all pages**
+- **NEW: QuizMe banner navigation from app states**
+- **NEW: Menu drawer from all pages**
 
 **Priority 2 (Should Test):**
 - Info bubbles on auth pages
 - Dark mode on all pages
 - Mobile responsiveness
 - Error handling
+- **NEW: Email verified badge**
+- **NEW: Sign in button contrast**
+- **NEW: Feedback confirmation UI**
 
 **Priority 3 (Nice to Test):**
 - Quiz History hover effects

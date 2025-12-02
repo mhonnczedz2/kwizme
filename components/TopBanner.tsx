@@ -13,6 +13,7 @@ export default function TopBanner({ onMenuClick, onInfoClick }: TopBannerProps) 
 
   const handleQuizMeClick = () => {
     console.log('🔵 QuizMe banner clicked - navigating to /')
+    // Use router.push for client-side navigation
     router.push('/')
   }
 
