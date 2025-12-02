@@ -94,21 +94,19 @@ export default function SignupPage() {
 
       if (error) throw error
 
-      // Check if user already exists (Supabase returns a user but with existing identity)
-      if (data.user && !data.session) {
-        // This means email confirmation is required OR user already exists
-        setError('This email is already registered. Please login instead.')
-        setLoading(false)
-        return
+      // Signup successful - show email confirmation screen
+      // Note: data.user will exist even without a session when email confirmation is required
+      if (data.user) {
+        setSuccess(true)
+      } else {
+        // This shouldn't happen, but handle it gracefully
+        throw new Error('Signup succeeded but no user data returned')
       }
-
-      // Show success message
-      setSuccess(true)
 
       // Don't auto-redirect - let user read the message and navigate manually
     } catch (err: any) {
       // Handle specific error messages
-      if (err.message.includes('already registered') || err.message.includes('already been registered')) {
+      if (err.message.includes('already registered') || err.message.includes('already been registered') || err.message.includes('User already registered')) {
         setError('This email is already registered. Please login instead.')
       } else if (err.message.includes('email')) {
         setError('Invalid email address. Please check and try again.')
