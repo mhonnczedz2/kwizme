@@ -45,47 +45,20 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
 
             {/* Feedback Form */}
             <form
+              action="https://formsubmit.co/my.stationptot@gmail.com"
+              method="POST"
               className="space-y-3"
-              noValidate
-              onSubmit={async (e) => {
-                e.preventDefault();
-                const form = e.currentTarget;
-
-                // Validate form
-                if (!form.checkValidity()) {
-                  const inputs = form.querySelectorAll('input[required], textarea[required]');
-                  inputs.forEach(input => {
-                    if (!(input as HTMLInputElement).validity.valid) {
-                      input.classList.add('border-red-300');
-                    }
-                  });
-                  return;
-                }
-
-                try {
-                  const formData = new FormData(form);
-                  const response = await fetch('/api/submit-feedback', {
-                    method: 'POST',
-                    body: formData,
-                  });
-
-                  const result = await response.json();
-
-                  if (result.success) {
-                    alert('Thank you for your feedback! We\'ll review it shortly.');
-                    form.reset();
-                    onClose();
-                  } else {
-                    alert('Failed to send feedback. Please try again.');
-                  }
-                } catch (error) {
-                  console.error('Feedback submission error:', error);
-                  alert('Failed to send feedback. Please try again.');
-                }
+              onSubmit={() => {
+                // Show success message before form submits
+                setTimeout(() => {
+                  alert('Thank you for your feedback! We\'ll review it shortly.');
+                  onClose();
+                }, 100);
               }}
             >
               <input type="hidden" name="_subject" value="QuizMe Feedback" />
               <input type="hidden" name="_captcha" value="false" />
+              <input type="hidden" name="_next" value={typeof window !== 'undefined' ? window.location.origin : ''} />
 
               <div>
                 <label htmlFor="feedback-name" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
