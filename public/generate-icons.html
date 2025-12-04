@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizMe Icon Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 1200px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        input[type="color"] {
+            width: 100%;
+            height: 50px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            border: 2px dashed #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        input[type="file"]:hover {
+            border-color: #667eea;
+        }
+
+        .preview-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .preview-box {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+        }
+
+        canvas {
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            background: white;
+        }
+
+        .size-label {
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .btn-download-192 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .btn-download-512 {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .btn-download-all {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .tips {
+            background: #f0f7ff;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+
+        .tips h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .tips ul {
+            margin-left: 20px;
+            color: #555;
+            line-height: 1.8;
+        }
+
+        .background-type {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .background-type label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-weight: normal;
+        }
+
+        .gradient-controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .gradient-controls > div {
+            flex: 1;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 QuizMe Icon Generator</h1>
+        <p class="subtitle">Create beautiful icons for your Progressive Web App</p>
+
+        <div class="main-grid">
+            <!-- Controls -->
+            <div class="controls">
+                <div class="control-group">
+                    <label>Icon Type</label>
+                    <select id="iconType">
+                        <option value="text">Text Logo (Customize)</option>
+                        <option value="image">Upload Image File</option>
+                    </select>
+                </div>
+
+                <div class="control-group" id="textControls">
+                    <label>Text (Q, QM, Quiz, etc.)</label>
+                    <input type="text" id="iconText" value="Q" maxlength="10">
+                </div>
+
+                <div class="control-group" id="imageControls" style="display: none;">
+                    <label>Upload Logo Image</label>
+                    <input type="file" id="imageUpload" accept="image/*">
+                    <p style="font-size: 12px; color: #666; margin-top: 5px;">
+                        Recommended: Square image, 512x512 or larger, PNG with transparent background
+                    </p>
+                </div>
+
+                <div class="control-group" id="fontControls">
+                    <label>Font Size</label>
+                    <input type="number" id="fontSize" value="300" min="50" max="500" step="10">
+                </div>
+
+                <div class="control-group" id="textColorControls">
+                    <label>Text Color</label>
+                    <input type="color" id="textColor" value="#ffffff">
+                </div>
+
+                <div class="control-group">
+                    <label>Background Type</label>
+                    <div class="background-type">
+                        <label>
+                            <input type="radio" name="bgType" value="gradient" checked>
+                            Gradient
+                        </label>
+                        <label>
+                            <input type="radio" name="bgType" value="solid">
+                            Solid
+                        </label>
+                        <label>
+                            <input type="radio" name="bgType" value="transparent">
+                            Transparent
+                        </label>
+                    </div>
+                </div>
+
+                <div class="gradient-controls" id="gradientControls">
+                    <div class="control-group">
+                        <label>Gradient Start</label>
+                        <input type="color" id="bgColor1" value="#667eea">
+                    </div>
+                    <div class="control-group">
+                        <label>Gradient End</label>
+                        <input type="color" id="bgColor2" value="#764ba2">
+                    </div>
+                </div>
+
+                <div class="control-group" id="solidControls" style="display: none;">
+                    <label>Background Color</label>
+                    <input type="color" id="bgColorSolid" value="#667eea">
+                </div>
+            </div>
+
+            <!-- Preview -->
+            <div class="preview-section">
+                <div class="preview-box">
+                    <span class="size-label">192x192 Preview</span>
+                    <canvas id="canvas192" width="192" height="192"></canvas>
+                </div>
+
+                <div class="preview-box">
+                    <span class="size-label">512x512 Preview</span>
+                    <canvas id="canvas512" width="512" height="512"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button class="btn-download-192" onclick="downloadIcon(192)">Download 192x192</button>
+            <button class="btn-download-512" onclick="downloadIcon(512)">Download 512x512</button>
+            <button class="btn-download-all" onclick="downloadAll()">Download Both</button>
+        </div>
+
+        <div class="tips">
+            <h3>💡 Tips for Great Icons</h3>
+            <ul>
+                <li><strong>Text mode:</strong> Customize text, colors, and backgrounds to match your brand</li>
+                <li><strong>Upload mode:</strong> Use your own logo - images are automatically resized and centered</li>
+                <li><strong>Keep it simple:</strong> Icons are displayed at small sizes, so avoid complex details</li>
+                <li><strong>High contrast:</strong> Use colors that stand out on both light and dark backgrounds</li>
+                <li><strong>Test it:</strong> Check how your icon looks on your device's home screen</li>
+                <li><strong>192x192:</strong> Used for home screen icon (required for PWA)</li>
+                <li><strong>512x512:</strong> Used for splash screen and high-res displays (required for PWA)</li>
+                <li><strong>After download:</strong> Replace icon-192x192.png and icon-512x512.png in your public/ folder</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const canvas192 = document.getElementById('canvas192');
+        const canvas512 = document.getElementById('canvas512');
+        const ctx192 = canvas192.getContext('2d');
+        const ctx512 = canvas512.getContext('2d');
+
+        let uploadedImage = null;
+
+        // Event listeners
+        document.getElementById('iconType').addEventListener('change', updateIconType);
+        document.getElementById('iconText').addEventListener('input', updateIcons);
+        document.getElementById('fontSize').addEventListener('input', updateIcons);
+        document.getElementById('textColor').addEventListener('input', updateIcons);
+        document.getElementById('bgColor1').addEventListener('input', updateIcons);
+        document.getElementById('bgColor2').addEventListener('input', updateIcons);
+        document.getElementById('bgColorSolid').addEventListener('input', updateIcons);
+        document.getElementById('imageUpload').addEventListener('change', handleImageUpload);
+
+        document.querySelectorAll('input[name="bgType"]').forEach(radio => {
+            radio.addEventListener('change', updateBackgroundType);
+        });
+
+        function updateIconType() {
+            const iconType = document.getElementById('iconType').value;
+
+            if (iconType === 'text') {
+                document.getElementById('textControls').style.display = 'flex';
+                document.getElementById('fontControls').style.display = 'flex';
+                document.getElementById('textColorControls').style.display = 'flex';
+                document.getElementById('imageControls').style.display = 'none';
+                uploadedImage = null;
+            } else {
+                document.getElementById('textControls').style.display = 'none';
+                document.getElementById('fontControls').style.display = 'none';
+                document.getElementById('textColorControls').style.display = 'none';
+                document.getElementById('imageControls').style.display = 'flex';
+            }
+
+            updateIcons();
+        }
+
+        function updateBackgroundType() {
+            const bgType = document.querySelector('input[name="bgType"]:checked').value;
+
+            if (bgType === 'gradient') {
+                document.getElementById('gradientControls').style.display = 'flex';
+                document.getElementById('solidControls').style.display = 'none';
+            } else if (bgType === 'solid') {
+                document.getElementById('gradientControls').style.display = 'none';
+                document.getElementById('solidControls').style.display = 'flex';
+            } else {
+                document.getElementById('gradientControls').style.display = 'none';
+                document.getElementById('solidControls').style.display = 'none';
+            }
+
+            updateIcons();
+        }
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        uploadedImage = img;
+                        updateIcons();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function drawIcon(ctx, size) {
+            const iconType = document.getElementById('iconType').value;
+            const bgType = document.querySelector('input[name="bgType"]:checked').value;
+
+            // Clear canvas
+            ctx.clearRect(0, 0, size, size);
+
+            // Draw background
+            if (bgType === 'gradient') {
+                const gradient = ctx.createLinearGradient(0, 0, size, size);
+                gradient.addColorStop(0, document.getElementById('bgColor1').value);
+                gradient.addColorStop(1, document.getElementById('bgColor2').value);
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, size, size);
+            } else if (bgType === 'solid') {
+                ctx.fillStyle = document.getElementById('bgColorSolid').value;
+                ctx.fillRect(0, 0, size, size);
+            }
+
+            // Draw content
+            if (iconType === 'text') {
+                const text = document.getElementById('iconText').value || 'Q';
+                const baseFontSize = parseInt(document.getElementById('fontSize').value);
+                const fontSize = (baseFontSize * size) / 512;
+
+                ctx.fillStyle = document.getElementById('textColor').value;
+                ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(text, size / 2, size / 2);
+            } else if (iconType === 'image' && uploadedImage) {
+                const padding = size * 0.05; // 5% padding
+                const maxSize = size - (padding * 2);
+                const aspectRatio = uploadedImage.width / uploadedImage.height;
+
+                let drawWidth = maxSize;
+                let drawHeight = maxSize;
+
+                if (aspectRatio > 1) {
+                    // Image is wider than tall
+                    drawHeight = maxSize / aspectRatio;
+                } else if (aspectRatio < 1) {
+                    // Image is taller than wide
+                    drawWidth = maxSize * aspectRatio;
+                }
+
+                const x = (size - drawWidth) / 2;
+                const y = (size - drawHeight) / 2;
+
+                ctx.drawImage(uploadedImage, x, y, drawWidth, drawHeight);
+            }
+        }
+
+        function updateIcons() {
+            drawIcon(ctx192, 192);
+            drawIcon(ctx512, 512);
+        }
+
+        function downloadIcon(size) {
+            const canvas = size === 192 ? canvas192 : canvas512;
+            const link = document.createElement('a');
+            link.download = `icon-${size}x${size}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function downloadAll() {
+            downloadIcon(192);
+            setTimeout(() => downloadIcon(512), 100);
+        }
+
+        // Initialize
+        updateIcons();
+    </script>
+</body>
+</html>
