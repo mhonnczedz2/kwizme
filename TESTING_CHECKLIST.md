@@ -281,7 +281,7 @@ This checklist covers all changes made in the recent deployment fixes. Test thes
 16. Review a past quiz attempt and click "QuizMe" banner
 17. **Expected:** Navigates back to home page
 
-**Test Scenario 8.5: Back to Home Button on Auth Pages**
+**Test Scenario 8.5: Back to Home Button on Auth Pages** ✅ PASSED
 1. Visit login page `/auth/login`
 2. **Expected:** "Back to Home" button is present below the banner
 3. **Expected:** Button style matches other "Back to Home" buttons (blue text, left arrow icon)
@@ -300,7 +300,7 @@ This checklist covers all changes made in the recent deployment fixes. Test thes
 
 ### Issue #9: Menu Drawer Improvements
 
-**Test Scenario 9.1: Email Verified Badge**
+**Test Scenario 9.1: Email Verified Badge** ✅ PASSED
 1. Sign up with a new account
 2. Open menu drawer before verifying email
 3. **Expected:** Email is shown but no "Verified" badge
@@ -312,7 +312,7 @@ This checklist covers all changes made in the recent deployment fixes. Test thes
 9. **Expected:** Badge text says "Verified"
 10. **Expected:** Badge has green background and border
 
-**Test Scenario 9.2: Sign In Button Contrast**
+**Test Scenario 9.2: Sign In Button Contrast** ✅ PASSED
 1. Log out of the app (if logged in)
 2. Open menu drawer from any page
 3. Scroll to bottom of drawer
@@ -330,7 +330,7 @@ This checklist covers all changes made in the recent deployment fixes. Test thes
 
 ### Issue #10: Feedback Confirmation UI
 
-**Test Scenario 10.1: Feedback Success Message**
+**Test Scenario 10.1: Feedback Success Message** ✅ PASSED
 1. Open feedback drawer from any page
 2. Fill in name, email, and message
 3. Click "Send Feedback"
@@ -341,7 +341,7 @@ This checklist covers all changes made in the recent deployment fixes. Test thes
 8. **Expected:** Drawer auto-closes after 2 seconds
 9. **Expected:** No browser alert popup
 
-**Test Scenario 10.2: Feedback Error Handling**
+**Test Scenario 10.2: Feedback Error Handling** ✅ PASSED
 1. Open feedback drawer
 2. Disconnect from internet (airplane mode)
 3. Fill in feedback form
@@ -355,7 +355,7 @@ This checklist covers all changes made in the recent deployment fixes. Test thes
 
 ### Issue #11: Terms and Privacy Pages Banner
 
-**Test Scenario 11.1: Terms Page with Banner**
+**Test Scenario 11.1: Terms Page with Banner** ✅ PASSED
 1. Navigate to `/legal/terms`
 2. **Expected:** Top banner is present (same as all pages)
 3. **Expected:** Menu burger button works
@@ -365,7 +365,7 @@ This checklist covers all changes made in the recent deployment fixes. Test thes
 7. Scroll through terms content
 8. **Expected:** Banner stays fixed at top
 
-**Test Scenario 11.2: Privacy Page with Banner**
+**Test Scenario 11.2: Privacy Page with Banner** ✅ PASSED
 1. Navigate to `/legal/privacy`
 2. **Expected:** Top banner is present (same as all pages)
 3. **Expected:** Menu burger button works
@@ -375,7 +375,7 @@ This checklist covers all changes made in the recent deployment fixes. Test thes
 7. Scroll through privacy content
 8. **Expected:** Banner stays fixed at top
 
-**Test Scenario 11.3: Banner from Terms/Privacy Links in Signup**
+**Test Scenario 11.3: Banner from Terms/Privacy Links in Signup** ✅ PASSED
 1. Go to signup page
 2. Click "Terms of Service" link (opens in new tab)
 3. **Expected:** Terms page has full banner
@@ -395,7 +395,7 @@ This checklist covers all changes made in the recent deployment fixes. Test thes
 
 ### Issue #6: Quiz History Review UX
 
-**Test Scenario 6.1: Quiz History Card Interaction**
+**Test Scenario 6.1: Quiz History Card Interaction** ✅ PASSED
 1. Login to the app
 2. Complete at least one quiz (if none exist)
 3. Go to Quiz History tab
@@ -410,7 +410,7 @@ This checklist covers all changes made in the recent deployment fixes. Test thes
 12. **Expected:** Navigates to quiz review page
 13. **Expected:** All answers and scores are displayed correctly
 
-**Test Scenario 6.2: Visual Feedback Consistency**
+**Test Scenario 6.2: Visual Feedback Consistency** ✅ PASSED
 1. Open Quiz History
 2. Hover over different session cards
 3. **Expected:** All cards show consistent hover effects

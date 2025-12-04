@@ -118,27 +118,8 @@ export default function SignupPage() {
       // Check if this is an existing user (user exists but no session created)
       // Supabase returns identities: [] when email already exists
       if (data.user && data.user.identities && data.user.identities.length === 0) {
-        // Email already registered - check if verified or unverified
-        // Try to resend confirmation email - this will only work for unverified users
-        const { error: resendError } = await supabase.auth.resend({
-          type: 'signup',
-          email: email,
-        })
-
-        if (resendError) {
-          // Resend failed - user is already verified
-          // Check specific error message to provide better feedback
-          if (resendError.message.includes('already confirmed') ||
-              resendError.message.includes('Email rate limit exceeded')) {
-            setError('This email is already registered and verified. Please login instead.')
-          } else {
-            setError('This email is already registered. Please login instead.')
-          }
-        } else {
-          // Successfully resent confirmation email - user is unverified
-          setIsResend(true)
-          setSuccess(true)
-        }
+        // Email already registered (verified or unverified)
+        setError('This email is already registered. Please login instead.')
       } else if (data.user) {
         // New user signup successful - show email confirmation screen
         setSuccess(true)
