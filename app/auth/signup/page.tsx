@@ -28,7 +28,6 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
-  const [isResend, setIsResend] = useState(false)
   const [gridDirection, setGridDirection] = useState('40px 40px')
   const router = useRouter()
   const supabase = createClient()
@@ -201,18 +200,10 @@ export default function SignupPage() {
 
             {/* Main Message */}
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-              {isResend ? 'Email Already Registered' : 'Please Verify Your Email'}
+              Please Verify Your Email
             </h2>
             <p className="text-gray-600 dark:text-gray-300 mb-4">
-              {isResend ? (
-                <>
-                  This email is already registered but not yet verified. We've sent a new confirmation link to <strong className="text-gray-900 dark:text-gray-100">{email}</strong>
-                </>
-              ) : (
-                <>
-                  We've sent a confirmation link to <strong className="text-gray-900 dark:text-gray-100">{email}</strong>
-                </>
-              )}
+              We've sent a confirmation link to <strong className="text-gray-900 dark:text-gray-100">{email}</strong>
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
               Click the link in the email to verify your account. You can start using QuizMe after verification.
