@@ -4,21 +4,88 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import ThemeToggle from '@/components/ThemeToggle'
+import type { User } from '@supabase/supabase-js'
+import TopBanner from '@/components/TopBanner'
+import SidePanel from '@/components/SidePanel'
+import FeedbackDrawer from '@/components/FeedbackDrawer'
 
 export const dynamic = 'force-dynamic'
 
 export default function ResetPasswordPage() {
+  const [user, setUser] = useState<User | null>(null)
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [showInfoBubble, setShowInfoBubble] = useState(false)
+  const [showSidePanel, setShowSidePanel] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [gridDirection, setGridDirection] = useState('40px 40px')
+  const [sessionValid, setSessionValid] = useState<boolean | null>(null)
   const router = useRouter()
   const supabase = createClient()
+
+  // Check authentication status
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [supabase])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    setUser(null)
+    router.push('/')
+  }
+
+
+  // Validate password reset session on mount
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        // Small delay to ensure session is set after redirect from callback
+        await new Promise(resolve => setTimeout(resolve, 100))
+
+        // Get the current session
+        const { data: { session }, error } = await supabase.auth.getSession()
+
+        if (error) {
+          console.error('Session error:', error)
+          setError('Invalid or expired password reset link. Please request a new one.')
+          setSessionValid(false)
+          return
+        }
+
+        // Check if we have a session (password reset creates a recovery session)
+        if (!session) {
+          console.error('No session found')
+          setError('Invalid or expired password reset link. Please request a new one.')
+          setSessionValid(false)
+          return
+        }
+
+        // Session exists - user can reset password
+        console.log('Valid session found for user:', session.user.email)
+        setSessionValid(true)
+      } catch (err) {
+        console.error('Error checking session:', err)
+        setError('Failed to validate reset link. Please try again.')
+        setSessionValid(false)
+      }
+    }
+
+    checkSession()
+  }, [supabase])
 
   // Change grid direction randomly every animation cycle (8s)
   useEffect(() => {
@@ -79,6 +146,45 @@ export default function ResetPasswordPage() {
     }
   }
 
+  // Show loading while checking session
+  if (sessionValid === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Verifying reset link...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error if session is invalid
+  if (sessionValid === false) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 max-w-md text-center">
+          <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            Invalid Reset Link
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300 mb-6">
+            {error || 'This password reset link is invalid or has expired. Please request a new one.'}
+          </p>
+          <Link
+            href="/auth/login"
+            className="inline-block px-6 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white font-semibold rounded-lg transition-colors"
+          >
+            Back to Login
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
@@ -95,21 +201,25 @@ export default function ResetPasswordPage() {
           } as React.CSSProperties & { '--grid-end-position': string }}
         ></div>
 
-        {/* Top Bar */}
-        <div className="fixed top-0 left-0 right-0 z-30 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm">
-          <div className="grid grid-cols-3 items-center px-4 lg:px-6 py-2 lg:py-3">
-            <div></div>
-            <button
-              onClick={() => window.location.href = '/'}
-              className="text-lg lg:text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent text-center cursor-pointer hover:opacity-80 transition-opacity"
-            >
-              QuizMe
-            </button>
-            <div className="flex items-center justify-end">
-              <ThemeToggle />
-            </div>
-          </div>
-        </div>
+        {/* Side Panel */}
+        <SidePanel
+          isOpen={showSidePanel}
+          onClose={() => setShowSidePanel(false)}
+          user={user}
+          onLogout={handleLogout}
+        />
+
+        {/* Feedback Drawer */}
+        <FeedbackDrawer
+          isOpen={showInfoBubble}
+          onClose={() => setShowInfoBubble(false)}
+        />
+
+        {/* Top Banner */}
+        <TopBanner
+          onMenuClick={() => setShowSidePanel(true)}
+          onInfoClick={() => setShowInfoBubble(true)}
+        />
 
         {/* Content */}
         <div className="relative z-10 w-full max-w-md mt-20">
@@ -146,24 +256,41 @@ export default function ResetPasswordPage() {
         } as React.CSSProperties & { '--grid-end-position': string }}
       ></div>
 
-      {/* Top Bar */}
-      <div className="fixed top-0 left-0 right-0 z-30 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm">
-        <div className="grid grid-cols-3 items-center px-4 lg:px-6 py-2 lg:py-3">
-          <div></div>
-          <button
-            onClick={() => window.location.href = '/'}
-            className="text-lg lg:text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent text-center cursor-pointer hover:opacity-80 transition-opacity"
-          >
-            QuizMe
-          </button>
-          <div className="flex items-center justify-end">
-            <ThemeToggle />
-          </div>
-        </div>
+      {/* Side Panel */}
+      <SidePanel
+        isOpen={showSidePanel}
+        onClose={() => setShowSidePanel(false)}
+        user={user}
+        onLogout={handleLogout}
+      />
+
+      {/* Feedback Drawer */}
+      <FeedbackDrawer
+        isOpen={showInfoBubble}
+        onClose={() => setShowInfoBubble(false)}
+      />
+
+      {/* Top Banner */}
+      <TopBanner
+        onMenuClick={() => setShowSidePanel(true)}
+        onInfoClick={() => setShowInfoBubble(true)}
+      />
+
+      {/* Back Button - Larger for touch */}
+      <div className="relative z-10 w-full max-w-md mx-auto px-4 mt-24 mb-6">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 min-h-[44px] text-base md:text-sm font-medium"
+        >
+          <svg className="w-6 h-6 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Home
+        </Link>
       </div>
 
       {/* Header */}
-      <div className="relative z-10 w-full max-w-md text-center mt-24 mb-8">
+      <div className="relative z-10 w-full max-w-md text-center mx-auto px-4 mb-8">
         <h1 className="text-3xl md:text-4xl font-extrabold mb-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
           Reset Your Password
         </h1>
