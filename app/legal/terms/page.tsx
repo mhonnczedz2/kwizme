@@ -2,9 +2,41 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
+import type { User } from '@supabase/supabase-js'
+import TopBanner from '@/components/TopBanner'
+import SidePanel from '@/components/SidePanel'
+import FeedbackDrawer from '@/components/FeedbackDrawer'
 
 export default function TermsOfServicePage() {
+  const [user, setUser] = useState<User | null>(null)
+  const [showSidePanel, setShowSidePanel] = useState(false)
+  const [showInfoBubble, setShowInfoBubble] = useState(false)
   const [gridDirection, setGridDirection] = useState('40px 40px')
+  const router = useRouter()
+  const supabase = createClient()
+
+  // Check authentication status
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [supabase])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    setUser(null)
+    router.push('/')
+  }
 
   useEffect(() => {
     const directions = ['40px 40px', '-40px 40px', '40px -40px', '-40px -40px']
@@ -31,18 +63,28 @@ export default function TermsOfServicePage() {
         } as React.CSSProperties & { '--grid-end-position': string }}
       ></div>
 
+      {/* Side Panel */}
+      <SidePanel
+        isOpen={showSidePanel}
+        onClose={() => setShowSidePanel(false)}
+        user={user}
+        onLogout={handleLogout}
+      />
+
+      {/* Feedback Drawer */}
+      <FeedbackDrawer
+        isOpen={showInfoBubble}
+        onClose={() => setShowInfoBubble(false)}
+      />
+
+      {/* Top Banner */}
+      <TopBanner
+        onMenuClick={() => setShowSidePanel(true)}
+        onInfoClick={() => setShowInfoBubble(true)}
+      />
+
       {/* Content */}
-      <div className="relative z-10 container mx-auto px-4 py-16 max-w-4xl">
-        {/* Back Link */}
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 mb-8"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Back to Home
-        </Link>
+      <div className="relative z-10 container mx-auto px-4 pt-24 pb-16 max-w-4xl">
 
         {/* Content Card */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 md:p-12">

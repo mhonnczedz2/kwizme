@@ -4,13 +4,16 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import ThemeToggle from '@/components/ThemeToggle'
+import type { User } from '@supabase/supabase-js'
+import TopBanner from '@/components/TopBanner'
+import SidePanel from '@/components/SidePanel'
 import FeedbackDrawer from '@/components/FeedbackDrawer'
 
 // Force dynamic rendering - don't prerender this page
 export const dynamic = 'force-dynamic'
 
 export default function SignupPage() {
+  const [user, setUser] = useState<User | null>(null)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
@@ -21,12 +24,28 @@ export default function SignupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [showInfoBubble, setShowInfoBubble] = useState(false)
+  const [showSidePanel, setShowSidePanel] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [gridDirection, setGridDirection] = useState('40px 40px')
   const router = useRouter()
   const supabase = createClient()
+
+  // Check authentication status
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [supabase])
 
   // Change grid direction randomly every animation cycle (8s)
   useEffect(() => {
@@ -48,9 +67,10 @@ export default function SignupPage() {
     return () => clearInterval(intervalId);
   }, []);
 
-  const handleBackToHome = () => {
-    console.log('🔵 handleBackToHome called - navigating to /')
-    window.location.href = '/'
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    setUser(null)
+    router.push('/')
   }
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -94,9 +114,13 @@ export default function SignupPage() {
 
       if (error) throw error
 
-      // Signup successful - show email confirmation screen
-      // Note: data.user will exist even without a session when email confirmation is required
-      if (data.user) {
+      // Check if this is an existing user (user exists but no session created)
+      // Supabase returns identities: [] when email already exists
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
+        // Email already registered (verified or unverified)
+        setError('This email is already registered. Please login instead.')
+      } else if (data.user) {
+        // New user signup successful - show email confirmation screen
         setSuccess(true)
       } else {
         // This shouldn't happen, but handle it gracefully
@@ -134,33 +158,25 @@ export default function SignupPage() {
           } as React.CSSProperties & { '--grid-end-position': string }}
         ></div>
 
-        {/* Top Bar - Same as main app */}
-        <div className="fixed top-0 left-0 right-0 z-30 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm">
-          <div className="grid grid-cols-3 items-center px-4 lg:px-6 py-2 lg:py-3">
-            <div className="flex items-center justify-start">
-              <button
-                onClick={handleBackToHome}
-                className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-full w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center shadow transition-colors"
-                aria-label="Back to Home"
-              >
-                <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-            </div>
+        {/* Side Panel */}
+        <SidePanel
+          isOpen={showSidePanel}
+          onClose={() => setShowSidePanel(false)}
+          user={user}
+          onLogout={handleLogout}
+        />
 
-            <button
-              onClick={handleBackToHome}
-              className="text-lg lg:text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent text-center cursor-pointer hover:opacity-80 transition-opacity"
-            >
-              QuizMe
-            </button>
+        {/* Feedback Drawer */}
+        <FeedbackDrawer
+          isOpen={showInfoBubble}
+          onClose={() => setShowInfoBubble(false)}
+        />
 
-            <div className="flex items-center justify-end">
-              <ThemeToggle />
-            </div>
-          </div>
-        </div>
+        {/* Top Banner - Same as all pages */}
+        <TopBanner
+          onMenuClick={() => setShowSidePanel(true)}
+          onInfoClick={() => setShowInfoBubble(true)}
+        />
 
         {/* Content */}
         <div className="relative z-10 w-full max-w-md mt-20">
@@ -228,58 +244,41 @@ export default function SignupPage() {
         } as React.CSSProperties & { '--grid-end-position': string }}
       ></div>
 
-      {/* Top Bar - Same as main app */}
-      <div className="fixed top-0 left-0 right-0 z-30 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm">
-        <div className="grid grid-cols-3 items-center px-4 lg:px-6 py-2 lg:py-3">
-          <div className="flex items-center justify-start">
-            <button
-              onClick={handleBackToHome}
-              className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-full w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center shadow transition-colors"
-              aria-label="Back to Home"
-            >
-              <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-          </div>
+      {/* Side Panel */}
+      <SidePanel
+        isOpen={showSidePanel}
+        onClose={() => setShowSidePanel(false)}
+        user={user}
+        onLogout={handleLogout}
+      />
 
-          <button
-            onClick={handleBackToHome}
-            className="text-lg lg:text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent text-center cursor-pointer hover:opacity-80 transition-opacity"
-          >
-            QuizMe
-          </button>
+      {/* Feedback Drawer */}
+      <FeedbackDrawer
+        isOpen={showInfoBubble}
+        onClose={() => setShowInfoBubble(false)}
+      />
 
-          <div className="flex items-center justify-end gap-2">
-            <ThemeToggle />
-            <button
-              onClick={() => setShowInfoBubble(true)}
-              className="bg-blue-600 dark:bg-blue-700 text-white rounded-full w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center shadow hover:bg-blue-700 dark:hover:bg-blue-800 transition-colors"
-              aria-label="Feedback"
-            >
-              <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Top Banner - Same as all pages */}
+      <TopBanner
+        onMenuClick={() => setShowSidePanel(true)}
+        onInfoClick={() => setShowInfoBubble(true)}
+      />
 
-      {/* Back to Home - Below top bar */}
-      <div className="relative z-10 w-full max-w-md mt-20 mb-4">
-        <button
-          onClick={handleBackToHome}
-          className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition text-base md:text-sm min-h-[44px]"
+      {/* Back Button - Larger for touch */}
+      <div className="relative z-10 w-full max-w-md mx-auto px-4 mt-24 mb-6">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 min-h-[44px] text-base md:text-sm font-medium"
         >
           <svg className="w-6 h-6 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back to Home
-        </button>
+        </Link>
       </div>
 
       {/* Header - Outside card */}
-      <div className="relative z-10 w-full max-w-md text-center mb-8">
+      <div className="relative z-10 w-full max-w-md text-center mx-auto px-4 mb-8">
         <h1 className="text-3xl md:text-4xl font-extrabold mb-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
           Create Account
         </h1>
@@ -504,12 +503,6 @@ export default function SignupPage() {
           </div>
         </div>
       </div>
-
-      {/* Feedback Drawer */}
-      <FeedbackDrawer
-        isOpen={showInfoBubble}
-        onClose={() => setShowInfoBubble(false)}
-      />
     </div>
   )
 }
