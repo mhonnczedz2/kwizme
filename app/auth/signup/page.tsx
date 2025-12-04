@@ -28,6 +28,7 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [isResend, setIsResend] = useState(false)
   const [gridDirection, setGridDirection] = useState('40px 40px')
   const router = useRouter()
   const supabase = createClient()
@@ -114,9 +115,32 @@ export default function SignupPage() {
 
       if (error) throw error
 
-      // Signup successful - show email confirmation screen
-      // Note: data.user will exist even without a session when email confirmation is required
-      if (data.user) {
+      // Check if this is an existing user (user exists but no session created)
+      // Supabase returns identities: [] when email already exists
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
+        // Email already registered - check if verified or unverified
+        // Try to resend confirmation email - this will only work for unverified users
+        const { error: resendError } = await supabase.auth.resend({
+          type: 'signup',
+          email: email,
+        })
+
+        if (resendError) {
+          // Resend failed - user is already verified
+          // Check specific error message to provide better feedback
+          if (resendError.message.includes('already confirmed') ||
+              resendError.message.includes('Email rate limit exceeded')) {
+            setError('This email is already registered and verified. Please login instead.')
+          } else {
+            setError('This email is already registered. Please login instead.')
+          }
+        } else {
+          // Successfully resent confirmation email - user is unverified
+          setIsResend(true)
+          setSuccess(true)
+        }
+      } else if (data.user) {
+        // New user signup successful - show email confirmation screen
         setSuccess(true)
       } else {
         // This shouldn't happen, but handle it gracefully
@@ -196,10 +220,18 @@ export default function SignupPage() {
 
             {/* Main Message */}
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-              Please Verify Your Email
+              {isResend ? 'Email Already Registered' : 'Please Verify Your Email'}
             </h2>
             <p className="text-gray-600 dark:text-gray-300 mb-4">
-              We've sent a confirmation link to <strong className="text-gray-900 dark:text-gray-100">{email}</strong>
+              {isResend ? (
+                <>
+                  This email is already registered but not yet verified. We've sent a new confirmation link to <strong className="text-gray-900 dark:text-gray-100">{email}</strong>
+                </>
+              ) : (
+                <>
+                  We've sent a confirmation link to <strong className="text-gray-900 dark:text-gray-100">{email}</strong>
+                </>
+              )}
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
               Click the link in the email to verify your account. You can start using QuizMe after verification.

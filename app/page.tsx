@@ -787,7 +787,7 @@ export default function Home() {
             answers={reviewData.answers}
             sessionScore={reviewData.sessionScore}
             onRetake={handleRetakeQuiz}
-            onBack={handleBackToHome}
+            onBack={handleViewHistory}
           />
         )}
 
