@@ -37,7 +37,7 @@ export default function FileValidationStatus({ validationResult, isValidating }:
 
   if (isValidating) {
     return (
-      <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+      <div className="mt-4 p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
         <div className="flex items-center space-x-3">
           <ClockIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 animate-spin" />
           <div>
@@ -58,7 +58,7 @@ export default function FileValidationStatus({ validationResult, isValidating }:
   const { isValid, pageCount, error, fileInfo } = validationResult;
 
   return (
-    <div className={`mt-4 p-4 border rounded-lg ${
+    <div className={`mt-4 p-3 sm:p-4 border rounded-lg ${
       isValid
         ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800'
         : 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800'
@@ -85,10 +85,10 @@ export default function FileValidationStatus({ validationResult, isValidating }:
               </p>
 
               {fileInfo && (
-                <div className="mt-1 flex items-center space-x-4 text-xs text-gray-600 dark:text-gray-400">
+                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600 dark:text-gray-400">
                   <span>{fileInfo.type}</span>
                   <span>{fileInfo.size}</span>
-                  <span className="truncate max-w-xs">{fileInfo.name}</span>
+                  <span className="truncate max-w-32 sm:max-w-xs">{fileInfo.name}</span>
                   {pageCount !== undefined && (
                     <span className={`font-medium ${
                       isValid ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
