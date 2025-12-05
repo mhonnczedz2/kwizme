@@ -101,7 +101,7 @@ export default function SignupPage() {
 
     try {
       // Get the current site URL for email redirects
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
+      const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || window.location.origin).replace(/\/$/, '')
 
       const { data, error } = await supabase.auth.signUp({
         email,
