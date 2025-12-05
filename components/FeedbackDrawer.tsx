@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface FeedbackDrawerProps {
   isOpen: boolean
@@ -12,6 +12,12 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showError, setShowError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const [currentOrigin, setCurrentOrigin] = useState('')
+
+  // Set the origin on client-side only to avoid hydration mismatch
+  useEffect(() => {
+    setCurrentOrigin(window.location.origin)
+  }, [])
 
   const clearErrors = () => {
     if (showError) {
@@ -153,7 +159,7 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
                 >
               <input type="hidden" name="_subject" value="QuizMe Feedback" />
               <input type="hidden" name="_captcha" value="false" />
-              <input type="hidden" name="_next" value={typeof window !== 'undefined' ? window.location.origin : ''} />
+              <input type="hidden" name="_next" value={currentOrigin} />
 
               <div>
                 <label htmlFor="feedback-name" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
