@@ -100,6 +100,9 @@ export default function SignupPage() {
     }
 
     try {
+      // Get the current site URL for email redirects
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -109,6 +112,7 @@ export default function SignupPage() {
             institution: institution || null,
             program: program || null,
           },
+          emailRedirectTo: `${siteUrl}/auth/callback`,
         },
       })
 
