@@ -6,15 +6,20 @@ import ThemeToggle from '@/components/ThemeToggle'
 interface TopBannerProps {
   onMenuClick: () => void
   onInfoClick: () => void
+  onHome?: () => void  // Optional callback for home navigation
 }
 
-export default function TopBanner({ onMenuClick, onInfoClick }: TopBannerProps) {
+export default function TopBanner({ onMenuClick, onInfoClick, onHome }: TopBannerProps) {
   const router = useRouter()
 
   const handleQuizMeClick = () => {
     console.log('🔵 QuizMe banner clicked - navigating to /')
-    // Use router.push for client-side navigation
-    router.push('/')
+    // If onHome callback is provided, use it; otherwise use router navigation
+    if (onHome) {
+      onHome()
+    } else {
+      router.push('/')
+    }
   }
 
   return (
