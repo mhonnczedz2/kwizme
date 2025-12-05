@@ -9,29 +9,73 @@ interface FeedbackDrawerProps {
 
 export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps) {
   const [showSuccess, setShowSuccess] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showError, setShowError] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const clearErrors = () => {
+    if (showError) {
+      setShowError(false)
+      setErrorMessage('')
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    // Show success message
-    setShowSuccess(true)
+    // Clear any previous errors
+    setShowError(false)
+    setErrorMessage('')
+    setIsSubmitting(true)
 
-    // Submit the form programmatically
     const form = e.currentTarget
     const formData = new FormData(form)
 
-    fetch('https://formsubmit.co/my.stationptot@gmail.com', {
-      method: 'POST',
-      body: formData,
-    }).catch(error => {
-      console.error('Error submitting feedback:', error)
-    })
+    try {
+      const response = await fetch('/api/submit-feedback', {
+        method: 'POST',
+        body: formData,
+      })
 
-    // Close drawer after showing success message
-    setTimeout(() => {
-      setShowSuccess(false)
-      onClose()
-    }, 2000)
+      const result = await response.json()
+
+      if (result.success) {
+        setShowSuccess(true)
+        // Close drawer after showing success message
+        setTimeout(() => {
+          setShowSuccess(false)
+          onClose()
+          // Reset form when closing
+          form.reset()
+          // Reset feedback type to default (Bug Report)
+          const typeInput = form.querySelector('input[name="type"]') as HTMLInputElement
+          if (typeInput) typeInput.value = 'bug'
+          // Reset button styles
+          const buttons = form.querySelectorAll('button[type="button"]')
+          buttons.forEach((btn, index) => {
+            btn.classList.remove('bg-orange-500', 'bg-blue-600', 'bg-green-600', 'text-white', 'border-transparent')
+            btn.classList.add('border-2')
+            if (index === 0) { // Bug Report button
+              btn.classList.remove('bg-orange-50', 'border-orange-200', 'text-orange-700')
+              btn.classList.add('bg-orange-500', 'text-white', 'border-transparent')
+            } else if (index === 1) { // Feature Request button
+              btn.classList.add('bg-blue-50', 'text-blue-700', 'border-blue-200')
+            } else if (index === 2) { // General Feedback button
+              btn.classList.add('bg-green-50', 'text-green-700', 'border-green-200')
+            }
+          })
+        }, 2000)
+      } else {
+        setShowError(true)
+        setErrorMessage(result.message || 'Failed to send feedback. Please try again.')
+      }
+    } catch (error) {
+      console.error('Network error submitting feedback:', error)
+      setShowError(true)
+      setErrorMessage('Network error. Please check your connection and try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -91,6 +135,18 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
                   Have feedback or a feature request? Report a bug below!
                 </p>
 
+                {/* Error Message */}
+                {showError && (
+                  <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-md">
+                    <div className="flex items-center">
+                      <svg className="w-4 h-4 text-red-600 dark:text-red-400 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <p className="text-sm text-red-700 dark:text-red-300">{errorMessage}</p>
+                    </div>
+                  </div>
+                )}
+
                 <form
                   onSubmit={handleSubmit}
                   className="space-y-3"
@@ -113,6 +169,7 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
                   onInput={(e) => {
                     // Remove error styling when user starts typing
                     e.currentTarget.classList.remove('border-red-300');
+                    clearErrors();
                   }}
                 />
               </div>
@@ -130,6 +187,7 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
                   required
                   onInput={(e) => {
                     e.currentTarget.classList.remove('border-red-300');
+                    clearErrors();
                   }}
                 />
               </div>
@@ -234,15 +292,27 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
                   required
                   onInput={(e) => {
                     e.currentTarget.classList.remove('border-red-300');
+                    clearErrors();
                   }}
                 ></textarea>
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-indigo-600 dark:bg-indigo-700 hover:bg-indigo-700 dark:hover:bg-indigo-800 text-white font-medium py-2 px-4 rounded-md transition-colors text-sm"
+                disabled={isSubmitting}
+                className="w-full bg-indigo-600 dark:bg-indigo-700 hover:bg-indigo-700 dark:hover:bg-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-md transition-colors text-sm flex items-center justify-center"
               >
-                Send Feedback
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Sending...
+                  </>
+                ) : (
+                  'Send Feedback'
+                )}
               </button>
             </form>
 
