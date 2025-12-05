@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import type { User } from '@supabase/supabase-js';
+import { validateFilePages, type FileValidationResult } from '@/lib/file-validator';
+import FileValidationStatus from '@/components/FileValidationStatus';
 
 export interface OrganizationMetadata {
   quiz_title?: string;
@@ -16,6 +18,7 @@ export interface OrganizationMetadata {
 interface FileUploadZoneProps {
   onFileSelect: (file: File) => void;
   onMetadataChange: (metadata: OrganizationMetadata) => void;
+  onValidationChange?: (result: FileValidationResult | null) => void;
   user: User | null;
 }
 
@@ -42,13 +45,15 @@ function InfoTooltip({ text }: { text: string }) {
   );
 }
 
-export default function FileUploadZone({ onFileSelect, onMetadataChange, user }: FileUploadZoneProps) {
+export default function FileUploadZone({ onFileSelect, onMetadataChange, onValidationChange, user }: FileUploadZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [metadata, setMetadata] = useState<OrganizationMetadata>({
     num_questions: 15
   });
   const [numQuestionsError, setNumQuestionsError] = useState<string>('');
+  const [validationResult, setValidationResult] = useState<FileValidationResult | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-populate institution and program from user profile
@@ -71,7 +76,11 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
   };
 
   // Update quiz title when file is selected
-  const handleFile = (file: File) => {
+  const handleFile = async (file: File) => {
+    // Reset validation state
+    setValidationResult(null);
+    setIsValidating(true);
+
     // Supported file types for Gemini 2.5 Flash
     const supportedTypes = [
       'application/pdf',
@@ -90,25 +99,43 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
 
     // Validate file type
     if (!supportedTypes.includes(file.type)) {
+      setIsValidating(false);
       alert('Unsupported file type. Supported formats:\n• PDF\n• Word (DOCX)\n• PowerPoint (PPTX)\n• Excel (XLSX)\n• Images (PNG, JPEG, WebP, GIF)\n• Text (TXT, MD, HTML, CSV)');
       return;
     }
 
-    // Validate file size (20MB)
-    if (file.size > 20 * 1024 * 1024) {
-      alert('File size must be less than 20MB');
-      return;
+    // Perform page validation
+    try {
+      const validation = await validateFilePages(file);
+      setValidationResult(validation);
+      setIsValidating(false);
+
+      // Notify parent component of validation result
+      onValidationChange?.(validation);
+
+      // Only proceed if validation passes
+      if (!validation.isValid) {
+        return; // Don't set the file or call onFileSelect if validation fails
+      }
+
+      setSelectedFile(file);
+      onFileSelect(file);
+
+      // Update quiz title to filename (remove file extension)
+      const filenameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+      const newMetadata = { ...metadata, quiz_title: filenameWithoutExt };
+      setMetadata(newMetadata);
+      onMetadataChange(newMetadata);
+    } catch (error) {
+      console.error('File validation error:', error);
+      setIsValidating(false);
+      const errorResult = {
+        isValid: false,
+        error: 'Something went wrong while checking your file. Please try uploading it again.'
+      };
+      setValidationResult(errorResult);
+      onValidationChange?.(errorResult);
     }
-
-    setSelectedFile(file);
-
-    // Update quiz title to filename (remove file extension)
-    const filenameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
-    const newMetadata = { ...metadata, quiz_title: filenameWithoutExt };
-    setMetadata(newMetadata);
-    onMetadataChange(newMetadata);
-
-    onFileSelect(file);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -193,10 +220,16 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
             <p className="text-base md:text-lg text-gray-700 dark:text-gray-300 mb-2">
               Drop your file here or click to browse
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Max 20MB • PDF, Word, PowerPoint, Excel, Images, Text</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Max 20MB or 10 Pages • PDF, Word, PowerPoint, Excel, Images, Text</p>
           </div>
         )}
       </div>
+
+      {/* File Validation Status */}
+      <FileValidationStatus
+        validationResult={validationResult}
+        isValidating={isValidating}
+      />
 
       {/* Organization Metadata Fields - Always visible */}
       <div className="mt-6 md:mt-8" onClick={(e) => e.stopPropagation()}>

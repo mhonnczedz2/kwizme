@@ -20,6 +20,7 @@ import { QuizGenerationResponse, AnswerRecord } from '@/lib/db/types';
 import { SessionConfig } from '@/components/QuizConfigModal';
 import { saveQuiz, getQuizById } from '@/lib/storage-router';
 import { seedDefaultQuizzes } from '@/lib/db/quiz-storage';
+import type { FileValidationResult } from '@/lib/file-validator';
 
 type AppState = 'home' | 'generate' | 'quizzes' | 'history' | 'reviewing-approval' | 'quiz-approved' | 'taking-quiz' | 'reviewing-quiz' | 'results';
 
@@ -30,6 +31,7 @@ export default function Home() {
   const supabase = createClient();
   const [appState, setAppState] = useState<AppState>('home');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileValidation, setFileValidation] = useState<FileValidationResult | null>(null);
   const [organizationMetadata, setOrganizationMetadata] = useState<OrganizationMetadata>({});
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
@@ -639,11 +641,12 @@ export default function Home() {
               <FileUploadZone
                 onFileSelect={handleFileSelect}
                 onMetadataChange={setOrganizationMetadata}
+                onValidationChange={setFileValidation}
                 user={user}
               />
 
               {/* Generate Button */}
-              {selectedFile && (
+              {selectedFile && fileValidation?.isValid && (
                 <div className="mt-6 text-center">
                   <button
                     onClick={handleGenerateQuiz}
