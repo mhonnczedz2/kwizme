@@ -38,12 +38,18 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
     const formData = new FormData(form)
 
     try {
+      // Add timeout to prevent infinite loading (increased for external service)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+
       const response = await fetch('/api/submit-feedback', {
         method: 'POST',
         body: formData,
-      })
+        signal: controller.signal
+      });
 
-      const result = await response.json()
+      clearTimeout(timeoutId);
+      const result = await response.json();
 
       if (result.success) {
         setShowSuccess(true)
@@ -78,7 +84,12 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
     } catch (error) {
       console.error('Network error submitting feedback:', error)
       setShowError(true)
-      setErrorMessage('Network error. Please check your connection and try again.')
+
+      if (error instanceof Error && error.name === 'AbortError') {
+        setErrorMessage('Request timed out. Please check your connection and try again.')
+      } else {
+        setErrorMessage('Network error. Please check your connection and try again.')
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -159,7 +170,6 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
                 >
               <input type="hidden" name="_subject" value="QuizMe Feedback" />
               <input type="hidden" name="_captcha" value="false" />
-              <input type="hidden" name="_next" value={currentOrigin} />
 
               <div>
                 <label htmlFor="feedback-name" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">

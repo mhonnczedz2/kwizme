@@ -1,8 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateQuizWithGemini, validateQuizResponse, validateAndImproveDescription } from '@/lib/llm-client';
+import { checkQuizGenerationLimit, recordQuizGeneration } from '@/lib/rate-limiting';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
+    // Step 1: Check rate limiting first (before processing file)
+    console.log('🔒 Checking quiz generation limits...');
+
+    // Get user ID from session if available
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id;
+
+    // Check if user can generate another quiz today
+    const rateLimitResult = await checkQuizGenerationLimit(userId);
+
+    if (!rateLimitResult.allowed) {
+      const resetTime = rateLimitResult.resetTime ? new Date(rateLimitResult.resetTime).toLocaleString() : 'tomorrow'
+      return NextResponse.json({
+        error: 'Daily quiz generation limit reached',
+        message: rateLimitResult.reason || `You've reached your ${rateLimitResult.limits.dailyLimit}-quiz generation daily limit! Resets at ${resetTime}.`,
+        limits: rateLimitResult.limits,
+        resetTime: rateLimitResult.resetTime
+      }, { status: 429 }); // 429 Too Many Requests
+    }
+
+    console.log(`✅ Rate limit check passed. Remaining: ${rateLimitResult.limits.remainingQuizzes === -1 ? 'unlimited' : rateLimitResult.limits.remainingQuizzes}`);
+
     // Parse form data
     const formData = await request.formData();
     const file = formData.get('pdf_file') as File;
@@ -97,6 +122,16 @@ export async function POST(request: NextRequest) {
     quizData.topic = topic || '';
 
     console.log('✅ Quiz generated successfully:', quizData.questions.length, 'questions');
+
+    // Step 4: Record quiz generation (increment usage counter)
+    console.log('📊 Recording quiz generation...');
+    try {
+      await recordQuizGeneration(userId);
+      console.log('✅ Quiz usage recorded successfully');
+    } catch (error) {
+      console.error('⚠️ Failed to record quiz usage:', error);
+      // Don't fail the request if usage recording fails
+    }
 
     // Return quiz data
     return NextResponse.json(quizData);
