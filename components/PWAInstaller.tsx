@@ -30,7 +30,7 @@ export default function PWAInstaller() {
           // Check for updates periodically
           updateInterval = setInterval(() => {
             // Verify registration is still valid and active before updating
-            if (registration && registration.active && !registration.uninstalling) {
+            if (registration && registration.active) {
               // Only update if we're on the same origin as the registration
               const currentOrigin = window.location.origin;
               if (registration.scope.startsWith(currentOrigin)) {
