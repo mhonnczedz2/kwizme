@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateQuizWithGemini, validateQuizResponse, validateAndImproveDescription } from '@/lib/llm-client';
 import { checkQuizGenerationLimit, recordQuizGeneration } from '@/lib/rate-limiting';
 import { createClient } from '@/lib/supabase/server';
+import { trackQuizGenerated, trackRateLimitHit, trackError } from '@/lib/analytics';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,6 +19,15 @@ export async function POST(request: NextRequest) {
 
     if (!rateLimitResult.allowed) {
       const resetTime = rateLimitResult.resetTime ? new Date(rateLimitResult.resetTime).toLocaleString() : 'tomorrow'
+
+      // Track rate limit hit event
+      trackRateLimitHit({
+        currentCount: rateLimitResult.limits.currentUsage || 0,
+        dailyLimit: rateLimitResult.limits.dailyLimit || 5,
+        userType: userId ? 'authenticated' : 'anonymous',
+        planType: rateLimitResult.limits.isUnlimited ? 'unlimited' : 'free'
+      });
+
       return NextResponse.json({
         error: 'Daily quiz generation limit reached',
         message: rateLimitResult.reason || `You've reached your ${rateLimitResult.limits.dailyLimit}-quiz generation daily limit! Resets at ${resetTime}.`,
@@ -133,11 +143,27 @@ export async function POST(request: NextRequest) {
       // Don't fail the request if usage recording fails
     }
 
+    // Track successful quiz generation
+    trackQuizGenerated({
+      fileType: file.type,
+      difficulty: difficulty as 'easy' | 'medium' | 'hard',
+      numQuestions: numQuestions, // Already parsed as number
+      userType: userId ? 'authenticated' : 'anonymous',
+      fileSize: file.size
+    });
+
     // Return quiz data
     return NextResponse.json(quizData);
 
   } catch (error: any) {
     console.error('❌ Quiz generation error:', error);
+
+    // Track error event
+    trackError({
+      errorType: 'api_error',
+      errorMessage: error.message || 'Unknown quiz generation error',
+      context: 'quiz_generation'
+    });
 
     // Handle specific error types
     if (error.message?.includes('GEMINI_API_KEY')) {

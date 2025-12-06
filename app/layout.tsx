@@ -2,6 +2,7 @@ import './globals.css'
 import type { Metadata, Viewport } from 'next'
 import { ThemeProvider } from '@/lib/contexts/ThemeContext'
 import PWAInstaller from '@/components/PWAInstaller'
+import { GoogleAnalytics } from '@next/third-parties/google'
 
 // Force dynamic rendering for entire app - uses Supabase client components
 export const dynamic = 'force-dynamic'
@@ -50,6 +51,9 @@ export default function RootLayout({
           <PWAInstaller />
           {children}
         </ThemeProvider>
+        {process.env.NODE_ENV === 'production' && (
+          <GoogleAnalytics gaId="G-79NFTLZH6L" />
+        )}
       </body>
     </html>
   )
