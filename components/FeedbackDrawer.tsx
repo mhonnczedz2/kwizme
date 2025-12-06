@@ -1,17 +1,23 @@
 'use client'
 
 import { useState } from 'react'
+import { trackFeedbackSubmitted } from '@/lib/analytics'
 
 interface FeedbackDrawerProps {
   isOpen: boolean
   onClose: () => void
+  source?: 'post_quiz' | 'error_state' | 'rate_limit' | 'header' | 'support_page'
+  defaultType?: 'bug' | 'feature' | 'general' | 'rating'
 }
 
-export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps) {
+export default function FeedbackDrawer({ isOpen, onClose, source = 'header', defaultType = 'bug' }: FeedbackDrawerProps) {
   const [showSuccess, setShowSuccess] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showError, setShowError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const [feedbackType, setFeedbackType] = useState(defaultType)
+  const [rating, setRating] = useState<number | null>(null)
+  const [hoveredRating, setHoveredRating] = useState<number | null>(null)
 
   const clearErrors = () => {
     if (showError) {
@@ -26,6 +32,14 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
     // Clear any previous errors
     setShowError(false)
     setErrorMessage('')
+
+    // Validate required rating
+    if (rating === null || rating === 0) {
+      setShowError(true)
+      setErrorMessage('Please provide a rating before submitting your feedback.')
+      return
+    }
+
     setIsSubmitting(true)
 
     const form = e.currentTarget
@@ -34,7 +48,7 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
     try {
       // Add timeout to prevent infinite loading (increased for external service)
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 35000); // 35 second timeout (longer than server)
 
       const response = await fetch('/api/submit-feedback', {
         method: 'POST',
@@ -47,12 +61,24 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
 
       if (result.success) {
         setShowSuccess(true)
+
+        // Track feedback submission in analytics
+        trackFeedbackSubmitted({
+          rating: rating || undefined,
+          feedbackType: feedbackType as 'bug' | 'feature' | 'general' | 'rating',
+          source: source,
+          hasText: Boolean(formData.get('message')?.toString().trim())
+        });
+
         // Close drawer after showing success message
         setTimeout(() => {
           setShowSuccess(false)
           onClose()
           // Reset form when closing
           form.reset()
+          // Reset rating state
+          setRating(null)
+          setFeedbackType('bug') // Reset to default
           // Reset feedback type to default (Bug Report)
           const typeInput = form.querySelector('input[name="type"]') as HTMLInputElement
           if (typeInput) typeInput.value = 'bug'
@@ -73,16 +99,23 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
         }, 2000)
       } else {
         setShowError(true)
-        setErrorMessage(result.message || 'Failed to send feedback. Please try again.')
+        // Provide better error messages based on the response
+        if (response.status === 408) {
+          setErrorMessage('Request timed out. Please check your internet connection and try again, or email us directly.')
+        } else {
+          setErrorMessage(result.message || 'Failed to send feedback. Please try again or email us directly.')
+        }
       }
     } catch (error) {
       console.error('Network error submitting feedback:', error)
       setShowError(true)
 
       if (error instanceof Error && error.name === 'AbortError') {
-        setErrorMessage('Request timed out. Please check your connection and try again.')
+        setErrorMessage('Request timed out. Please check your internet connection and try again, or email us directly at my.stationptot@gmail.com')
+      } else if (error instanceof TypeError && error.message.includes('fetch')) {
+        setErrorMessage('Network error. Please check your internet connection and try again, or email us directly.')
       } else {
-        setErrorMessage('Network error. Please check your connection and try again.')
+        setErrorMessage('An unexpected error occurred. Please try again or email us directly at my.stationptot@gmail.com')
       }
     } finally {
       setIsSubmitting(false)
@@ -164,6 +197,7 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
                 >
               <input type="hidden" name="_subject" value="QuizMe Feedback" />
               <input type="hidden" name="_captcha" value="false" />
+              <input type="hidden" name="rating" value={rating?.toString() || ''} />
 
               <div>
                 <label htmlFor="feedback-name" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -202,6 +236,62 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
                 />
               </div>
 
+              {/* Star Rating Section */}
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  How would you rate your experience? *
+                </label>
+                <div className={`flex gap-1 mb-3 ${
+                  showError && rating === null ? 'p-2 border-2 border-red-300 rounded-md bg-red-50 dark:bg-red-900/20' : ''
+                }`}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => {
+                        setRating(star)
+                        // Clear rating-related errors when user selects a rating
+                        if (showError && errorMessage.includes('rating')) {
+                          setShowError(false)
+                          setErrorMessage('')
+                        }
+                      }}
+                      onMouseEnter={() => setHoveredRating(star)}
+                      onMouseLeave={() => setHoveredRating(null)}
+                      className="p-1 transition-colors"
+                      aria-label={`Rate ${star} star${star !== 1 ? 's' : ''}`}
+                    >
+                      <svg
+                        className={`w-6 h-6 transition-colors ${
+                          (hoveredRating || rating || 0) >= star
+                            ? 'text-yellow-400 fill-current'
+                            : 'text-gray-300 dark:text-gray-600'
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                        />
+                      </svg>
+                    </button>
+                  ))}
+                  {rating && (
+                    <button
+                      type="button"
+                      onClick={() => setRating(null)}
+                      className="ml-2 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Feedback Type *
@@ -211,6 +301,7 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
                     type="button"
                     onClick={(e) => {
                       e.preventDefault();
+                      setFeedbackType('bug');
                       const buttons = e.currentTarget.parentElement?.querySelectorAll('button');
                       buttons?.forEach(btn => {
                         btn.classList.remove('bg-orange-500', 'bg-blue-600', 'bg-green-600', 'text-white', 'border-transparent');
@@ -237,6 +328,7 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
                     type="button"
                     onClick={(e) => {
                       e.preventDefault();
+                      setFeedbackType('feature');
                       const buttons = e.currentTarget.parentElement?.querySelectorAll('button');
                       buttons?.forEach(btn => {
                         btn.classList.remove('bg-orange-500', 'bg-blue-600', 'bg-green-600', 'text-white', 'border-transparent');
@@ -263,6 +355,7 @@ export default function FeedbackDrawer({ isOpen, onClose }: FeedbackDrawerProps)
                     type="button"
                     onClick={(e) => {
                       e.preventDefault();
+                      setFeedbackType('general');
                       const buttons = e.currentTarget.parentElement?.querySelectorAll('button');
                       buttons?.forEach(btn => {
                         btn.classList.remove('bg-orange-500', 'bg-blue-600', 'bg-green-600', 'text-white', 'border-transparent');

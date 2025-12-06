@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Set runtime timeout to prevent hanging requests
+export const maxDuration = 30; // 30 seconds max
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -31,36 +34,58 @@ export async function POST(request: NextRequest) {
     const formEntries = Array.from(formData.entries());
     console.log('📝 Form data:', formEntries.map(([key, value]) => `${key}: ${value}`));
 
-    // Forward to FormSubmit with proper headers
-    const response = await fetch('https://formsubmit.co/my.stationptot@gmail.com', {
-      method: 'POST',
-      body: formData,
-      headers: {
-        'Origin': siteUrl,
-        'Referer': siteUrl,
-      },
-    });
+    // Add timeout to the fetch request
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
 
-    console.log('🔄 FormSubmit response status:', response.status);
-    console.log('🔄 FormSubmit response headers:', Object.fromEntries(response.headers.entries()));
+    try {
+      // Forward to FormSubmit with proper headers
+      const response = await fetch('https://formsubmit.co/my.stationptot@gmail.com', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Origin': siteUrl,
+          'Referer': siteUrl,
+          'User-Agent': 'QuizMe-App/1.0',
+        },
+        signal: controller.signal,
+      });
 
-    if (response.ok) {
-      console.log('✅ Feedback sent successfully');
-      return NextResponse.json({ success: true, message: 'Feedback sent successfully' });
-    } else {
-      const errorText = await response.text();
-      console.error('❌ FormSubmit error:', errorText);
-      return NextResponse.json({
-        success: false,
-        message: 'Failed to send feedback',
-        error: errorText
-      }, { status: 500 });
+      clearTimeout(timeoutId);
+
+      console.log('🔄 FormSubmit response status:', response.status);
+      console.log('🔄 FormSubmit response headers:', Object.fromEntries(response.headers.entries()));
+
+      if (response.ok) {
+        console.log('✅ Feedback sent successfully');
+        return NextResponse.json({ success: true, message: 'Feedback sent successfully' });
+      } else {
+        const errorText = await response.text();
+        console.error('❌ FormSubmit error:', errorText);
+        return NextResponse.json({
+          success: false,
+          message: 'Failed to send feedback. Please try emailing directly.',
+          error: errorText
+        }, { status: 500 });
+      }
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+
+      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+        console.error('⏰ FormSubmit request timed out');
+        return NextResponse.json({
+          success: false,
+          message: 'Request timed out. Please try again or email directly.',
+        }, { status: 408 });
+      } else {
+        throw fetchError; // Re-throw to be caught by outer catch
+      }
     }
   } catch (error) {
     console.error('❌ Feedback submission error:', error);
     return NextResponse.json({
       success: false,
-      message: 'Server error',
+      message: 'Server error. Please try emailing directly.',
       error: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }

@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 interface GeneratingQuizProps {
   error?: string | null;
   onRetry?: () => void;
+  onReportIssue?: () => void;
 }
 
 interface Stage {
@@ -20,45 +21,81 @@ const stages: Stage[] = [
   { emoji: '✨', message: 'Almost ready...', duration: 2000 },
 ];
 
-export default function GeneratingQuiz({ error, onRetry }: GeneratingQuizProps) {
+export default function GeneratingQuiz({ error, onRetry, onReportIssue }: GeneratingQuizProps) {
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     if (error) return; // Don't run progress simulation if there's an error
 
-    // Calculate total duration for all stages
-    const totalDuration = stages.reduce((sum, stage) => sum + stage.duration, 0);
-    let elapsedTime = 0;
+    let intervalId: NodeJS.Timeout;
+    let stageIntervalId: NodeJS.Timeout;
+    let cleanupTimeout: NodeJS.Timeout;
+    let isActive = true;
 
-    // Update progress bar smoothly
-    const progressInterval = setInterval(() => {
-      elapsedTime += 50;
+    const updateProgress = () => {
+      if (!isActive) return;
 
-      // Calculate current progress (0-100%)
-      // Use easing function to slow down as we approach 95%
-      const linearProgress = Math.min((elapsedTime / totalDuration) * 100, 95);
-      const easedProgress = linearProgress - (linearProgress * 0.15 * Math.pow((linearProgress / 100), 2));
+      setProgress(currentProgress => {
+        if (!isActive || currentProgress >= 95) return currentProgress;
 
-      setProgress(Math.min(easedProgress, 95)); // Cap at 95% until actual completion
-
-      // Change stage based on elapsed time
-      let cumulativeTime = 0;
-      for (let i = 0; i < stages.length; i++) {
-        cumulativeTime += stages[i].duration;
-        if (elapsedTime < cumulativeTime) {
-          setCurrentStageIndex(i);
-          break;
+        // Sometimes pause (10% chance) to simulate processing
+        if (Math.random() < 0.1) {
+          return currentProgress;
         }
-      }
 
-      // Stop at the last stage
-      if (elapsedTime >= totalDuration) {
-        clearInterval(progressInterval);
-      }
-    }, 50);
+        // Generate random increment between 0.5% and 4%
+        const baseIncrement = Math.random() * 3.5 + 0.5;
 
-    return () => clearInterval(progressInterval);
+        // Add occasional bursts of faster progress (20% chance)
+        const burstMultiplier = Math.random() < 0.2 ? 1.8 : 1;
+        const randomIncrement = baseIncrement * burstMultiplier;
+
+        // Slow down as we approach 95% (add resistance)
+        const slowdownFactor = currentProgress > 80 ? 0.25 : currentProgress > 60 ? 0.6 : 1;
+        const adjustedProgress = currentProgress + (randomIncrement * slowdownFactor);
+
+        // Cap at 95% until actual completion
+        return Math.min(adjustedProgress, 95);
+      });
+
+      // Schedule next update with random interval, only if still active
+      if (isActive) {
+        const nextInterval = 150 + Math.random() * 400; // 150-550ms
+        intervalId = setTimeout(updateProgress, nextInterval);
+      }
+    };
+
+    // Start the progress updates
+    updateProgress();
+
+    // Change stage based on progress percentage
+    stageIntervalId = setInterval(() => {
+      if (!isActive) return;
+
+      setProgress(currentProgress => {
+        if (currentProgress < 20) setCurrentStageIndex(0);
+        else if (currentProgress < 45) setCurrentStageIndex(1);
+        else if (currentProgress < 75) setCurrentStageIndex(2);
+        else setCurrentStageIndex(3);
+        return currentProgress;
+      });
+    }, 500);
+
+    // Clean up after total expected duration
+    const totalDuration = stages.reduce((sum, stage) => sum + stage.duration, 0);
+    cleanupTimeout = setTimeout(() => {
+      isActive = false;
+      clearTimeout(intervalId);
+      clearInterval(stageIntervalId);
+    }, totalDuration);
+
+    return () => {
+      isActive = false;
+      clearTimeout(intervalId);
+      clearInterval(stageIntervalId);
+      clearTimeout(cleanupTimeout);
+    };
   }, [error]);
 
   if (error) {
@@ -117,14 +154,23 @@ export default function GeneratingQuiz({ error, onRetry }: GeneratingQuizProps) 
               Go Back
             </button>
 
-            <a
-              href="https://github.com/yourusername/quizme/issues"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-center text-sm text-blue-600 hover:text-blue-700 mt-2"
-            >
-              Report Issue
-            </a>
+            {onReportIssue ? (
+              <button
+                onClick={onReportIssue}
+                className="text-center text-sm text-blue-600 hover:text-blue-700 mt-2 font-medium underline"
+              >
+                Report Issue
+              </button>
+            ) : (
+              <a
+                href="https://github.com/yourusername/quizme/issues"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-center text-sm text-blue-600 hover:text-blue-700 mt-2"
+              >
+                Report Issue
+              </a>
+            )}
           </div>
         </div>
       </div>

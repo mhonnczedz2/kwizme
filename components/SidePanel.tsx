@@ -31,6 +31,7 @@ export default function SidePanel({ isOpen, onClose, user, onLogout }: SidePanel
   const [showChangePassword, setShowChangePassword] = useState(false)
   const [passwordLoading, setPasswordLoading] = useState(false)
   const [passwordSuccess, setPasswordSuccess] = useState(false)
+  const [totalQuizzes, setTotalQuizzes] = useState<number>(0)
 
   // Check real-time sync status
   const isSyncActive = useSyncStatus(user)
@@ -48,6 +49,29 @@ export default function SidePanel({ isOpen, onClose, user, onLogout }: SidePanel
       setFullName(user.user_metadata?.full_name || '')
       setInstitution(user.user_metadata?.institution || '')
       setProgram(user.user_metadata?.program || '')
+    }
+  }, [user, isOpen])
+
+  // Fetch total quiz count for the user
+  const fetchQuizCount = async () => {
+    if (!user) return
+
+    try {
+      const { count } = await supabase
+        .from('quizzes')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+
+      setTotalQuizzes(count || 0)
+    } catch (error) {
+      console.error('Error fetching quiz count:', error)
+    }
+  }
+
+  // Load quiz count when panel opens or user changes
+  useEffect(() => {
+    if (user && isOpen) {
+      fetchQuizCount()
     }
   }, [user, isOpen])
 
@@ -264,23 +288,13 @@ export default function SidePanel({ isOpen, onClose, user, onLogout }: SidePanel
                               {isSyncActive ? 'Synced' : 'Signed In'}
                             </span>
                           </div>
-                          {migration.migrationStatus &&
-                           migration.migrationStatus.completed === migration.migrationStatus.total &&
-                           migration.migrationStatus.failed === 0 &&
-                           !migration.isMigrating && (
-                            <p className="text-xs text-green-600 dark:text-green-500 mt-1">
-                              {migration.migrationStatus.total} {migration.migrationStatus.total === 1 ? 'quiz' : 'quizzes'} synced
-                            </p>
-                          )}
+                          <p className="text-xs text-green-600 dark:text-green-500 mt-1">
+                            {totalQuizzes} {totalQuizzes === 1 ? 'quiz' : 'quizzes'} available
+                          </p>
                         </div>
-                        {migration.migrationStatus &&
-                         migration.migrationStatus.completed === migration.migrationStatus.total &&
-                         migration.migrationStatus.failed === 0 &&
-                         !migration.isMigrating && (
-                          <svg className="w-5 h-5 text-green-600 dark:text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        )}
+                        <svg className="w-5 h-5 text-green-600 dark:text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                       </div>
                     </div>
 
@@ -510,7 +524,21 @@ export default function SidePanel({ isOpen, onClose, user, onLogout }: SidePanel
           </div>
 
           {/* Footer */}
-          <div className="border-t border-gray-200 dark:border-gray-700 p-4">
+          <div className="border-t border-gray-200 dark:border-gray-700 p-4 space-y-3">
+            {/* Support Link */}
+            <button
+              onClick={() => {
+                router.push('/support')
+                onClose()
+              }}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg transition"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Help & Support
+            </button>
+
             <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
               QuizMe v0.1.0
             </p>

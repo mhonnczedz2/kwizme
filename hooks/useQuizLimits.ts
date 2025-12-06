@@ -91,31 +91,25 @@ export function useQuizLimits() {
   const getUsageMessage = (): string => {
     if (usage) {
       const { limits } = usage
-      const resetTime = new Date(usage.resetTime).toLocaleString()
 
       if (limits.isUnlimited) {
         return 'You have unlimited quiz generation!'
       }
 
       if (!limits.canGenerateToday) {
-        return `You've reached your ${limits.dailyLimit}-quiz generation daily limit! Resets at ${resetTime}.`
+        return `You've reached your ${limits.dailyLimit}-quiz generation daily limit! Limits reset at 12:00 AM daily.`
       }
 
-      return `You have ${limits.remainingQuizzes} quiz${limits.remainingQuizzes === 1 ? '' : 's'} remaining today. Resets at ${resetTime}.`
+      return `You have ${limits.remainingQuizzes} quiz${limits.remainingQuizzes === 1 ? '' : 's'} remaining today. Limits reset at 12:00 AM daily.`
     }
 
-    // Anonymous user message - calculate reset time
-    const tomorrow = new Date()
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    tomorrow.setHours(0, 0, 0, 0)
-    const resetTime = tomorrow.toLocaleString()
-
+    // Anonymous user message
     const remaining = getRemainingQuizzes()
     if (remaining === 0) {
-      return `You've reached your 5-quiz generation daily limit! Resets at ${resetTime}.`
+      return `You've reached your 5-quiz generation daily limit! Limits reset at 12:00 AM daily.`
     }
 
-    return `You have ${remaining} quiz${remaining === 1 ? '' : 's'} remaining today. Resets at ${resetTime}.`
+    return `You have ${remaining} quiz${remaining === 1 ? '' : 's'} remaining today. Limits reset at 12:00 AM daily.`
   }
 
   useEffect(() => {
