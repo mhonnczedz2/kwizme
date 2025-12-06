@@ -1,7 +1,9 @@
 /**
  * Analytics utility functions for QuizMe
- * Provides type-safe event tracking for Google Analytics 4
+ * Provides type-safe event tracking for Google Analytics 4 and Sentry error monitoring
  */
+
+import * as Sentry from '@sentry/nextjs';
 
 // Extend the Window interface to include gtag
 declare global {
@@ -213,14 +215,16 @@ export const trackPageView = (pageName: string, additionalParams?: Record<string
 };
 
 /**
- * Error Events
+ * Error Events - Enhanced with Sentry integration
  */
 export const trackError = (params: {
   errorType: 'api_error' | 'client_error' | 'network_error' | 'validation_error';
   errorMessage: string;
   errorCode?: string | number;
   context?: string;
+  error?: Error; // Actual error object for Sentry
 }) => {
+  // Track in GA4
   trackEvent('error_occurred', {
     error_type: params.errorType,
     error_message: params.errorMessage.substring(0, 100), // Limit message length
@@ -228,4 +232,23 @@ export const trackError = (params: {
     context: params.context,
     event_category: 'errors',
   });
+
+  // Also send to Sentry with additional context
+  if (process.env.NODE_ENV === 'production') {
+    Sentry.withScope((scope) => {
+      scope.setTag('errorType', params.errorType);
+      scope.setTag('context', params.context || 'unknown');
+      if (params.errorCode) {
+        scope.setTag('errorCode', params.errorCode.toString());
+      }
+      scope.setLevel('error');
+
+      // Capture the actual error object or create one from the message
+      if (params.error) {
+        Sentry.captureException(params.error);
+      } else {
+        Sentry.captureMessage(params.errorMessage, 'error');
+      }
+    });
+  }
 };

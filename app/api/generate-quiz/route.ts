@@ -162,7 +162,8 @@ export async function POST(request: NextRequest) {
     trackError({
       errorType: 'api_error',
       errorMessage: error.message || 'Unknown quiz generation error',
-      context: 'quiz_generation'
+      context: 'quiz_generation',
+      error: error // Pass the actual error object for Sentry
     });
 
     // Handle specific error types
