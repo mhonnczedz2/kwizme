@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     console.log('🔒 Checking quiz generation limits...');
 
     // Get user ID from session if available
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     const userId = user?.id;
 

@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -25,6 +25,15 @@ export async function GET(request: NextRequest) {
         { error: 'Could not fetch usage limits' },
         { status: 500 }
       )
+    }
+
+    // Type assertion for the SQL function result
+    const typedLimits = limits as {
+      allowed: boolean
+      current_usage: number
+      daily_limit: number
+      is_unlimited: boolean
+      remaining_quizzes: number
     }
 
     // Get usage history for the last 7 days
@@ -52,11 +61,11 @@ export async function GET(request: NextRequest) {
         fullName: profile?.full_name
       },
       limits: {
-        dailyLimit: limits.is_unlimited ? -1 : limits.daily_limit,
-        currentUsage: limits.current_usage,
-        remainingQuizzes: limits.remaining_quizzes,
-        isUnlimited: limits.is_unlimited,
-        canGenerateToday: limits.allowed
+        dailyLimit: typedLimits.is_unlimited ? -1 : typedLimits.daily_limit,
+        currentUsage: typedLimits.current_usage,
+        remainingQuizzes: typedLimits.remaining_quizzes,
+        isUnlimited: typedLimits.is_unlimited,
+        canGenerateToday: typedLimits.allowed
       },
       usageHistory: usageHistory || [],
       resetTime: getTomorrowMidnight()

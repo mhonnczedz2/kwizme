@@ -26,7 +26,7 @@ export async function checkQuizGenerationLimit(userId?: string): Promise<RateLim
     return checkAnonymousUserLimit()
   }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const today = new Date().toISOString().split('T')[0]
 
   try {
@@ -111,7 +111,7 @@ export async function recordQuizGeneration(userId?: string): Promise<void> {
     return
   }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const today = new Date().toISOString().split('T')[0]
 
   try {
@@ -241,7 +241,7 @@ export async function setUserLimit(
   reason: string = 'custom',
   expiresAt?: Date
 ): Promise<boolean> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const { error } = await supabase

@@ -1,5 +1,5 @@
 import './globals.css'
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { ThemeProvider } from '@/lib/contexts/ThemeContext'
 import PWAInstaller from '@/components/PWAInstaller'
 
@@ -10,17 +10,7 @@ export const revalidate = 0
 export const metadata: Metadata = {
   title: 'QuizMe - AI Quiz Generator',
   description: 'Generate practice quizzes from your learning materials using AI',
-  manifest: '/manifest.json',
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#2563eb' },
-    { media: '(prefers-color-scheme: dark)', color: '#1e40af' },
-  ],
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 5,
-    userScalable: true,
-  },
+  manifest: '/manifest.json?v=4',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -35,6 +25,17 @@ export const metadata: Metadata = {
       { url: '/icon-192x192.png?v=3', sizes: '192x192', type: 'image/png' },
     ],
   },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#2563eb' },
+    { media: '(prefers-color-scheme: dark)', color: '#1e40af' },
+  ],
 }
 
 export default function RootLayout({

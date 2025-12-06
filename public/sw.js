@@ -1,6 +1,6 @@
 // Service Worker for QuizMe PWA
-const CACHE_NAME = 'quizme-v1';
-const RUNTIME_CACHE = 'quizme-runtime-v1';
+const CACHE_NAME = 'quizme-v2';
+const RUNTIME_CACHE = 'quizme-runtime-v2';
 
 // Assets to cache immediately on install
 const PRECACHE_URLS = [
@@ -87,8 +87,9 @@ self.addEventListener('fetch', (event) => {
       }
 
       return fetch(event.request).then((response) => {
-        // Don't cache non-successful responses
-        if (!response || response.status !== 200 || response.type === 'error') {
+        // Don't cache non-successful responses or POST/PUT/DELETE requests
+        if (!response || response.status !== 200 || response.type === 'error' ||
+            event.request.method !== 'GET') {
           return response;
         }
 
