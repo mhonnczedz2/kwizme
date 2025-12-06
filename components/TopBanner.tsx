@@ -7,13 +7,23 @@ interface TopBannerProps {
   onMenuClick: () => void
   onInfoClick: () => void
   onHome?: () => void  // Optional callback for home navigation
+  isHomePage?: boolean  // Flag to indicate if we're on the home page
 }
 
-export default function TopBanner({ onMenuClick, onInfoClick, onHome }: TopBannerProps) {
+export default function TopBanner({ onMenuClick, onInfoClick, onHome, isHomePage }: TopBannerProps) {
   const router = useRouter()
 
   const handleQuizMeClick = () => {
-    console.log('🔵 QuizMe banner clicked - navigating to /')
+    console.log('🔵 QuizMe banner clicked')
+
+    // If we're on the home page, scroll to top instead of navigating
+    if (isHomePage) {
+      console.log('🔵 Scrolling to top on home page')
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+
+    console.log('🔵 Navigating to home page')
     // If onHome callback is provided, use it; otherwise use router navigation
     if (onHome) {
       onHome()

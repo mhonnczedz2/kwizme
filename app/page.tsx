@@ -536,6 +536,7 @@ export default function Home() {
         onMenuClick={() => setShowSidePanel(true)}
         onInfoClick={() => setShowInfoBubble(true)}
         onHome={() => setAppState('home')}
+        isHomePage={appState === 'home'}
       />
 
       <div className="container mx-auto px-4 pt-24 pb-16 lg:pt-32">
