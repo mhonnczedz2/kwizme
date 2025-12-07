@@ -98,7 +98,7 @@ export default function PrivacyPolicyPage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">1. Introduction</h2>
               <p className="text-gray-700 dark:text-gray-300 mb-4">
-                QuizMe ("we", "our", or "us") respects your privacy and is committed to protecting your personal data. This Privacy Policy explains how we collect, use, store, and protect your information when you use our Service.
+                KwizMe ("we", "our", or "us") respects your privacy and is committed to protecting your personal data. This Privacy Policy explains how we collect, use, store, and protect your information when you use our Service.
               </p>
             </section>
 
@@ -292,7 +292,7 @@ export default function PrivacyPolicyPage() {
           {/* Footer */}
           <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
             <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-              By using QuizMe, you acknowledge that you have read and understood this Privacy Policy.
+              By using KwizMe, you acknowledge that you have read and understood this Privacy Policy.
             </p>
           </div>
         </div>

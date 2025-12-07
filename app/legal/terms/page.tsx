@@ -98,7 +98,7 @@ export default function TermsOfServicePage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">1. Acceptance of Terms</h2>
               <p className="text-gray-700 dark:text-gray-300 mb-4">
-                By accessing and using QuizMe ("the Service"), you accept and agree to be bound by the terms and provisions of this agreement. If you do not agree to these terms, please do not use the Service.
+                By accessing and using KwizMe ("the Service"), you accept and agree to be bound by the terms and provisions of this agreement. If you do not agree to these terms, please do not use the Service.
               </p>
             </section>
 
@@ -106,7 +106,7 @@ export default function TermsOfServicePage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">2. Service Description</h2>
               <p className="text-gray-700 dark:text-gray-300 mb-4">
-                QuizMe is an educational tool that uses artificial intelligence to generate practice quizzes from user-uploaded learning materials. The Service is provided "as is" for educational purposes only.
+                KwizMe is an educational tool that uses artificial intelligence to generate practice quizzes from user-uploaded learning materials. The Service is provided "as is" for educational purposes only.
               </p>
             </section>
 
@@ -134,7 +134,7 @@ export default function TermsOfServicePage() {
               </ul>
 
               <p className="text-gray-700 dark:text-gray-300 mb-4">
-                <strong>3.3 License Grant:</strong> By uploading content, you grant QuizMe a non-exclusive, worldwide, royalty-free license to use, reproduce, and process your content solely for the purpose of providing the Service.
+                <strong>3.3 License Grant:</strong> By uploading content, you grant KwizMe a non-exclusive, worldwide, royalty-free license to use, reproduce, and process your content solely for the purpose of providing the Service.
               </p>
             </section>
 
@@ -165,7 +165,7 @@ export default function TermsOfServicePage() {
               </p>
 
               <p className="text-gray-700 dark:text-gray-300 mb-4">
-                <strong>5.3 User Indemnification:</strong> You agree to indemnify, defend, and hold harmless QuizMe, its operators, and affiliates from and against any and all claims, damages, obligations, losses, liabilities, costs, and expenses arising from:
+                <strong>5.3 User Indemnification:</strong> You agree to indemnify, defend, and hold harmless KwizMe, its operators, and affiliates from and against any and all claims, damages, obligations, losses, liabilities, costs, and expenses arising from:
               </p>
               <ul className="list-disc pl-6 text-gray-700 dark:text-gray-300 mb-4 space-y-2">
                 <li>Your use of the Service</li>
@@ -175,7 +175,7 @@ export default function TermsOfServicePage() {
               </ul>
 
               <p className="text-gray-700 dark:text-gray-300 mb-4">
-                <strong>5.4 No Legal Action:</strong> By using this Service, you agree not to sue QuizMe, its operators, developers, or any affiliated parties for any reason whatsoever related to your use of the Service, except where prohibited by law.
+                <strong>5.4 No Legal Action:</strong> By using this Service, you agree not to sue KwizMe, its operators, developers, or any affiliated parties for any reason whatsoever related to your use of the Service, except where prohibited by law.
               </p>
             </section>
 
@@ -233,7 +233,7 @@ export default function TermsOfServicePage() {
           {/* Footer */}
           <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
             <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-              By using QuizMe, you acknowledge that you have read and understood these Terms of Service.
+              By using KwizMe, you acknowledge that you have read and understood these Terms of Service.
             </p>
           </div>
         </div>

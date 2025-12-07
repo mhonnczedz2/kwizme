@@ -23,20 +23,20 @@ const faqData: FAQItem[] = [
   // General Questions
   {
     id: 'what-is-quizme',
-    question: 'What is QuizMe?',
-    answer: 'QuizMe is an AI-powered quiz generation tool that helps students create practice quizzes from their learning materials. Simply upload your study materials (PDFs, documents, etc.) and get instant quizzes to test your knowledge.',
+    question: 'What is KwizMe?',
+    answer: 'KwizMe is an AI-powered quiz generation tool that helps students create practice quizzes from their learning materials. Simply upload your study materials (PDFs, documents, etc.) and get instant quizzes to test your knowledge.',
     category: 'general'
   },
   {
     id: 'how-does-it-work',
-    question: 'How does QuizMe work?',
+    question: 'How does KwizMe work?',
     answer: 'Upload your study materials, choose your quiz preferences (difficulty, number of questions, etc.), and our AI will generate relevant quiz questions based on your content. You can then take the quiz and track your progress over time.',
     category: 'general'
   },
   {
     id: 'supported-file-types',
     question: 'What file types are supported?',
-    answer: 'QuizMe supports PDF documents, Word documents (.docx), PowerPoint presentations (.pptx), and plain text files (.txt). We\'re working on adding support for more file types.',
+    answer: 'KwizMe supports PDF documents, Word documents (.docx), PowerPoint presentations (.pptx), and plain text files (.txt). We\'re working on adding support for more file types.',
     category: 'general'
   },
   {
@@ -50,7 +50,7 @@ const faqData: FAQItem[] = [
   {
     id: 'create-account',
     question: 'Do I need to create an account?',
-    answer: 'No! You can use QuizMe without creating an account. However, creating a free account allows you to save your quizzes, track your progress, and access additional features.',
+    answer: 'No! You can use KwizMe without creating an account. However, creating a free account allows you to save your quizzes, track your progress, and access additional features.',
     category: 'account'
   },
   {
@@ -88,21 +88,21 @@ const faqData: FAQItem[] = [
   {
     id: 'browser-compatibility',
     question: 'Which browsers are supported?',
-    answer: 'QuizMe works best on modern browsers including Chrome, Firefox, Safari, and Edge. Make sure you have JavaScript enabled for the best experience.',
+    answer: 'KwizMe works best on modern browsers including Chrome, Firefox, Safari, and Edge. Make sure you have JavaScript enabled for the best experience.',
     category: 'technical'
   },
   {
     id: 'mobile-support',
-    question: 'Can I use QuizMe on mobile devices?',
-    answer: 'Yes! QuizMe is fully responsive and works great on smartphones and tablets. You can also install it as a Progressive Web App (PWA) for an app-like experience.\n\n📱 How to install QuizMe as an app:\n\n• iPhone/iPad: Open QuizMe in Safari, tap the Share button, then tap "Add to Home Screen"\n• Android: Open QuizMe in Chrome, tap the menu (3 dots), then tap "Add to Home screen" or look for the "Install app" prompt\n• Desktop: Look for the install icon in your browser\'s address bar, or check the browser menu for "Install QuizMe"\n\nOnce installed, QuizMe will work like a native app with faster loading, offline capabilities, and easy access from your home screen!',
+    question: 'Can I use KwizMe on mobile devices?',
+    answer: 'Yes! KwizMe is fully responsive and works great on smartphones and tablets. You can also install it as a Progressive Web App (PWA) for an app-like experience.\n\n📱 How to install KwizMe as an app:\n\n• iPhone/iPad: Open KwizMe in Safari, tap the Share button, then tap "Add to Home Screen"\n• Android: Open KwizMe in Chrome, tap the menu (3 dots), then tap "Add to Home screen" or look for the "Install app" prompt\n• Desktop: Look for the install icon in your browser\'s address bar, or check the browser menu for "Install KwizMe"\n\nOnce installed, KwizMe will work like a native app with faster loading, offline capabilities, and easy access from your home screen!',
     category: 'technical'
   },
 
   // Billing Questions
   {
     id: 'is-it-free',
-    question: 'Is QuizMe free to use?',
-    answer: 'Yes! QuizMe is completely free to use. We believe education should be accessible to everyone. There are no hidden fees or premium tiers.',
+    question: 'Is KwizMe free to use?',
+    answer: 'Yes! KwizMe is completely free to use. We believe education should be accessible to everyone. There are no hidden fees or premium tiers.',
     category: 'billing'
   },
   {
@@ -255,7 +255,7 @@ export default function SupportPage() {
             Help & Support
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
-            Find answers to common questions and get help with QuizMe
+            Find answers to common questions and get help with KwizMe
           </p>
 
         </div>
@@ -385,7 +385,7 @@ export default function SupportPage() {
               href="/"
               className="px-8 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
-              Back to QuizMe
+              Back to KwizMe
             </Link>
           </div>
         </div>
