@@ -32,13 +32,9 @@ export async function middleware(request: NextRequest) {
       const rateLimitResult = await checkQuizGenerationLimit(undefined, clientIP)
 
       if (!rateLimitResult.allowed) {
-        const resetTime = rateLimitResult.resetTime
-          ? new Date(rateLimitResult.resetTime).toLocaleString()
-          : 'tomorrow'
-
         return NextResponse.json({
           error: 'Rate limit exceeded in middleware',
-          message: rateLimitResult.reason || `Rate limit exceeded. Resets at ${resetTime}.`,
+          message: rateLimitResult.reason || `You've reached your ${rateLimitResult.limits.dailyLimit}-quiz generation daily limit! Limits reset at 12:00 AM daily.`,
           limits: rateLimitResult.limits,
           resetTime: rateLimitResult.resetTime
         }, {

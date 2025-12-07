@@ -25,8 +25,6 @@ export async function POST(request: NextRequest) {
     const rateLimitResult = await checkQuizGenerationLimit(userId, clientIP);
 
     if (!rateLimitResult.allowed) {
-      const resetTime = rateLimitResult.resetTime ? new Date(rateLimitResult.resetTime).toLocaleString() : 'tomorrow'
-
       // Track rate limit hit event
       trackRateLimitHit({
         currentCount: rateLimitResult.limits.currentUsage || 0,
@@ -37,7 +35,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         error: 'Daily quiz generation limit reached',
-        message: rateLimitResult.reason || `You've reached your ${rateLimitResult.limits.dailyLimit}-quiz generation daily limit! Resets at ${resetTime}.`,
+        message: rateLimitResult.reason || `You've reached your ${rateLimitResult.limits.dailyLimit}-quiz generation daily limit! Limits reset at 12:00 AM daily.`,
         limits: rateLimitResult.limits,
         resetTime: rateLimitResult.resetTime
       }, { status: 429 }); // 429 Too Many Requests

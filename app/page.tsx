@@ -294,10 +294,8 @@ export default function Home() {
       } else {
         // Handle different error types based on status and response
         if (response.status === 429) {
-          // Rate limit error - show detailed message from response
-          const resetTime = data.resetTime ? new Date(data.resetTime).toLocaleString() : 'tomorrow'
-          const limitInfo = data.limits ? ` (${data.limits.currentUsage}/${data.limits.dailyLimit} used today)` : ''
-          setGenerationError(`RATE_LIMIT: ${data.message || 'Daily limit reached'}${limitInfo}. Resets at ${resetTime}.`);
+          // Rate limit error - use clean message from backend
+          setGenerationError(`RATE_LIMIT: ${data.message || 'Daily limit reached'}`);
         } else if (data.error?.includes('parse') || data.error?.includes('read')) {
           setGenerationError('PDF_PARSE_ERROR');
         } else if (data.error?.includes('rate') || data.error?.includes('limit')) {

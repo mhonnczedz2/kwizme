@@ -179,7 +179,7 @@ async function checkAnonymousUserLimit(ipAddress?: string): Promise<RateLimitRes
         limitType: 'default'
       },
       resetTime: getTomorrowMidnight(),
-      reason: allowed ? undefined : `Daily limit reached for your IP. Resets at ${getTomorrowMidnight().toLocaleString()}.`
+      reason: allowed ? undefined : `You've reached your ${DEFAULT_DAILY_LIMIT}-quiz generation daily limit! Limits reset at 12:00 AM daily.`
     }
 
   } catch (error) {
@@ -267,7 +267,7 @@ function checkAnonymousUserLimitClientSide(): RateLimitResult {
       limitType: 'default'
     },
     resetTime: getTomorrowMidnight(),
-    reason: allowed ? undefined : `Daily limit reached. Resets at ${getTomorrowMidnight().toLocaleString()}.`
+    reason: allowed ? undefined : `You've reached your ${DEFAULT_DAILY_LIMIT}-quiz generation daily limit! Limits reset at 12:00 AM daily.`
   }
 }
 
