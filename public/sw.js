@@ -1,6 +1,6 @@
-// Service Worker for QuizMe PWA
-const CACHE_NAME = 'quizme-v2';
-const RUNTIME_CACHE = 'quizme-runtime-v2';
+// Service Worker for KwizMe PWA
+const CACHE_NAME = 'kwizme-v2';
+const RUNTIME_CACHE = 'kwizme-runtime-v2';
 
 // Assets to cache immediately on install
 const PRECACHE_URLS = [
@@ -121,7 +121,7 @@ async function syncQuizSessions() {
 // Push notifications (optional - for reminders)
 self.addEventListener('push', (event) => {
   const options = {
-    body: event.data ? event.data.text() : 'New notification from QuizMe',
+    body: event.data ? event.data.text() : 'New notification from KwizMe',
     icon: '/icon-192x192.png',
     badge: '/icon-192x192.png',
     vibrate: [200, 100, 200],
@@ -132,7 +132,7 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification('QuizMe', options)
+    self.registration.showNotification('KwizMe', options)
   );
 });
 
