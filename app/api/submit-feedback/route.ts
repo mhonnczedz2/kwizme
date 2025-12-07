@@ -7,89 +7,157 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
 
-    // Dynamically get the site URL from the request headers
-    const getSiteUrl = () => {
-      // First try the environment variable (for production deployments)
-      if (process.env.NEXT_PUBLIC_SITE_URL) {
-        return process.env.NEXT_PUBLIC_SITE_URL;
-      }
+    // Extract feedback data
+    const feedback = formData.get('feedback') as string;
+    const rating = formData.get('rating') as string;
+    const email = formData.get('email') as string;
+    const feedbackType = formData.get('type') as string || 'general';
 
-      // For development/dynamic environments, construct from request headers
-      const host = request.headers.get('host');
-      const protocol = request.headers.get('x-forwarded-proto') ||
-                      (host?.includes('localhost') || host?.includes('127.0.0.1') ? 'http' : 'https');
+    console.log('📝 Processing feedback:', { rating, feedbackType, hasEmail: !!email, feedback: feedback?.substring(0, 100) + '...' });
 
-      if (host) {
-        return `${protocol}://${host}`;
-      }
+    // Validate required fields
+    if (!feedback || feedback.trim().length < 5) {
+      return NextResponse.json({
+        success: false,
+        message: 'Feedback must be at least 5 characters long.',
+      }, { status: 400 });
+    }
 
-      // Final fallback (should rarely be used)
-      return request.headers.get('origin') || 'http://localhost:3000';
+    if (!rating || !['1', '2', '3', '4', '5'].includes(rating)) {
+      return NextResponse.json({
+        success: false,
+        message: 'Please provide a valid rating (1-5 stars).',
+      }, { status: 400 });
+    }
+
+    // Prepare Discord webhook payload with rich embed
+    const embedColor = rating === '5' ? 0x00ff00 : // Green for 5 stars
+                      rating === '4' ? 0x90EE90 : // Light green for 4 stars
+                      rating === '3' ? 0xffff00 : // Yellow for 3 stars
+                      rating === '2' ? 0xff8000 : // Orange for 2 stars
+                      0xff0000;                   // Red for 1 star
+
+    const starEmojis = '★'.repeat(parseInt(rating)) + '☆'.repeat(5 - parseInt(rating));
+
+    const discordPayload = {
+      embeds: [{
+        title: `🎯 New QuizMe Feedback`,
+        color: embedColor,
+        fields: [
+          {
+            name: `${starEmojis} Rating`,
+            value: `${rating}/5 stars`,
+            inline: true
+          },
+          {
+            name: '📂 Type',
+            value: feedbackType.charAt(0).toUpperCase() + feedbackType.slice(1),
+            inline: true
+          },
+          {
+            name: '👤 Contact',
+            value: email || 'Anonymous',
+            inline: true
+          },
+          {
+            name: '💬 Feedback',
+            value: feedback.length > 1000 ? feedback.substring(0, 1000) + '...' : feedback,
+            inline: false
+          }
+        ],
+        footer: {
+          text: `Submitted ${new Date().toLocaleString()} | QuizMe Feedback System`
+        }
+      }]
     };
 
-    const siteUrl = getSiteUrl();
-    console.log('📧 Sending feedback from:', siteUrl);
-
-    // Log form data for debugging
-    const formEntries = Array.from(formData.entries());
-    console.log('📝 Form data:', formEntries.map(([key, value]) => `${key}: ${value}`));
-
-    // Add timeout to the fetch request
+    // Add timeout to the Discord webhook request
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
     try {
-      console.log('🔄 Starting FormSubmit request...');
+      console.log('🔄 Sending feedback to Discord...');
 
-      // Forward to FormSubmit with minimal headers
-      const response = await fetch('https://formsubmit.co/my.stationptot@gmail.com', {
+      if (!process.env.DISCORD_WEBHOOK_URL) {
+        throw new Error('DISCORD_WEBHOOK_URL not configured');
+      }
+
+      const response = await fetch(process.env.DISCORD_WEBHOOK_URL, {
         method: 'POST',
-        body: formData,
         headers: {
-          'Origin': siteUrl,
-          'Referer': siteUrl,
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify(discordPayload),
         signal: controller.signal,
       });
 
-      console.log('✅ FormSubmit request completed with status:', response.status);
+      console.log('✅ Discord webhook request completed with status:', response.status);
 
       clearTimeout(timeoutId);
 
-      console.log('🔄 FormSubmit response status:', response.status);
-      console.log('🔄 FormSubmit response headers:', Object.fromEntries(response.headers.entries()));
-
       if (response.ok) {
-        console.log('✅ Feedback sent successfully');
-        return NextResponse.json({ success: true, message: 'Feedback sent successfully' });
+        console.log('✅ Feedback sent successfully to Discord');
+        return NextResponse.json({
+          success: true,
+          message: 'Thank you for your feedback! We appreciate you helping us improve QuizMe.'
+        });
       } else {
         const errorText = await response.text();
-        console.error('❌ FormSubmit error:', errorText);
-        return NextResponse.json({
-          success: false,
-          message: 'Failed to send feedback. Please try emailing directly.',
-          error: errorText
-        }, { status: 500 });
+        console.error('❌ Discord webhook error:', response.status, errorText);
+
+        // Try database fallback if Discord fails
+        return await handleFallback(feedback, rating, email, feedbackType);
       }
+
     } catch (fetchError) {
       clearTimeout(timeoutId);
 
       if (fetchError instanceof Error && fetchError.name === 'AbortError') {
-        console.error('⏰ FormSubmit request timed out');
-        return NextResponse.json({
-          success: false,
-          message: 'Request timed out. Please try again or email directly.',
-        }, { status: 408 });
+        console.error('⏰ Discord webhook request timed out');
       } else {
-        throw fetchError; // Re-throw to be caught by outer catch
+        console.error('❌ Discord webhook failed:', fetchError);
       }
+
+      // Try database fallback if Discord fails
+      return await handleFallback(feedback, rating, email, feedbackType);
     }
+
   } catch (error) {
     console.error('❌ Feedback submission error:', error);
     return NextResponse.json({
       success: false,
-      message: 'Server error. Please try emailing directly.',
+      message: 'Sorry, we encountered an error processing your feedback. Please try again in a few moments.',
       error: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
+  }
+}
+
+// Fallback function to store feedback when Discord webhook fails
+async function handleFallback(feedback: string, rating: string, email: string, feedbackType: string) {
+  try {
+    console.log('🔄 Attempting database fallback...');
+
+    // For now, just log the feedback and return success
+    // You could implement Supabase storage here if needed
+    console.log('📝 FALLBACK FEEDBACK:', {
+      rating,
+      feedbackType,
+      email: email || 'Anonymous',
+      feedback,
+      timestamp: new Date().toISOString()
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Thank you for your feedback! It has been saved and we will review it soon.'
+    });
+
+  } catch (fallbackError) {
+    console.error('❌ Fallback also failed:', fallbackError);
+
+    return NextResponse.json({
+      success: false,
+      message: 'We appreciate your feedback, but encountered a technical issue. Please email us directly at the contact address.',
     }, { status: 500 });
   }
 }

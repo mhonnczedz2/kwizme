@@ -187,7 +187,7 @@ export default function PrivacyPolicyPage() {
                 <li><strong>Supabase:</strong> Authentication and database hosting</li>
                 <li><strong>Google Gemini:</strong> AI-powered quiz generation</li>
                 <li><strong>Vercel:</strong> Application hosting and deployment</li>
-                <li><strong>FormSubmit.co:</strong> Feedback email delivery</li>
+                <li><strong>Discord:</strong> Feedback and communication delivery</li>
               </ul>
 
               <p className="text-gray-700 dark:text-gray-300 mb-4">
