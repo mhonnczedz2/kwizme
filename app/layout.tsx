@@ -52,9 +52,9 @@ export default function RootLayout({
           <PWAInstaller />
           {children}
         </ThemeProvider>
-        {process.env.NODE_ENV === 'production' && (
+        {process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_GA_ID && (
           <>
-            <GoogleAnalytics gaId="G-79NFTLZH6L" />
+            <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
             <SpeedInsights />
           </>
         )}
