@@ -218,7 +218,7 @@ export default function SignupPage() {
               We've sent a confirmation link to <strong className="text-gray-900 dark:text-gray-100">{email}</strong>
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-              Click the link in the email to verify your account. You can start using QuizMe after verification.
+              Click the link in the email to verify your account. You can start using KwizMe after verification.
             </p>
 
             {/* Info Box */}
@@ -294,7 +294,7 @@ export default function SignupPage() {
         <h1 className="text-3xl md:text-4xl font-extrabold mb-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
           Create Account
         </h1>
-        <p className="text-sm md:text-base text-gray-600 dark:text-gray-300">Join QuizMe and start learning</p>
+        <p className="text-sm md:text-base text-gray-600 dark:text-gray-300">Join KwizMe and start learning</p>
       </div>
 
       {/* Content */}

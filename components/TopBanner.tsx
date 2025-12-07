@@ -13,8 +13,8 @@ interface TopBannerProps {
 export default function TopBanner({ onMenuClick, onInfoClick, onHome, isHomePage }: TopBannerProps) {
   const router = useRouter()
 
-  const handleQuizMeClick = () => {
-    console.log('🔵 QuizMe banner clicked')
+  const handleKwizMeClick = () => {
+    console.log('🔵 KwizMe banner clicked')
 
     // If we're on the home page, scroll to top instead of navigating
     if (isHomePage) {
@@ -48,12 +48,12 @@ export default function TopBanner({ onMenuClick, onInfoClick, onHome, isHomePage
           </button>
         </div>
 
-        {/* Center: QuizMe Title */}
+        {/* Center: KwizMe Title */}
         <button
-          onClick={handleQuizMeClick}
+          onClick={handleKwizMeClick}
           className="text-lg lg:text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent text-center cursor-pointer hover:opacity-80 transition-opacity"
         >
-          QuizMe
+          KwizMe
         </button>
 
         {/* Right: Theme Toggle + Info Button */}

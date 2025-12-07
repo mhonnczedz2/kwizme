@@ -119,7 +119,7 @@ export default function Home() {
     "📝 The app supports files up to 20MB - perfect for comprehensive study materials.",
     "🎲 Use the quiz browser to find all your saved quizzes in one place.",
     "⚡ Generate multiple quizzes from the same material with different difficulty levels for progressive learning.",
-    "📱 Install QuizMe as a Progressive Web App (PWA) for faster loading and offline access!",
+    "📱 Install KwizMe as a Progressive Web App (PWA) for faster loading and offline access!",
     "🏠 Access Help & Support from the side menu for comprehensive FAQs and assistance.",
     "⭐ Use the feedback system to rate your experience and help improve the app.",
     "🔍 Search through FAQs on the support page to quickly find answers to common questions.",
@@ -516,7 +516,7 @@ export default function Home() {
             {/* Header */}
             <div className="text-center mb-12 md:mb-16">
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                QuizMe
+                KwizMe
               </h1>
               <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300">
                 Generate practice quizzes from your learning materials using AI

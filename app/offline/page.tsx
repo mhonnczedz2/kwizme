@@ -60,7 +60,7 @@ export default function OfflinePage() {
                 Back Online!
               </h2>
               <p className="text-gray-600 dark:text-gray-300">
-                Redirecting you to QuizMe...
+                Redirecting you to KwizMe...
               </p>
             </>
           ) : (
@@ -84,7 +84,7 @@ export default function OfflinePage() {
                 You're Offline
               </h2>
               <p className="text-gray-600 dark:text-gray-300 mb-6">
-                QuizMe needs an internet connection to generate new quizzes. You can still:
+                KwizMe needs an internet connection to generate new quizzes. You can still:
               </p>
               <div className="text-left bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4 mb-6">
                 <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">

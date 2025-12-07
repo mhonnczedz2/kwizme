@@ -1,6 +1,6 @@
 # Complete Database & Local Storage Cleanup Guide
 
-This guide helps you completely reset QuizMe during development, allowing you to sign up again with the same email.
+This guide helps you completely reset KwizMe during development, allowing you to sign up again with the same email.
 
 ## 🎯 Problem
 After signing up, you can't re-register with the same email even after manually deleting data because:
@@ -38,7 +38,7 @@ After signing up, you can't re-register with the same email even after manually 
 ### Step 2: Clear Browser Storage (Local)
 **File:** `db-schema/clear_local_storage.js`
 
-1. Open your QuizMe app in browser (e.g., `http://localhost:3001`)
+1. Open your KwizMe app in browser (e.g., `http://localhost:3001`)
 2. Open **DevTools** (F12 or Right Click → Inspect)
 3. Go to **Console** tab
 4. Copy the **entire contents** of `db-schema/clear_local_storage.js`
@@ -48,7 +48,7 @@ After signing up, you can't re-register with the same email even after manually 
 
 **What it clears:**
 - ✅ Supabase auth tokens (session, refresh tokens)
-- ✅ QuizMe theme preferences
+- ✅ KwizMe theme preferences
 - ✅ Local SQLite database (anonymous user data)
 - ✅ All localStorage items
 - ✅ All sessionStorage items
@@ -153,7 +153,7 @@ After running both scripts, verify:
 ## 🔧 Scripts Location
 
 ```
-quizme/
+kwizme/
 └── db-schema/
     ├── clear_all_data.sql          # Step 1: Database cleanup
     ├── clear_local_storage.js      # Step 2: Browser cleanup
@@ -202,5 +202,5 @@ quizme/
 ---
 
 **Last Updated:** 2024-12-02
-**QuizMe Version:** Development
+**KwizMe Version:** Development
 **Environment:** Local Development Only

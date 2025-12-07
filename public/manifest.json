@@ -1,6 +1,6 @@
 {
-  "name": "QuizMe - AI Quiz Generator",
-  "short_name": "QuizMe",
+  "name": "KwizMe - AI Quiz Generator",
+  "short_name": "KwizMe",
   "description": "Generate practice quizzes from your learning materials using AI",
   "start_url": "/",
   "display": "standalone",

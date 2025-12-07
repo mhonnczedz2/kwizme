@@ -1,4 +1,4 @@
--- Rate Limiting Examples for QuizMe
+-- Rate Limiting Examples for KwizMe
 -- Single-query examples using only email address as input
 
 -- ====================================================================

@@ -164,7 +164,7 @@ export default function GeneratingQuiz({ error, onRetry, onReportIssue }: Genera
               </button>
             ) : (
               <a
-                href="https://github.com/yourusername/quizme/issues"
+                href="https://github.com/mhonnczedz2/kwizme/issues"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-center text-sm text-blue-600 hover:text-blue-700 mt-2"

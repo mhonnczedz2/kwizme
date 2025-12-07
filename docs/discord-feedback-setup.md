@@ -2,7 +2,7 @@
 
 ## Overview
 
-QuizMe now uses Discord webhooks as the primary feedback system for better reliability and instant notifications! This guide will help you set up a Discord webhook to receive user feedback.
+KwizMe now uses Discord webhooks as the primary feedback system for better reliability and instant notifications! This guide will help you set up a Discord webhook to receive user feedback.
 
 ## Why Discord Webhooks?
 
@@ -18,14 +18,14 @@ If you don't have a Discord server:
 1. Open Discord (desktop app or web)
 2. Click the "+" icon in the server list
 3. Choose "Create My Own"
-4. Name it "QuizMe Feedback" or similar
+4. Name it "KwizMe Feedback" or similar
 
 ## Step 2: Create a Feedback Channel
 
 1. Right-click in your server
 2. Select "Create Channel"
 3. Choose "Text Channel"
-4. Name it `#feedback` or `#quizme-feedback`
+4. Name it `#feedback` or `#kwizme-feedback`
 
 ## Step 3: Create a Webhook
 
@@ -34,7 +34,7 @@ If you don't have a Discord server:
 3. Go to **"Integrations"** tab
 4. Click **"Create Webhook"**
 5. **Configure the webhook:**
-   - **Name:** `QuizMe Feedback Bot`
+   - **Name:** `KwizMe Feedback Bot`
    - **Avatar:** Upload a custom image (optional)
    - **Channel:** Make sure it's your feedback channel
 
@@ -57,7 +57,7 @@ DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOO
 
 ### Production (Vercel):
 1. Go to your Vercel dashboard
-2. Select your QuizMe project
+2. Select your KwizMe project
 3. Go to **Settings** → **Environment Variables**
 4. Add:
    - **Name:** `DISCORD_WEBHOOK_URL`
@@ -67,7 +67,7 @@ DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOO
 ## Step 6: Test the System
 
 1. Deploy your changes or restart your local server
-2. Go to your QuizMe feedback form
+2. Go to your KwizMe feedback form
 3. Submit test feedback
 4. Check your Discord channel for the message!
 
@@ -90,12 +90,12 @@ When users submit feedback, you'll get beautiful Discord embeds with:
 ## Example Discord Message
 
 ```
-🎯 New QuizMe Feedback
+🎯 New KwizMe Feedback
 ★★★★★ Rating: 5/5 stars
 📂 Type: Suggestion
 👤 Contact: user@example.com
 💬 Feedback: Love the app! Could you add dark mode support?
-Submitted 12/7/2024, 3:45:23 PM | QuizMe Feedback System
+Submitted 12/7/2024, 3:45:23 PM | KwizMe Feedback System
 ```
 
 ## Benefits Over Email
@@ -138,7 +138,7 @@ If Discord webhook fails (extremely rare), the system will:
 # Test with curl
 curl -X POST "YOUR_WEBHOOK_URL" \
   -H "Content-Type: application/json" \
-  -d '{"content": "Test message from QuizMe!"}'
+  -d '{"content": "Test message from KwizMe!"}'
 ```
 
 ---

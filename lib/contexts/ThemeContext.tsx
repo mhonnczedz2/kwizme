@@ -17,9 +17,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   // Load theme from localStorage on mount
   useEffect(() => {
-    const savedTheme = localStorage.getItem('quizme-theme') as Theme | null;
+    const savedTheme = localStorage.getItem('kwizme-theme') as Theme | null;
+    const oldTheme = localStorage.getItem('quizme-theme') as Theme | null;
+
     if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
       setThemeState(savedTheme);
+    } else if (oldTheme && (oldTheme === 'light' || oldTheme === 'dark')) {
+      // Migrate from old theme key
+      console.log('🔄 Migrating theme preference (quizme-theme → kwizme-theme)');
+      setThemeState(oldTheme);
+      localStorage.setItem('kwizme-theme', oldTheme);
+      localStorage.removeItem('quizme-theme');
+      console.log('✅ Theme migration completed');
     }
   }, []);
 
@@ -35,7 +44,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
-    localStorage.setItem('quizme-theme', newTheme);
+    localStorage.setItem('kwizme-theme', newTheme);
   };
 
   const toggleTheme = () => {

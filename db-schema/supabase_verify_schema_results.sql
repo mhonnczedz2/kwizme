@@ -1,4 +1,4 @@
--- Schema Verification Script for QuizMe (Results Version)
+-- Schema Verification Script for KwizMe (Results Version)
 -- Run this in Supabase SQL Editor to verify your database schema
 -- This version returns a results table you can see in the Results tab
 

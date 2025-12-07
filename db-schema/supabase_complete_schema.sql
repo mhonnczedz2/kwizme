@@ -1,4 +1,4 @@
--- Complete Supabase Schema for QuizMe
+-- Complete Supabase Schema for KwizMe
 -- Run this in Supabase SQL Editor to create all required tables
 -- Make sure to run this as a single transaction
 
@@ -309,7 +309,7 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
 -- Success message
 DO $$
 BEGIN
-    RAISE NOTICE '✅ QuizMe schema created successfully!';
+    RAISE NOTICE '✅ KwizMe schema created successfully!';
     RAISE NOTICE 'Tables created: profiles, quizzes, questions, review_sessions, answer_records';
     RAISE NOTICE 'Row Level Security enabled on all tables';
     RAISE NOTICE 'Indexes created for performance optimization';

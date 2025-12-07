@@ -1,4 +1,4 @@
--- Enable Realtime for QuizMe Tables
+-- Enable Realtime for KwizMe Tables
 -- Run this after creating the main schema
 -- This enables real-time subscriptions for quiz and session changes
 
@@ -22,6 +22,6 @@ WHERE pubname = 'supabase_realtime';
 -- Success message
 DO $$
 BEGIN
-    RAISE NOTICE '✅ Realtime enabled for all QuizMe tables!';
+    RAISE NOTICE '✅ Realtime enabled for all KwizMe tables!';
     RAISE NOTICE 'Tables: quizzes, questions, review_sessions, answer_records';
 END $$;

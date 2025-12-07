@@ -3,7 +3,7 @@
 import initSqlJs, { Database } from 'sql.js';
 import { SCHEMA_SQL } from './schema';
 
-const DB_NAME = 'quizme-db';
+const DB_NAME = 'kwizme-db';
 
 let dbInstance: Database | null = null;
 
@@ -50,6 +50,8 @@ export async function initDatabase(): Promise<Database> {
 
     // Try to load existing database from localStorage
     const savedDb = localStorage.getItem(DB_NAME);
+    const oldDbName = 'quizme-db';
+    const oldSavedDb = localStorage.getItem(oldDbName);
 
     if (savedDb) {
       // Load existing database
@@ -58,6 +60,16 @@ export async function initDatabase(): Promise<Database> {
       );
       dbInstance = new SQL.Database(uint8Array);
       console.log('📁 Loaded existing database from localStorage');
+    } else if (oldSavedDb) {
+      // Migrate from old database name
+      console.log('🔄 Migrating database from old name (quizme-db → kwizme-db)');
+      const uint8Array = new Uint8Array(
+        JSON.parse(oldSavedDb)
+      );
+      dbInstance = new SQL.Database(uint8Array);
+      console.log('✅ Database migration completed - data preserved');
+      // Remove old database after successful migration
+      localStorage.removeItem(oldDbName);
     } else {
       // Create new database
       dbInstance = new SQL.Database();

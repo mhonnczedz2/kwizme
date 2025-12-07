@@ -1,6 +1,6 @@
 # Customer Support Response Templates
 
-This document contains standardized response templates for QuizMe customer support to ensure consistent, helpful, and professional communication.
+This document contains standardized response templates for KwizMe customer support to ensure consistent, helpful, and professional communication.
 
 ## General Guidelines
 
@@ -8,7 +8,7 @@ This document contains standardized response templates for QuizMe customer suppo
 - Acknowledge the user's issue clearly
 - Provide actionable solutions when possible
 - Include relevant links to help documentation
-- Sign with your name and QuizMe Support signature
+- Sign with your name and KwizMe Support signature
 - Response time goal: Within 24 hours (business days)
 
 ## Email Signature
@@ -16,11 +16,11 @@ This document contains standardized response templates for QuizMe customer suppo
 ```
 Best regards,
 [Your Name]
-QuizMe Support Team
+KwizMe Support Team
 
 📧 Email: my.stationptot@gmail.com
-🌐 Website: https://quizme-app.vercel.app
-💬 Support: https://quizme-app.vercel.app/support
+🌐 Website: https://kwizme.vercel.app
+💬 Support: https://kwizme.vercel.app/support
 ```
 
 ---
@@ -33,7 +33,7 @@ QuizMe Support Team
 
 Hi [Name],
 
-Thank you for reporting this bug! We really appreciate users like you who help us improve QuizMe.
+Thank you for reporting this bug! We really appreciate users like you who help us improve KwizMe.
 
 **Issue Summary:**
 [Briefly restate the issue they reported]
@@ -62,13 +62,13 @@ Great news! We've fixed the issue you reported.
 [Brief description of the fix]
 
 **What you need to do:**
-- Refresh your browser or reload QuizMe
+- Refresh your browser or reload KwizMe
 - Clear your browser cache if needed
 - The fix should now be active
 
 Please let us know if you're still experiencing any issues.
 
-Thank you for helping us improve QuizMe!
+Thank you for helping us improve KwizMe!
 
 [Email Signature]
 
@@ -82,7 +82,7 @@ Thank you for helping us improve QuizMe!
 
 Hi [Name],
 
-Thank you for your feature suggestion! We love hearing ideas from our users about how to make QuizMe even better.
+Thank you for your feature suggestion! We love hearing ideas from our users about how to make KwizMe even better.
 
 **Your Suggestion:**
 [Briefly restate their request]
@@ -91,7 +91,7 @@ Thank you for your feature suggestion! We love hearing ideas from our users abou
 We've added your suggestion to our product roadmap for evaluation. Our team considers factors like:
 - User demand and feedback
 - Technical feasibility
-- Alignment with QuizMe's goals
+- Alignment with KwizMe's goals
 
 **What's Next:**
 While we can't guarantee implementation timelines, we'll keep your suggestion in our backlog. Popular features often get prioritized, so encourage other users to suggest similar features!
@@ -146,7 +146,7 @@ Hi [Name],
 Thank you for contacting us about your account issue. We're here to help!
 
 **For Password Reset:**
-1. Go to https://quizme-app.vercel.app/auth/login
+1. Go to https://kwizme.vercel.app/auth/login
 2. Click "Forgot Password"
 3. Enter your email address
 4. Check your email (and spam folder) for the reset link
@@ -175,14 +175,14 @@ Please provide details about:
 
 ### Template: General Information
 
-**Subject**: Re: QuizMe Inquiry
+**Subject**: Re: KwizMe Inquiry
 
 Hi [Name],
 
-Thank you for your interest in QuizMe! I'm happy to answer your questions.
+Thank you for your interest in KwizMe! I'm happy to answer your questions.
 
-**About QuizMe:**
-QuizMe is a free AI-powered tool that helps students create practice quizzes from their study materials. Simply upload your documents and get instant, relevant quiz questions.
+**About KwizMe:**
+KwizMe is a free AI-powered tool that helps students create practice quizzes from their study materials. Simply upload your documents and get instant, relevant quiz questions.
 
 **Key Features:**
 - Supports PDF, Word, PowerPoint, and text files
@@ -192,13 +192,13 @@ QuizMe is a free AI-powered tool that helps students create practice quizzes fro
 - Completely free to use
 
 **Getting Started:**
-1. Visit https://quizme-app.vercel.app
+1. Visit https://kwizme.vercel.app
 2. Upload your study material
 3. Choose your quiz preferences
 4. Start practicing!
 
 **Questions?**
-Check our FAQ at https://quizme-app.vercel.app/support or reply to this email.
+Check our FAQ at https://kwizme.vercel.app/support or reply to this email.
 
 Happy studying!
 
@@ -206,14 +206,14 @@ Happy studying!
 
 ### Template: Pricing/Business Inquiry
 
-**Subject**: Re: QuizMe Pricing Inquiry
+**Subject**: Re: KwizMe Pricing Inquiry
 
 Hi [Name],
 
-Thank you for your interest in QuizMe!
+Thank you for your interest in KwizMe!
 
 **Current Pricing:**
-QuizMe is completely FREE for all users. There are no hidden fees, premium tiers, or subscription costs.
+KwizMe is completely FREE for all users. There are no hidden fees, premium tiers, or subscription costs.
 
 **Why Free?**
 We believe education should be accessible to everyone. Our mission is to help students succeed without financial barriers.
@@ -228,7 +228,7 @@ If you're representing an educational institution and need:
 Please let us know your specific requirements and we'll discuss how we can help.
 
 **Questions?**
-Feel free to reach out with any other questions about QuizMe's features or capabilities.
+Feel free to reach out with any other questions about KwizMe's features or capabilities.
 
 [Email Signature]
 
@@ -238,11 +238,11 @@ Feel free to reach out with any other questions about QuizMe's features or capab
 
 ### Template: Feedback Request
 
-**Subject**: How was your QuizMe support experience?
+**Subject**: How was your KwizMe support experience?
 
 Hi [Name],
 
-I hope our recent support interaction helped resolve your issue with QuizMe.
+I hope our recent support interaction helped resolve your issue with KwizMe.
 
 **Quick Feedback:**
 Could you take 30 seconds to let us know how we did?
@@ -251,29 +251,29 @@ Could you take 30 seconds to let us know how we did?
 - Any suggestions for improvement?
 
 **Share Your Experience:**
-If you're happy with QuizMe, we'd love if you could:
+If you're happy with KwizMe, we'd love if you could:
 - Share it with classmates or friends
-- Leave us feedback at https://quizme-app.vercel.app/support
+- Leave us feedback at https://kwizme.vercel.app/support
 
-Your feedback helps us improve QuizMe for everyone.
+Your feedback helps us improve KwizMe for everyone.
 
 [Email Signature]
 
 ### Template: Check-in After Resolution
 
-**Subject**: Following up on your QuizMe issue
+**Subject**: Following up on your KwizMe issue
 
 Hi [Name],
 
-I wanted to check in and see how things are going with QuizMe after we resolved your issue.
+I wanted to check in and see how things are going with KwizMe after we resolved your issue.
 
 **Everything Working Well?**
 - Are you able to generate quizzes successfully?
 - Have you encountered any other issues?
-- Any questions about QuizMe's features?
+- Any questions about KwizMe's features?
 
 **We're Here to Help:**
-Don't hesitate to reach out if you need any assistance. We're committed to making sure you have a great experience with QuizMe.
+Don't hesitate to reach out if you need any assistance. We're committed to making sure you have a great experience with KwizMe.
 
 [Email Signature]
 
@@ -313,25 +313,25 @@ We apologize for any inconvenience and appreciate your patience.
 
 ### Template: Initial Auto-Response
 
-**Subject**: We received your QuizMe support request [Ticket #]
+**Subject**: We received your KwizMe support request [Ticket #]
 
 Hi there,
 
-Thank you for contacting QuizMe Support! We've received your message and will respond within 24 hours (business days).
+Thank you for contacting KwizMe Support! We've received your message and will respond within 24 hours (business days).
 
 **Ticket Number:** [Auto-generated number]
 **Received:** [Timestamp]
 
 **Quick Help:**
 While you wait, check our FAQ for common solutions:
-🔗 https://quizme-app.vercel.app/support
+🔗 https://kwizme.vercel.app/support
 
 **Urgent Issue?**
 If this is a critical bug affecting many users, please mark your email as "URGENT" in the subject line.
 
 We appreciate your patience and look forward to helping you!
 
-QuizMe Support Team
+KwizMe Support Team
 
 ---
 

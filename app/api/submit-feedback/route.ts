@@ -42,17 +42,38 @@ export async function POST(request: NextRequest) {
 
     const discordPayload = {
       embeds: [{
-        title: `🎯 New QuizMe Feedback`,
+        title: `🎯 New KwizMe Feedback`,
         color: embedColor,
-        description: `⭐ **Rating:** ${starEmojis}
-👤 **Name:** ${name || 'Anonymous'}
-📧 **Contact:** ${email || 'Anonymous'}
-📂 **Type:** ${feedbackType.charAt(0).toUpperCase() + feedbackType.slice(1)}
-💬 **Message:**
-
-*${feedback}*
-
-Submitted ${new Date().toLocaleString()} | QuizMe Feedback System`
+        fields: [
+          {
+            name: `${starEmojis} Rating`,
+            value: `${rating}/5 stars`,
+            inline: true
+          },
+          {
+            name: '📂 Type',
+            value: feedbackType.charAt(0).toUpperCase() + feedbackType.slice(1),
+            inline: true
+          },
+          {
+            name: '👤 Name',
+            value: name || 'Anonymous',
+            inline: true
+          },
+          {
+            name: '📧 Contact',
+            value: email || 'Anonymous',
+            inline: true
+          },
+          {
+            name: '💬 Feedback',
+            value: feedback.length > 1000 ? feedback.substring(0, 1000) + '...' : feedback,
+            inline: false
+          }
+        ],
+        footer: {
+          text: `Submitted ${new Date().toLocaleString()} | KwizMe Feedback System`
+        }
       }]
     };
 
@@ -84,7 +105,7 @@ Submitted ${new Date().toLocaleString()} | QuizMe Feedback System`
         console.log('✅ Feedback sent successfully to Discord');
         return NextResponse.json({
           success: true,
-          message: 'Thank you for your feedback! We appreciate you helping us improve QuizMe.'
+          message: 'Thank you for your feedback! We appreciate you helping us improve KwizMe.'
         });
       } else {
         const errorText = await response.text();

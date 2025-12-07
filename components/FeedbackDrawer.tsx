@@ -253,7 +253,7 @@ export default function FeedbackDrawer({ isOpen, onClose, source = 'header', def
                   onSubmit={handleSubmit}
                   className="space-y-3"
                 >
-              <input type="hidden" name="_subject" value="QuizMe Feedback" />
+              <input type="hidden" name="_subject" value="KwizMe Feedback" />
               <input type="hidden" name="_captcha" value="false" />
               <input type="hidden" name="rating" value={rating?.toString() || ''} />
 
