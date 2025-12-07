@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import type { User } from '@supabase/supabase-js';
+import { validateFilePages, type FileValidationResult } from '@/lib/file-validator';
+import FileValidationStatus from '@/components/FileValidationStatus';
 
 export interface OrganizationMetadata {
   quiz_title?: string;
@@ -16,6 +18,7 @@ export interface OrganizationMetadata {
 interface FileUploadZoneProps {
   onFileSelect: (file: File) => void;
   onMetadataChange: (metadata: OrganizationMetadata) => void;
+  onValidationChange?: (result: FileValidationResult | null) => void;
   user: User | null;
 }
 
@@ -42,13 +45,15 @@ function InfoTooltip({ text }: { text: string }) {
   );
 }
 
-export default function FileUploadZone({ onFileSelect, onMetadataChange, user }: FileUploadZoneProps) {
+export default function FileUploadZone({ onFileSelect, onMetadataChange, onValidationChange, user }: FileUploadZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [metadata, setMetadata] = useState<OrganizationMetadata>({
     num_questions: 15
   });
   const [numQuestionsError, setNumQuestionsError] = useState<string>('');
+  const [validationResult, setValidationResult] = useState<FileValidationResult | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-populate institution and program from user profile
@@ -71,7 +76,11 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
   };
 
   // Update quiz title when file is selected
-  const handleFile = (file: File) => {
+  const handleFile = async (file: File) => {
+    // Reset validation state
+    setValidationResult(null);
+    setIsValidating(true);
+
     // Supported file types for Gemini 2.5 Flash
     const supportedTypes = [
       'application/pdf',
@@ -90,25 +99,43 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
 
     // Validate file type
     if (!supportedTypes.includes(file.type)) {
+      setIsValidating(false);
       alert('Unsupported file type. Supported formats:\n• PDF\n• Word (DOCX)\n• PowerPoint (PPTX)\n• Excel (XLSX)\n• Images (PNG, JPEG, WebP, GIF)\n• Text (TXT, MD, HTML, CSV)');
       return;
     }
 
-    // Validate file size (20MB)
-    if (file.size > 20 * 1024 * 1024) {
-      alert('File size must be less than 20MB');
-      return;
+    // Perform page validation
+    try {
+      const validation = await validateFilePages(file);
+      setValidationResult(validation);
+      setIsValidating(false);
+
+      // Notify parent component of validation result
+      onValidationChange?.(validation);
+
+      // Only proceed if validation passes
+      if (!validation.isValid) {
+        return; // Don't set the file or call onFileSelect if validation fails
+      }
+
+      setSelectedFile(file);
+      onFileSelect(file);
+
+      // Update quiz title to filename (remove file extension)
+      const filenameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+      const newMetadata = { ...metadata, quiz_title: filenameWithoutExt };
+      setMetadata(newMetadata);
+      onMetadataChange(newMetadata);
+    } catch (error) {
+      console.error('File validation error:', error);
+      setIsValidating(false);
+      const errorResult = {
+        isValid: false,
+        error: 'Something went wrong while checking your file. Please try uploading it again.'
+      };
+      setValidationResult(errorResult);
+      onValidationChange?.(errorResult);
     }
-
-    setSelectedFile(file);
-
-    // Update quiz title to filename (remove file extension)
-    const filenameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
-    const newMetadata = { ...metadata, quiz_title: filenameWithoutExt };
-    setMetadata(newMetadata);
-    onMetadataChange(newMetadata);
-
-    onFileSelect(file);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -144,7 +171,7 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
   return (
     <>
       <div
-        className={`border-2 border-dashed rounded-lg p-8 md:p-12 text-center transition-colors cursor-pointer ${
+        className={`border-2 border-dashed rounded-lg p-4 sm:p-6 md:p-12 text-center transition-colors cursor-pointer ${
           isDragging
             ? 'border-primary bg-blue-50 dark:bg-blue-900/30'
             : 'border-gray-300 dark:border-gray-600 hover:border-primary dark:hover:border-blue-500'
@@ -164,7 +191,7 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
 
         <div className="mb-4">
           <svg
-            className="mx-auto h-12 w-12 md:h-12 md:w-12 text-gray-400"
+            className="mx-auto h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 text-gray-400"
             stroke="currentColor"
             fill="none"
             viewBox="0 0 48 48"
@@ -181,22 +208,28 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
 
         {selectedFile ? (
           <div>
-            <p className="text-base md:text-lg text-green-700 font-semibold mb-2">
+            <p className="text-sm sm:text-base md:text-lg text-green-700 font-semibold mb-2">
               ✓ {selectedFile.name}
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-xs sm:text-sm text-gray-500">
               {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
             </p>
           </div>
         ) : (
           <div>
-            <p className="text-base md:text-lg text-gray-700 dark:text-gray-300 mb-2">
+            <p className="text-sm sm:text-base md:text-lg text-gray-700 dark:text-gray-300 mb-2">
               Drop your file here or click to browse
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Max 20MB • PDF, Word, PowerPoint, Excel, Images, Text</p>
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Max 20MB or 10 Pages • PDF, Word, PowerPoint, Excel, Images, Text</p>
           </div>
         )}
       </div>
+
+      {/* File Validation Status */}
+      <FileValidationStatus
+        validationResult={validationResult}
+        isValidating={isValidating}
+      />
 
       {/* Organization Metadata Fields - Always visible */}
       <div className="mt-6 md:mt-8" onClick={(e) => e.stopPropagation()}>
@@ -212,7 +245,7 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
             value={metadata.quiz_title || ''}
             onChange={(e) => handleMetadataChange('quiz_title', e.target.value)}
             placeholder="Prelims Quiz 1"
-            className="w-full px-4 py-3 md:px-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base"
+            className="w-full px-3 py-2 sm:px-4 sm:py-3 md:px-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base"
           />
         </div>
 
@@ -252,7 +285,7 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
               }
             }}
             placeholder="15"
-            className={`w-full px-4 py-3 md:px-3 md:py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base ${
+            className={`w-full px-3 py-2 sm:px-4 sm:py-3 md:px-3 md:py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base ${
               numQuestionsError ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
             }`}
           />
@@ -276,7 +309,7 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
             onChange={(e) => handleMetadataChange('file_description', e.target.value)}
             placeholder="e.g., 'Lecture notes on thermodynamic concepts. Focus on names and definitions' or 'MCQ test with questions, options, and correct answers already compiled. Simply extract the MCQs.' Leave blank for automatic analysis."
             rows={5}
-            className="w-full px-4 py-3 md:px-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base"
+            className="w-full px-3 py-2 sm:px-4 sm:py-3 md:px-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base"
           />
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             AI will analyze the document and enhance your description (or create one if blank)
@@ -299,7 +332,7 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
               value={metadata.institution || ''}
               onChange={(e) => handleMetadataChange('institution', e.target.value)}
               placeholder="e.g., TIP-QC"
-              className="w-full px-4 py-3 md:px-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base"
+              className="w-full px-3 py-2 sm:px-4 sm:py-3 md:px-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base"
             />
           </div>
 
@@ -314,7 +347,7 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
               value={metadata.program || ''}
               onChange={(e) => handleMetadataChange('program', e.target.value)}
               placeholder="e.g., BSME"
-              className="w-full px-4 py-3 md:px-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base"
+              className="w-full px-3 py-2 sm:px-4 sm:py-3 md:px-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base"
             />
           </div>
 
@@ -329,7 +362,7 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
               value={metadata.course_code || ''}
               onChange={(e) => handleMetadataChange('course_code', e.target.value)}
               placeholder="e.g., PPD"
-              className="w-full px-4 py-3 md:px-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base"
+              className="w-full px-3 py-2 sm:px-4 sm:py-3 md:px-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base"
             />
           </div>
 
@@ -344,7 +377,7 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, user }:
               value={metadata.topic || ''}
               onChange={(e) => handleMetadataChange('topic', e.target.value)}
               placeholder="e.g., Diesel Power Plants"
-              className="w-full px-4 py-3 md:px-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base"
+              className="w-full px-3 py-2 sm:px-4 sm:py-3 md:px-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base"
             />
           </div>
         </div>

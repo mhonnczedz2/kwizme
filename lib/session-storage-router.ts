@@ -5,6 +5,7 @@
 
 import type { User } from '@supabase/supabase-js'
 import type { ReviewSession, AnswerRecord } from './db/types'
+import { trackQuizCompleted } from './analytics'
 
 // LocalStorage operations
 import {
@@ -80,7 +81,9 @@ export async function completeSession(
   correctAnswers: number,
   totalQuestions: number,
   user: User | null,
-  timeSpentSeconds?: number
+  timeSpentSeconds?: number,
+  quizId?: string,
+  mode?: string
 ): Promise<void> {
   if (user) {
     console.log('☁️ Completing session in Supabase (logged in)')
@@ -89,6 +92,17 @@ export async function completeSession(
     console.log('💾 Completing session in localStorage (anonymous)')
     await completeSessionLocal(sessionId, correctAnswers, totalQuestions, timeSpentSeconds)
   }
+
+  // Track quiz completion analytics
+  const completionRate = (correctAnswers / totalQuestions) * 100;
+  trackQuizCompleted({
+    quizId: quizId || sessionId, // Use quizId if available, fallback to sessionId
+    score: correctAnswers,
+    totalQuestions: totalQuestions,
+    mode: mode || 'unknown',
+    timeSpent: timeSpentSeconds || 0,
+    completionRate: completionRate
+  });
 }
 
 /**

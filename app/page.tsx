@@ -20,6 +20,7 @@ import { QuizGenerationResponse, AnswerRecord } from '@/lib/db/types';
 import { SessionConfig } from '@/components/QuizConfigModal';
 import { saveQuiz, getQuizById } from '@/lib/storage-router';
 import { seedDefaultQuizzes } from '@/lib/db/quiz-storage';
+import type { FileValidationResult } from '@/lib/file-validator';
 
 type AppState = 'home' | 'generate' | 'quizzes' | 'history' | 'reviewing-approval' | 'quiz-approved' | 'taking-quiz' | 'reviewing-quiz' | 'results';
 
@@ -30,6 +31,7 @@ export default function Home() {
   const supabase = createClient();
   const [appState, setAppState] = useState<AppState>('home');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileValidation, setFileValidation] = useState<FileValidationResult | null>(null);
   const [organizationMetadata, setOrganizationMetadata] = useState<OrganizationMetadata>({});
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
@@ -43,6 +45,7 @@ export default function Home() {
   const [reviewContext, setReviewContext] = useState<'generation' | 'browser' | null>(null);
   const [showInfoBubble, setShowInfoBubble] = useState(false);
   const [showSidePanel, setShowSidePanel] = useState(false);
+  const [feedbackSource, setFeedbackSource] = useState<'post_quiz' | 'error_state' | 'rate_limit' | 'header' | 'support_page'>('header');
   const [gridDirection, setGridDirection] = useState('40px 40px');
   const [helpfulTip, setHelpfulTip] = useState('');
 
@@ -50,10 +53,26 @@ export default function Home() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        // Handle refresh token errors gracefully
+        if (error && (error.message?.includes('refresh_token_not_found') || error.message?.includes('Invalid Refresh Token'))) {
+          // Clear the invalid session silently and continue as anonymous user
+          await supabase.auth.signOut();
+          setUser(null);
+          console.log('🔄 Cleared invalid session, continuing as anonymous user');
+          return;
+        }
+
+        if (error) {
+          throw error;
+        }
+
         setUser(session?.user ?? null);
       } catch (error) {
         console.error('Error checking auth:', error);
+        // Clear any corrupted auth state and continue as anonymous user
+        setUser(null);
       } finally {
         setLoadingAuth(false);
       }
@@ -64,7 +83,14 @@ export default function Home() {
     // Listen for auth state changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      // Handle auth errors gracefully
+      if (event === 'TOKEN_REFRESHED' && !session) {
+        console.log('🔄 Token refresh failed, continuing as anonymous user');
+        setUser(null);
+        return;
+      }
+
       setUser(session?.user ?? null);
     });
 
@@ -82,9 +108,9 @@ export default function Home() {
     seedDefaultQuizzes().catch(console.error);
   }, []);
 
-  // Pool of helpful tips, motivational messages, and jokes (175 total)
+  // Pool of helpful tips, motivational messages, and jokes (87 total)
   const helpfulTips = [
-    // App usage tips (8)
+    // App usage tips (25)
     "💡 You can upload PDFs, Word docs, PowerPoint presentations, Excel files, images, and text files to generate quizzes!",
     "🎯 Review your quiz questions before saving - you can edit them to better match your learning goals.",
     "📊 Check your Quiz History to track your progress and see which topics need more practice.",
@@ -93,6 +119,23 @@ export default function Home() {
     "📝 The app supports files up to 20MB - perfect for comprehensive study materials.",
     "🎲 Use the quiz browser to find all your saved quizzes in one place.",
     "⚡ Generate multiple quizzes from the same material with different difficulty levels for progressive learning.",
+    "📱 Install QuizMe as a Progressive Web App (PWA) for faster loading and offline access!",
+    "🏠 Access Help & Support from the side menu for comprehensive FAQs and assistance.",
+    "⭐ Use the feedback system to rate your experience and help improve the app.",
+    "🔍 Search through FAQs on the support page to quickly find answers to common questions.",
+    "📧 Contact support directly through the feedback drawer for personalized help.",
+    "🌙 Switch between light and dark modes for comfortable studying at any time.",
+    "💾 Your quiz data syncs across devices when you create an account.",
+    "🎨 Customize quiz difficulty to match your learning level and goals.",
+    "📋 Copy quiz questions to your clipboard for use in other study materials.",
+    "⏱️ Track your quiz completion time to monitor your progress speed.",
+    "🔐 Create a secure account to save unlimited quizzes and track your learning journey.",
+    "📈 Monitor your performance trends over time in the Quiz History section.",
+    "🎯 Use different question types (multiple choice, true/false) to test various skills.",
+    "💡 Generate quizzes from images with text using our advanced OCR technology.",
+    "🔄 Refresh the home page to see new helpful tips and study motivation.",
+    "📚 Organize your quizzes by subject using institution and course details.",
+    "🚀 Take advantage of rate limits to pace your learning - quality over quantity!",
 
     // Study and learning tips (17)
     "📚 Active recall through quizzing is proven to be more effective than passive reading.",
@@ -140,111 +183,28 @@ export default function Home() {
     "🌺 You are braver than you believe and smarter than you think!",
     "💖 Keep going - you're doing better than you realize!",
 
-    // Light-hearted jokes in English (50)
-    "😄 Why did the student eat their homework? The teacher said it was a piece of cake!",
-    "🤣 What's a math teacher's favorite place? Times Square!",
-    "😂 Why don't scientists trust atoms? Because they make up everything!",
-    "😆 What do you call a bear with no teeth? A gummy bear!",
-    "😄 Why did the scarecrow become a successful student? He was outstanding in his field!",
-    "🤣 What's the king of all school supplies? The ruler!",
-    "😂 Why did the book join the police? It wanted to go undercover!",
+    // Light-hearted jokes (20)
+    "😄 Did you hear about the circus fire? It was in tents!",
+    "🤣 Why don't eggs tell jokes? They might crack up!",
+    "😂 I used to have a job at a calendar factory, but I got fired because I took a couple of days off.",
     "😆 What do you call a snowman with a six-pack? An abdominal snowman!",
-    "😄 Why can't you trust an atom? They literally make up everything!",
-    "🤣 What do you call a fake noodle? An impasta!",
-    "😂 Why did the bicycle fall over? It was two-tired!",
-    "😆 What do you call a sleeping bull? A bulldozer!",
-    "😄 Why did the coffee file a police report? It got mugged!",
-    "🤣 What do you call a fish without eyes? A fsh!",
-    "😂 Why don't eggs tell jokes? They'd crack up!",
-    "😆 What's orange and sounds like a parrot? A carrot!",
-    "😄 Why did the math book look so sad? It had too many problems!",
-    "🤣 What do you call a dinosaur that crashes his car? Tyrannosaurus Wrecks!",
-    "😂 Why couldn't the bicycle stand up? It was two tired!",
-    "😆 What do you call cheese that isn't yours? Nacho cheese!",
-    "😄 Why did the golfer bring two pairs of pants? In case he got a hole in one!",
-    "🤣 What do you call a can opener that doesn't work? A can't opener!",
-    "😂 Why did the computer go to the doctor? It had a virus!",
-    "😆 What do you call a belt made of watches? A waist of time!",
-    "😄 Why did the tomato turn red? Because it saw the salad dressing!",
-    "🤣 What do you call a lazy kangaroo? A pouch potato!",
-    "😂 Why don't skeletons fight each other? They don't have the guts!",
-    "😆 What do you call a boomerang that won't come back? A stick!",
-    "😄 Why did the cookie go to the hospital? It felt crumbly!",
-    "🤣 What do you call a train that sneezes? Achoo-choo train!",
-    "😂 Why did the banana go to the doctor? It wasn't peeling well!",
-    "😆 What do you call a bear in the rain? A drizzly bear!",
-    "😄 Why did the stadium get hot? All the fans left!",
-    "🤣 What do you call a pile of cats? A meowtain!",
-    "😂 Why don't oysters donate to charity? Because they're shellfish!",
-    "😆 What do you call a singing laptop? A Dell!",
-    "😄 Why did the chicken go to the seance? To talk to the other side!",
-    "🤣 What do you call a group of musical whales? An orca-stra!",
-    "😂 Why did the picture go to jail? It was framed!",
-    "😆 What do you call a nervous javelin thrower? Shakespeare!",
-    "😄 Why don't calendars ever win races? They always have too many dates!",
-    "🤣 What do you call a cow with no legs? Ground beef!",
-    "😂 Why did the smartphone need glasses? It lost all its contacts!",
-    "😆 What do you call a sleeping pizza? A piZZZa!",
-    "😄 Why don't some couples go to the gym? Because some relationships don't work out!",
-    "🤣 What do you call a magical dog? A labracadabrador!",
-    "😂 Why did the invisible man turn down the job? He couldn't see himself doing it!",
-    "😆 What do you call a sad coffee? A depresso!",
-    "😄 Why don't mountains ever get cold? They have snow caps!",
-    "🤣 What do you call a sleeping dinosaur? A dino-snore!",
+    "😄 What's 90 degrees but covered with ice? The North and South Poles.",
+    "🤣 Why can't a leopard hide? He's always spotted.",
+    "😂 Why are fish so smart? They live in schools!",
+    "😆 How do you throw a party in outer space? You planet",
+    "😄 Why couldn't the bicycle stand up by itself? It was two tired!",
+    "🤣 How do celebrities stay cool? They have many fans.",
+    "😂 Bakit maswerte ang kalendaryo? Kasi maraming siyang date.",
+    "😆 Ano'ng tawag ng batang langgam sa kapatid na babae ng nanay niya? Eh 'di... ANTY!",
+    "😄 May tatlong lalake na tumalon sa tubig, ilan ang nabasa ang buhok? Wala. Kalbo silang lahat eh.",
+    "🤣 Ano ang pagkakaparehas ng UTOT at TULA? Pareho silang nagmula sa POET.",
+    "😂 Ano ang tawag mo sa baboy na magaling mag-karate? Eh 'di... PORK CHOP!",
+    "😆 Ano'ng puno ang hindi pwedeng akyatin? 'Yung nakatumba!",
+    "😄 Ano'ng favorite sport ni Dracula? Eh 'di... BAT-MINTON!",
+    "🤣 Ano'ng nauna -- bills o coins? Coins! Kasi... coin PURSE",
+    "😂 Ano'ng shoe ang masakit? Eh 'di... SHOE-ntok!",
+    "😆 Ano'ng shoe ang mas masakit? Eh 'di... SHOE-gat!",
 
-    // Light-hearted jokes in Filipino - Pure Tagalog (25)
-    "😄 Bakit laging natatalo ang kalabaw sa quiz? Kasi siya ay bago sa lahat!",
-    "🤣 Ano ang tawag sa estudyanteng mahilig sa sayaw? Mag-aaral na may ritmo!",
-    "😂 Bakit ayaw mag-aral ng ibon? Kasi gusto niya mag-fly lang ng grades!",
-    "😆 Ano ang paboritong subject ng bampira? Dugo-nometry!",
-    "😄 Bakit mahilig mag-aral ang pusa? Para maging honors-cat!",
-    "🤣 Ano ang tawag sa masipag na isda? Grade-conscious na tilapia!",
-    "😂 Bakit nag-aaral ang mangga? Para hindi maging hinog na walang alam!",
-    "😆 Ano ang paboritong libro ng manok? Kwentong may saysay!",
-    "😄 Bakit sumama ang lapis sa eskwela? Gusto niyang maging sharp!",
-    "🤣 Ano ang tawag sa ulan na mahilig sa math? Precipi-tayo ng problema!",
-    "😂 Bakit masaya ang eraser? Kasi marunong siyang mag-move on!",
-    "😆 Ano ang ginagawa ng plantsa sa library? Nag-aaral ng pressed issues!",
-    "😄 Bakit nag-aaral ang tsokolate? Para maging bitter-sweet success!",
-    "🤣 Ano ang tawag sa bato na matalino? Rock-olar!",
-    "😂 Bakit sumama ang hangin sa quiz bee? Para ipakita ang hangin-aling niya!",
-    "😆 Ano ang paboritong subject ng asin? Chemis-try niya lahat!",
-    "😄 Bakit ayaw mag-exam ng kamatis? Takot siyang ma-crush!",
-    "🤣 Ano ang tawag sa matalinong patatas? Brainy chips!",
-    "😂 Bakit nag-aaral ang bola? Para hindi maging bilog lang ang ulo!",
-    "😆 Ano ang ginagawa ng bituin sa klase? Sumasagot ng twinkling stars!",
-    "😄 Bakit masipag ang prutas? Gusto nilang maging fruitful ang buhay!",
-    "🤣 Ano ang tawag sa matalinong bubuyog? Bee-yani!",
-    "😂 Bakit nag-aaral ang ulap? Para hindi maging malabo ang kinabukasan!",
-    "😆 Ano ang paboritong subject ng dilim? Shadow-nomics!",
-    "😄 Bakit sumama ang tuwa sa eskwela? Para mag-enjoy habang nag-aaral!",
-
-    // Light-hearted jokes in Filipino - Taglish (25)
-    "😄 Bakit late si Juan sa exam? Nag-cram kasi siya sa cram-poline!",
-    "🤣 Ano ang tawag sa student na mahilig sa Japanese food? Honor roll na may tempura-ment!",
-    "😂 Teacher: Bakit wala kang assignment? Student: Sorry ma'am, na-save ko kasi sa cloud... yung rain cloud!",
-    "😆 Bakit nag-aaral si Pedro ng English? Para ma-gets niya ang memes!",
-    "😄 Ano ang favorite subject ng Pinoy? Recess, kasi break time na!",
-    "🤣 Bakit pumasa si Maria sa Math? Kasi nag-pray siya na mag-multiply ang blessings!",
-    "😂 What's the difference between homework at home work? Isa pinapasa, isa hindi tapos-tapos!",
-    "😆 Bakit favorite ng students ang Friday? Kasi feel na feel na nila ang weekend vibes!",
-    "😄 Teacher: Anong formula ng success? Student: Ma'am, Ctrl+C plus Ctrl+V... joke lang po!",
-    "🤣 Bakit nag-fail si Dodong? Nag-focus kasi siya sa camera instead of books!",
-    "😂 Ano ang study habit ng millennial? Mag-scroll ng TikTok habang may textbook sa tabi!",
-    "😆 Bakit ayaw mag-recite ni Berto? Kasi introvert siya, gusto niya chat lang!",
-    "😄 What's a Filipino student's prayer? Sana mag-curve ang grades!",
-    "🤣 Bakit happy si Inday sa quiz? Kasi multiple choice - may fifty-fifty pa!",
-    "😂 Teacher: Submit your paper! Student: Ma'am wait, nag-lo-load pa po!",
-    "😆 Ano ang motto ng students? Bahala na si Batman, pero sana si Superman na lang!",
-    "😄 Bakit mahilig sa group study ang Pinoy? Para may ma-copy... I mean, ma-collaborate!",
-    "🤣 What do you call a Filipino student's favorite button? The snooze button!",
-    "😂 Bakit nag-aaral ng Science si Tony? Para ma-gets niya why may chemistry sila ni Maria!",
-    "😆 Teacher: Early bird gets the worm! Student: Ma'am, pwede na po yung late night snack!",
-    "😄 Ano ang battle cry ng students? Kaya natin 'to! After ng one more episode!",
-    "🤣 Bakit nag-attend ng class si Gina? Para ma-justify ang WiFi bill!",
-    "😂 What's a student's favorite exercise? Mental gymnastics para sa excuses!",
-    "😆 Bakit nag-aaral si Carlo ng History? Para hindi mag-repeat ang kamalian... ng grades niya!",
-    "😄 Teacher: Think outside the box! Student: Ma'am, pwede po bang think inside the aircon room?"
   ];
 
   // Select random tip on component mount and when returning to home
@@ -332,10 +292,16 @@ export default function Home() {
         // Go to review/approval state instead of saving immediately
         setAppState('reviewing-approval');
       } else {
-        // Set appropriate error code based on response
-        if (data.error?.includes('parse') || data.error?.includes('read')) {
+        // Handle different error types based on status and response
+        if (response.status === 429) {
+          // Rate limit error - show detailed message from response
+          const resetTime = data.resetTime ? new Date(data.resetTime).toLocaleString() : 'tomorrow'
+          const limitInfo = data.limits ? ` (${data.limits.currentUsage}/${data.limits.dailyLimit} used today)` : ''
+          setGenerationError(`RATE_LIMIT: ${data.message || 'Daily limit reached'}${limitInfo}. Resets at ${resetTime}.`);
+        } else if (data.error?.includes('parse') || data.error?.includes('read')) {
           setGenerationError('PDF_PARSE_ERROR');
         } else if (data.error?.includes('rate') || data.error?.includes('limit')) {
+          // Fallback for other rate limit detection
           setGenerationError('RATE_LIMIT');
         } else {
           setGenerationError(data.error || 'Failed to generate quiz');
@@ -526,13 +492,23 @@ export default function Home() {
       {/* Feedback Drawer */}
       <FeedbackDrawer
         isOpen={showInfoBubble}
-        onClose={() => setShowInfoBubble(false)}
+        onClose={() => {
+          setShowInfoBubble(false)
+          setFeedbackSource('header') // Reset to default source
+        }}
+        source={feedbackSource}
+        defaultType={feedbackSource === 'error_state' ? 'bug' : 'bug'}
       />
 
       {/* Top Banner - Unified across all pages */}
       <TopBanner
         onMenuClick={() => setShowSidePanel(true)}
-        onInfoClick={() => setShowInfoBubble(true)}
+        onInfoClick={() => {
+          setFeedbackSource('header')
+          setShowInfoBubble(true)
+        }}
+        onHome={() => setAppState('home')}
+        isHomePage={appState === 'home'}
       />
 
       <div className="container mx-auto px-4 pt-24 pb-16 lg:pt-32">
@@ -638,11 +614,12 @@ export default function Home() {
               <FileUploadZone
                 onFileSelect={handleFileSelect}
                 onMetadataChange={setOrganizationMetadata}
+                onValidationChange={setFileValidation}
                 user={user}
               />
 
               {/* Generate Button */}
-              {selectedFile && (
+              {selectedFile && fileValidation?.isValid && (
                 <div className="mt-6 text-center">
                   <button
                     onClick={handleGenerateQuiz}
@@ -808,6 +785,12 @@ export default function Home() {
         <GeneratingQuiz
           error={generationError}
           onRetry={handleRetryGeneration}
+          onReportIssue={() => {
+            setFeedbackSource('error_state')
+            setShowInfoBubble(true)
+            // Close the error modal when opening feedback
+            setGenerationError(null)
+          }}
         />
       )}
       </div>

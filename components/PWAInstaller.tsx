@@ -6,6 +6,20 @@ export default function PWAInstaller() {
   useEffect(() => {
     let updateInterval: NodeJS.Timeout | null = null;
 
+    // Clean up any existing service workers from different ports during development
+    if (process.env.NODE_ENV === 'development' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        const currentOrigin = window.location.origin;
+        registrations.forEach((registration) => {
+          // Unregister service workers from different origins/ports
+          if (!registration.scope.startsWith(currentOrigin)) {
+            console.log('🧹 Cleaning up old service worker:', registration.scope);
+            registration.unregister();
+          }
+        });
+      });
+    }
+
     // Register service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
@@ -15,11 +29,20 @@ export default function PWAInstaller() {
 
           // Check for updates periodically
           updateInterval = setInterval(() => {
-            // Verify registration is still valid before updating
-            if (registration) {
-              registration.update().catch((error) => {
-                console.error('⚠️ Service Worker update failed:', error);
-              });
+            // Verify registration is still valid and active before updating
+            if (registration && registration.active) {
+              // Only update if we're on the same origin as the registration
+              const currentOrigin = window.location.origin;
+              if (registration.scope.startsWith(currentOrigin)) {
+                registration.update().catch((error) => {
+                  console.error('⚠️ Service Worker update failed:', error);
+                  // If update fails due to invalid state, clear the interval
+                  if (error.name === 'InvalidStateError' && updateInterval) {
+                    clearInterval(updateInterval);
+                    updateInterval = null;
+                  }
+                });
+              }
             }
           }, 60000); // Check every minute
         })

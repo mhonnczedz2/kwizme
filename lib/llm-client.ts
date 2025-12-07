@@ -91,7 +91,7 @@ Keep it concise (2-4 sentences max).`;
       }],
       generationConfig: {
         temperature: 0.3,
-        maxOutputTokens: 500,
+        maxOutputTokens: 1000,
         responseMimeType: 'application/json',
       }
     });
@@ -255,7 +255,7 @@ export async function generateQuizWithGemini(
       }],
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 16384,  // Significantly increased to prevent truncation
+        maxOutputTokens: 30000,  // Significantly increased to prevent truncation
         responseMimeType: 'application/json',
       }
     });

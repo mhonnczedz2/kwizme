@@ -8,6 +8,7 @@ import type { User } from '@supabase/supabase-js'
 import TopBanner from '@/components/TopBanner'
 import SidePanel from '@/components/SidePanel'
 import FeedbackDrawer from '@/components/FeedbackDrawer'
+import { trackUserSignup } from '@/lib/analytics'
 
 // Force dynamic rendering - don't prerender this page
 export const dynamic = 'force-dynamic'
@@ -100,6 +101,9 @@ export default function SignupPage() {
     }
 
     try {
+      // Get the current site URL for email redirects
+      const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || window.location.origin).replace(/\/$/, '')
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -109,6 +113,7 @@ export default function SignupPage() {
             institution: institution || null,
             program: program || null,
           },
+          emailRedirectTo: `${siteUrl}/auth/callback`,
         },
       })
 
@@ -122,6 +127,13 @@ export default function SignupPage() {
       } else if (data.user) {
         // New user signup successful - show email confirmation screen
         setSuccess(true)
+
+        // Track successful user signup
+        trackUserSignup({
+          source: 'direct',
+          referrer: document.referrer,
+          hasExistingData: false // New signups don't have existing data
+        });
       } else {
         // This shouldn't happen, but handle it gracefully
         throw new Error('Signup succeeded but no user data returned')

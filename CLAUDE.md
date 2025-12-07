@@ -1,3 +1,4 @@
 - remember this
 - remmeber 10/17/2001
 - when testing dev servers, never run on port 3000, use other available ports. After testing, kill that server you spun.
+- when you spin up a local dev server to run, make sure kill it after testing
