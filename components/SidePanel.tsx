@@ -454,7 +454,7 @@ export default function SidePanel({ isOpen, onClose, user, onLogout }: SidePanel
                     </svg>
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                    Welcome to QuizMe
+                    Welcome to KwizMe
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     Sign in to sync your quizzes across all your devices
@@ -516,7 +516,7 @@ export default function SidePanel({ isOpen, onClose, user, onLogout }: SidePanel
                 {/* Local Mode Notice */}
                 <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                   <p className="text-xs text-gray-600 dark:text-gray-400 text-center">
-                    You can continue using QuizMe without an account. Your data will be stored locally on this device.
+                    You can continue using KwizMe without an account. Your data will be stored locally on this device.
                   </p>
                 </div>
               </div>
@@ -540,7 +540,7 @@ export default function SidePanel({ isOpen, onClose, user, onLogout }: SidePanel
             </button>
 
             <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-              QuizMe v0.1.0
+              KwizMe v0.1.0
             </p>
           </div>
         </div>
