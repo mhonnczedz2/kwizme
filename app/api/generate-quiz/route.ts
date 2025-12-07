@@ -13,8 +13,15 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     const userId = user?.id;
 
+    // Get client IP address for rate limiting anonymous users
+    const clientIP =
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      request.headers.get('x-real-ip') ||
+      request.headers.get('cf-connecting-ip') ||
+      'unknown'
+
     // Check if user can generate another quiz today
-    const rateLimitResult = await checkQuizGenerationLimit(userId);
+    const rateLimitResult = await checkQuizGenerationLimit(userId, clientIP);
 
     if (!rateLimitResult.allowed) {
       const resetTime = rateLimitResult.resetTime ? new Date(rateLimitResult.resetTime).toLocaleString() : 'tomorrow'
@@ -126,7 +133,7 @@ export async function POST(request: NextRequest) {
     // Step 4: Record quiz generation (increment usage counter)
     console.log('📊 Recording quiz generation...');
     try {
-      await recordQuizGeneration(userId);
+      await recordQuizGeneration(userId, clientIP);
       console.log('✅ Quiz usage recorded successfully');
     } catch (error) {
       console.error('⚠️ Failed to record quiz usage:', error);

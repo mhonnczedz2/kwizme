@@ -94,14 +94,15 @@ export default function GeneratingQuiz({ error, onRetry }: GeneratingQuizProps) 
             <p className="text-sm text-red-800 text-center">
               {error === 'PDF_PARSE_ERROR' && "Couldn't read your file. Try another one?"}
               {error === 'API_ERROR' && "AI service is unavailable. Try again in a moment."}
-              {error === 'RATE_LIMIT' && "Too many quizzes! Please wait 5 minutes."}
-              {!['PDF_PARSE_ERROR', 'API_ERROR', 'RATE_LIMIT'].includes(error) && error}
+              {error === 'RATE_LIMIT' && "Too many quizzes! Please wait before trying again."}
+              {error.startsWith('RATE_LIMIT:') && error.replace('RATE_LIMIT:', '').trim()}
+              {!['PDF_PARSE_ERROR', 'API_ERROR', 'RATE_LIMIT'].includes(error) && !error.startsWith('RATE_LIMIT:') && error}
             </p>
           </div>
 
           {/* Action Buttons */}
           <div className="flex flex-col gap-3">
-            {onRetry && error !== 'RATE_LIMIT' && (
+            {onRetry && error !== 'RATE_LIMIT' && !error.startsWith('RATE_LIMIT:') && (
               <button
                 onClick={onRetry}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors shadow-md hover:shadow-lg"

@@ -1,12 +1,63 @@
 import { updateSession } from '@/lib/supabase/middleware'
-import { type NextRequest } from 'next/server'
+import { checkQuizGenerationLimit } from '@/lib/rate-limiting'
+import { type NextRequest, NextResponse } from 'next/server'
 
 /**
- * Middleware to handle authentication and session refresh
+ * Middleware to handle authentication, session refresh, and rate limiting
  * This runs on every request to protected routes
  */
 export async function middleware(request: NextRequest) {
-  return await updateSession(request)
+  const { pathname } = request.nextUrl
+
+  // First, handle Supabase session management
+  const supabaseResponse = await updateSession(request)
+
+  // Apply rate limiting only to quiz generation endpoint
+  if (pathname === '/api/generate-quiz' && request.method === 'POST') {
+    try {
+      // Extract user session from the supabase response
+      // We need to parse the user from the session, similar to what's done in the API route
+      const authCookie = request.cookies.get('sb-access-token')?.value
+      let userId: string | undefined
+
+      // Get client IP address
+      const clientIP =
+        request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+        request.headers.get('x-real-ip') ||
+        request.headers.get('cf-connecting-ip') ||
+        'unknown'
+
+      // For now, we'll check rate limits without userId in middleware
+      // The API route will do a more thorough check with proper user authentication
+      const rateLimitResult = await checkQuizGenerationLimit(undefined, clientIP)
+
+      if (!rateLimitResult.allowed) {
+        const resetTime = rateLimitResult.resetTime
+          ? new Date(rateLimitResult.resetTime).toLocaleString()
+          : 'tomorrow'
+
+        return NextResponse.json({
+          error: 'Rate limit exceeded in middleware',
+          message: rateLimitResult.reason || `Rate limit exceeded. Resets at ${resetTime}.`,
+          limits: rateLimitResult.limits,
+          resetTime: rateLimitResult.resetTime
+        }, {
+          status: 429,
+          headers: {
+            'Retry-After': '3600', // 1 hour
+            'X-RateLimit-Limit': rateLimitResult.limits.dailyLimit.toString(),
+            'X-RateLimit-Remaining': rateLimitResult.limits.remainingQuizzes.toString(),
+          }
+        })
+      }
+    } catch (error) {
+      console.error('Middleware rate limit check failed:', error)
+      // On error, let the request through but log the issue
+      // The API route will perform another check
+    }
+  }
+
+  return supabaseResponse
 }
 
 export const config = {

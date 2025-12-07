@@ -334,10 +334,16 @@ export default function Home() {
         // Go to review/approval state instead of saving immediately
         setAppState('reviewing-approval');
       } else {
-        // Set appropriate error code based on response
-        if (data.error?.includes('parse') || data.error?.includes('read')) {
+        // Handle different error types based on status and response
+        if (response.status === 429) {
+          // Rate limit error - show detailed message from response
+          const resetTime = data.resetTime ? new Date(data.resetTime).toLocaleString() : 'tomorrow'
+          const limitInfo = data.limits ? ` (${data.limits.currentUsage}/${data.limits.dailyLimit} used today)` : ''
+          setGenerationError(`RATE_LIMIT: ${data.message || 'Daily limit reached'}${limitInfo}. Resets at ${resetTime}.`);
+        } else if (data.error?.includes('parse') || data.error?.includes('read')) {
           setGenerationError('PDF_PARSE_ERROR');
         } else if (data.error?.includes('rate') || data.error?.includes('limit')) {
+          // Fallback for other rate limit detection
           setGenerationError('RATE_LIMIT');
         } else {
           setGenerationError(data.error || 'Failed to generate quiz');

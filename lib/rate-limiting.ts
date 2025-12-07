@@ -20,10 +20,10 @@ const DEFAULT_DAILY_LIMIT = 5
 /**
  * Check if user can generate another quiz today
  */
-export async function checkQuizGenerationLimit(userId?: string): Promise<RateLimitResult> {
+export async function checkQuizGenerationLimit(userId?: string, ipAddress?: string): Promise<RateLimitResult> {
   if (!userId) {
-    // Anonymous user - check browser storage
-    return checkAnonymousUserLimit()
+    // Anonymous user - check server-side IP-based limiting
+    return checkAnonymousUserLimit(ipAddress)
   }
 
   const supabase = await createClient()
@@ -73,6 +73,8 @@ export async function checkQuizGenerationLimit(userId?: string): Promise<RateLim
     const remainingQuizzes = Math.max(0, dailyLimit - currentUsage)
     const allowed = currentUsage < dailyLimit
 
+    console.log(`📊 Rate limit check - User: ${userId || 'anonymous'}, IP: ${ipAddress || 'unknown'}, Current: ${currentUsage}, Limit: ${dailyLimit}, Allowed: ${allowed}`)
+
     return {
       allowed,
       limits: {
@@ -86,17 +88,20 @@ export async function checkQuizGenerationLimit(userId?: string): Promise<RateLim
     }
 
   } catch (error) {
-    console.error('Error checking rate limit:', error)
-    // On error, allow but with default limits
+    console.error(`❌ Rate limit check failed - User: ${userId || 'anonymous'}, IP: ${ipAddress || 'unknown'}:`, error)
+
+    // SECURITY: Fail secure - deny access when there are database errors
+    // This prevents bypassing rate limits due to technical issues
     return {
-      allowed: true,
+      allowed: false,
       limits: {
         dailyLimit: DEFAULT_DAILY_LIMIT,
-        currentUsage: 0,
-        remainingQuizzes: DEFAULT_DAILY_LIMIT,
+        currentUsage: 0, // Unknown due to error
+        remainingQuizzes: 0,
         isUnlimited: false,
         limitType: 'default'
-      }
+      },
+      reason: 'Rate limit check failed. Please try again in a few minutes.'
     }
   }
 }
@@ -104,46 +109,131 @@ export async function checkQuizGenerationLimit(userId?: string): Promise<RateLim
 /**
  * Record a quiz generation (increment usage counter)
  */
-export async function recordQuizGeneration(userId?: string): Promise<void> {
+export async function recordQuizGeneration(userId?: string, ipAddress?: string): Promise<void> {
   if (!userId) {
-    // Anonymous user - update browser storage
-    recordAnonymousQuizGeneration()
-    return
+    // Anonymous user - record server-side with IP
+    return recordAnonymousQuizGeneration(ipAddress)
   }
 
   const supabase = await createClient()
   const today = new Date().toISOString().split('T')[0]
 
   try {
-    // Upsert daily usage record
-    await supabase
-      .from('daily_usage')
-      .upsert({
-        user_id: userId,
-        generated_date: today,
-        quiz_count: 1,
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'user_id,generated_date',
-        ignoreDuplicates: false
-      })
-
-    // If record exists, increment the count
-    await supabase.rpc('increment_quiz_count', {
+    // Use only the increment function to avoid double counting
+    const { error: rpcError } = await supabase.rpc('increment_quiz_count', {
       p_user_id: userId,
       p_date: today
     })
 
+    if (rpcError) {
+      throw new Error(`Failed to record quiz generation: ${rpcError.message}`)
+    }
+
+    console.log(`✅ Quiz usage recorded - User: ${userId || 'anonymous'}, IP: ${ipAddress || 'unknown'}`)
+
   } catch (error) {
-    console.error('Error recording quiz generation:', error)
+    console.error(`❌ Failed to record quiz usage - User: ${userId || 'anonymous'}, IP: ${ipAddress || 'unknown'}:`, error)
+    // Don't throw - generation should still succeed, but log the issue
+    // This prevents users from being unable to generate quizzes due to tracking issues
+  }
+}
+
+/**
+ * Server-side limiting for anonymous users using IP address
+ */
+async function checkAnonymousUserLimit(ipAddress?: string): Promise<RateLimitResult> {
+  // If no IP provided, fall back to client-side check
+  if (!ipAddress) {
+    return checkAnonymousUserLimitClientSide()
+  }
+
+  const supabase = await createClient()
+  const today = new Date().toISOString().split('T')[0]
+
+  try {
+    // Get today's usage for this IP
+    const { data: usage, error } = await supabase
+      .from('daily_usage')
+      .select('quiz_count')
+      .eq('ip_address', ipAddress)
+      .eq('generated_date', today)
+      .single()
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+      throw error
+    }
+
+    const currentUsage = usage?.quiz_count || 0
+    const remainingQuizzes = Math.max(0, DEFAULT_DAILY_LIMIT - currentUsage)
+    const allowed = currentUsage < DEFAULT_DAILY_LIMIT
+
+    console.log(`📊 Anonymous rate limit check - IP: ${ipAddress}, Current: ${currentUsage}, Limit: ${DEFAULT_DAILY_LIMIT}, Allowed: ${allowed}`)
+
+    return {
+      allowed,
+      limits: {
+        dailyLimit: DEFAULT_DAILY_LIMIT,
+        currentUsage,
+        remainingQuizzes,
+        isUnlimited: false,
+        limitType: 'default'
+      },
+      resetTime: getTomorrowMidnight(),
+      reason: allowed ? undefined : `Daily limit reached for your IP. Resets at ${getTomorrowMidnight().toLocaleString()}.`
+    }
+
+  } catch (error) {
+    console.error('Error checking anonymous rate limit:', error)
+    // Fail secure for anonymous users too
+    return {
+      allowed: false,
+      limits: {
+        dailyLimit: DEFAULT_DAILY_LIMIT,
+        currentUsage: 0,
+        remainingQuizzes: 0,
+        isUnlimited: false,
+        limitType: 'default'
+      },
+      reason: 'Rate limit check failed. Please try again in a few minutes.'
+    }
+  }
+}
+
+/**
+ * Record quiz generation for anonymous user using IP address
+ */
+async function recordAnonymousQuizGeneration(ipAddress?: string): Promise<void> {
+  // If no IP provided, fall back to client-side recording
+  if (!ipAddress) {
+    return recordAnonymousQuizGenerationClientSide()
+  }
+
+  const supabase = await createClient()
+  const today = new Date().toISOString().split('T')[0]
+
+  try {
+    // Use the same increment function but with IP address
+    const { error: rpcError } = await supabase.rpc('increment_quiz_count_ip', {
+      p_ip_address: ipAddress,
+      p_date: today
+    })
+
+    if (rpcError) {
+      console.error('Failed to record anonymous quiz generation:', rpcError.message)
+    } else {
+      console.log(`✅ Anonymous quiz usage recorded - IP: ${ipAddress}`)
+    }
+
+  } catch (error) {
+    console.error(`❌ Error recording anonymous quiz generation - IP: ${ipAddress}:`, error)
     // Don't throw - generation should still succeed
   }
 }
 
 /**
- * Browser-based limiting for anonymous users
+ * Client-side limiting for anonymous users (fallback)
  */
-function checkAnonymousUserLimit(): RateLimitResult {
+function checkAnonymousUserLimitClientSide(): RateLimitResult {
   if (typeof window === 'undefined') {
     // Server-side, assume allowed
     return {
@@ -182,9 +272,9 @@ function checkAnonymousUserLimit(): RateLimitResult {
 }
 
 /**
- * Record quiz generation for anonymous user
+ * Record quiz generation for anonymous user (client-side fallback)
  */
-function recordAnonymousQuizGeneration(): void {
+function recordAnonymousQuizGenerationClientSide(): void {
   if (typeof window === 'undefined') return
 
   const today = new Date().toISOString().split('T')[0]
