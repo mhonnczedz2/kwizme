@@ -10,13 +10,13 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export const metadata: Metadata = {
-  title: 'QuizMe - AI Quiz Generator',
+  title: 'KwizMe - AI Quiz Generator',
   description: 'Generate practice quizzes from your learning materials using AI',
   manifest: '/manifest.json?v=4',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'QuizMe',
+    title: 'KwizMe',
   },
   icons: {
     icon: [
