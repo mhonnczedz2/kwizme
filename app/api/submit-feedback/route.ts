@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     const discordPayload = {
       embeds: [{
-        title: `🎯 New QuizMe Feedback`,
+        title: `🎯 New KwizMe Feedback`,
         color: embedColor,
         fields: [
           {
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
           }
         ],
         footer: {
-          text: `Submitted ${new Date().toLocaleString()} | QuizMe Feedback System`
+          text: `Submitted ${new Date().toLocaleString()} | KwizMe Feedback System`
         }
       }]
     };
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
         console.log('✅ Feedback sent successfully to Discord');
         return NextResponse.json({
           success: true,
-          message: 'Thank you for your feedback! We appreciate you helping us improve QuizMe.'
+          message: 'Thank you for your feedback! We appreciate you helping us improve KwizMe.'
         });
       } else {
         const errorText = await response.text();
