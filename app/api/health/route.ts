@@ -1,11 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+interface HealthStatus {
+  status: 'healthy' | 'degraded' | 'unhealthy'
+  timestamp: string
+  uptime: number
+  environment: string | undefined
+  version: string
+  memory: {
+    used: number
+    total: number
+    external: number
+  }
+  responseTime: number
+  warnings?: string[]
+}
+
 export async function GET(request: NextRequest) {
   try {
     const startTime = Date.now()
 
     // Basic system health checks
-    const healthStatus = {
+    const healthStatus: HealthStatus = {
       status: 'healthy',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
