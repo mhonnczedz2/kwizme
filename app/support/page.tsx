@@ -126,15 +126,44 @@ export default function SupportPage() {
 
   // Check authentication status
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-    })
+    const checkAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        // Handle refresh token errors gracefully
+        if (error && (error.message?.includes('refresh_token_not_found') || error.message?.includes('Invalid Refresh Token'))) {
+          // Clear the invalid session silently and continue as anonymous user
+          await supabase.auth.signOut();
+          setUser(null);
+          console.log('🔄 Cleared invalid session, continuing as anonymous user');
+          return;
+        }
+
+        if (error) {
+          throw error;
+        }
+
+        setUser(session?.user ?? null);
+      } catch (error) {
+        console.error('Error checking auth:', error);
+        setUser(null);
+      }
+    };
+
+    checkAuth();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      // Handle auth errors gracefully
+      if (event === 'TOKEN_REFRESHED' && !session) {
+        console.log('🔄 Token refresh failed, continuing as anonymous user');
+        setUser(null);
+        return;
+      }
+
+      setUser(session?.user ?? null);
+    });
 
     return () => subscription.unsubscribe()
   }, [supabase])

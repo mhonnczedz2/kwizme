@@ -39,17 +39,20 @@ export async function POST(request: NextRequest) {
     const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
 
     try {
-      // Forward to FormSubmit with proper headers
+      console.log('🔄 Starting FormSubmit request...');
+
+      // Forward to FormSubmit with minimal headers
       const response = await fetch('https://formsubmit.co/my.stationptot@gmail.com', {
         method: 'POST',
         body: formData,
         headers: {
           'Origin': siteUrl,
           'Referer': siteUrl,
-          'User-Agent': 'QuizMe-App/1.0',
         },
         signal: controller.signal,
       });
+
+      console.log('✅ FormSubmit request completed with status:', response.status);
 
       clearTimeout(timeoutId);
 

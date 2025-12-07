@@ -45,78 +45,91 @@ export default function FeedbackDrawer({ isOpen, onClose, source = 'header', def
     const form = e.currentTarget
     const formData = new FormData(form)
 
-    try {
-      // Add timeout to prevent infinite loading (increased for external service)
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 35000); // 35 second timeout (longer than server)
+    // Get form values for FormSubmit
+    const name = formData.get('name')?.toString() || ''
+    const email = formData.get('email')?.toString() || ''
+    const message = formData.get('message')?.toString() || ''
+    const type = formData.get('type')?.toString() || ''
 
-      const response = await fetch('/api/submit-feedback', {
-        method: 'POST',
-        body: formData,
-        signal: controller.signal
+    try {
+      // Create FormSubmit URL with pre-filled data
+      const formSubmitUrl = new URL('https://formsubmit.co/my.stationptot@gmail.com')
+
+      // Create a temporary form to submit in new tab
+      const tempForm = document.createElement('form')
+      tempForm.method = 'POST'
+      tempForm.action = formSubmitUrl.toString()
+      tempForm.target = '_blank'
+      tempForm.style.display = 'none'
+
+      // Add form fields
+      const fields = {
+        '_subject': 'QuizMe Feedback',
+        '_captcha': 'false',
+        '_next': 'https://quizme-git-staging-mhonn-czedrick-ybanezs-projects.vercel.app/support?submitted=true',
+        'name': name,
+        'email': email,
+        'rating': `${rating}/5 stars`,
+        'type': type,
+        'message': message
+      }
+
+      Object.entries(fields).forEach(([key, value]) => {
+        const input = document.createElement('input')
+        input.type = 'hidden'
+        input.name = key
+        input.value = value.toString()
+        tempForm.appendChild(input)
+      })
+
+      // Add to document and submit
+      document.body.appendChild(tempForm)
+      tempForm.submit()
+      document.body.removeChild(tempForm)
+
+      // Show success message
+      setShowSuccess(true)
+
+      // Track feedback submission in analytics
+      trackFeedbackSubmitted({
+        rating: rating || undefined,
+        feedbackType: feedbackType as 'bug' | 'feature' | 'general' | 'rating',
+        source: source,
+        hasText: Boolean(message.trim())
       });
 
-      clearTimeout(timeoutId);
-      const result = await response.json();
+      // Close drawer after showing success message
+      setTimeout(() => {
+        setShowSuccess(false)
+        onClose()
+        // Reset form when closing
+        form.reset()
+        // Reset rating state
+        setRating(null)
+        setFeedbackType('bug') // Reset to default
+        // Reset feedback type to default (Bug Report)
+        const typeInput = form.querySelector('input[name="type"]') as HTMLInputElement
+        if (typeInput) typeInput.value = 'bug'
+        // Reset button styles
+        const buttons = form.querySelectorAll('button[type="button"]')
+        buttons.forEach((btn, index) => {
+          btn.classList.remove('bg-orange-500', 'bg-blue-600', 'bg-green-600', 'text-white', 'border-transparent')
+          btn.classList.add('border-2')
+          if (index === 0) { // Bug Report button
+            btn.classList.remove('bg-orange-50', 'border-orange-200', 'text-orange-700')
+            btn.classList.add('bg-orange-500', 'text-white', 'border-transparent')
+          } else if (index === 1) { // Feature Request button
+            btn.classList.add('bg-blue-50', 'text-blue-700', 'border-blue-200')
+          } else if (index === 2) { // General Feedback button
+            btn.classList.add('bg-green-50', 'text-green-700', 'border-green-200')
+          }
+        })
+      }, 3000) // Give user time to see they need to complete captcha in other tab
 
-      if (result.success) {
-        setShowSuccess(true)
-
-        // Track feedback submission in analytics
-        trackFeedbackSubmitted({
-          rating: rating || undefined,
-          feedbackType: feedbackType as 'bug' | 'feature' | 'general' | 'rating',
-          source: source,
-          hasText: Boolean(formData.get('message')?.toString().trim())
-        });
-
-        // Close drawer after showing success message
-        setTimeout(() => {
-          setShowSuccess(false)
-          onClose()
-          // Reset form when closing
-          form.reset()
-          // Reset rating state
-          setRating(null)
-          setFeedbackType('bug') // Reset to default
-          // Reset feedback type to default (Bug Report)
-          const typeInput = form.querySelector('input[name="type"]') as HTMLInputElement
-          if (typeInput) typeInput.value = 'bug'
-          // Reset button styles
-          const buttons = form.querySelectorAll('button[type="button"]')
-          buttons.forEach((btn, index) => {
-            btn.classList.remove('bg-orange-500', 'bg-blue-600', 'bg-green-600', 'text-white', 'border-transparent')
-            btn.classList.add('border-2')
-            if (index === 0) { // Bug Report button
-              btn.classList.remove('bg-orange-50', 'border-orange-200', 'text-orange-700')
-              btn.classList.add('bg-orange-500', 'text-white', 'border-transparent')
-            } else if (index === 1) { // Feature Request button
-              btn.classList.add('bg-blue-50', 'text-blue-700', 'border-blue-200')
-            } else if (index === 2) { // General Feedback button
-              btn.classList.add('bg-green-50', 'text-green-700', 'border-green-200')
-            }
-          })
-        }, 2000)
-      } else {
-        setShowError(true)
-        // Provide better error messages based on the response
-        if (response.status === 408) {
-          setErrorMessage('Request timed out. Please check your internet connection and try again, or email us directly.')
-        } else {
-          setErrorMessage(result.message || 'Failed to send feedback. Please try again or email us directly.')
-        }
-      }
     } catch (error) {
-      console.error('Network error submitting feedback:', error)
+      console.error('Error submitting feedback:', error)
       setShowError(true)
-
-      if (error instanceof Error && error.name === 'AbortError') {
-        setErrorMessage('Request timed out. Please check your internet connection and try again, or email us directly at my.stationptot@gmail.com')
-      } else if (error instanceof TypeError && error.message.includes('fetch')) {
-        setErrorMessage('Network error. Please check your internet connection and try again, or email us directly.')
-      } else {
-        setErrorMessage('An unexpected error occurred. Please try again or email us directly at my.stationptot@gmail.com')
-      }
+      setErrorMessage('An unexpected error occurred. Please try again or email us directly at my.stationptot@gmail.com')
     } finally {
       setIsSubmitting(false)
     }
@@ -165,10 +178,13 @@ export default function FeedbackDrawer({ isOpen, onClose, source = 'header', def
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                    Feedback Sent!
+                    Feedback Submitted!
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Thank you for your feedback. We'll review it shortly.
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                    A new tab has opened for you to complete the feedback submission.
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-500">
+                    Please complete any security verification in the new tab to finish sending your feedback.
                   </p>
                 </div>
               </div>

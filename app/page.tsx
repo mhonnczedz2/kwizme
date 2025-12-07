@@ -53,10 +53,26 @@ export default function Home() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        // Handle refresh token errors gracefully
+        if (error && (error.message?.includes('refresh_token_not_found') || error.message?.includes('Invalid Refresh Token'))) {
+          // Clear the invalid session silently and continue as anonymous user
+          await supabase.auth.signOut();
+          setUser(null);
+          console.log('🔄 Cleared invalid session, continuing as anonymous user');
+          return;
+        }
+
+        if (error) {
+          throw error;
+        }
+
         setUser(session?.user ?? null);
       } catch (error) {
         console.error('Error checking auth:', error);
+        // Clear any corrupted auth state and continue as anonymous user
+        setUser(null);
       } finally {
         setLoadingAuth(false);
       }
@@ -67,7 +83,14 @@ export default function Home() {
     // Listen for auth state changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      // Handle auth errors gracefully
+      if (event === 'TOKEN_REFRESHED' && !session) {
+        console.log('🔄 Token refresh failed, continuing as anonymous user');
+        setUser(null);
+        return;
+      }
+
       setUser(session?.user ?? null);
     });
 
@@ -269,10 +292,16 @@ export default function Home() {
         // Go to review/approval state instead of saving immediately
         setAppState('reviewing-approval');
       } else {
-        // Set appropriate error code based on response
-        if (data.error?.includes('parse') || data.error?.includes('read')) {
+        // Handle different error types based on status and response
+        if (response.status === 429) {
+          // Rate limit error - show detailed message from response
+          const resetTime = data.resetTime ? new Date(data.resetTime).toLocaleString() : 'tomorrow'
+          const limitInfo = data.limits ? ` (${data.limits.currentUsage}/${data.limits.dailyLimit} used today)` : ''
+          setGenerationError(`RATE_LIMIT: ${data.message || 'Daily limit reached'}${limitInfo}. Resets at ${resetTime}.`);
+        } else if (data.error?.includes('parse') || data.error?.includes('read')) {
           setGenerationError('PDF_PARSE_ERROR');
         } else if (data.error?.includes('rate') || data.error?.includes('limit')) {
+          // Fallback for other rate limit detection
           setGenerationError('RATE_LIMIT');
         } else {
           setGenerationError(data.error || 'Failed to generate quiz');
