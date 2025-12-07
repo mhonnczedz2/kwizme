@@ -1,5 +1,5 @@
 /**
- * Analytics utility functions for QuizMe
+ * Analytics utility functions for KwizMe
  * Provides type-safe event tracking for Google Analytics 4 and Sentry error monitoring
  */
 

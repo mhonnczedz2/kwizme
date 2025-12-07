@@ -1,4 +1,4 @@
-// Type definitions for QuizMe database entities
+// Type definitions for KwizMe database entities
 
 export interface Quiz {
   quiz_id: string;

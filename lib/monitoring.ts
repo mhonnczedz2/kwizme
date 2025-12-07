@@ -1,4 +1,4 @@
-// Monitoring and logging utilities for QuizMe application
+// Monitoring and logging utilities for KwizMe application
 
 export interface LogEvent {
   level: 'info' | 'warn' | 'error' | 'debug'
