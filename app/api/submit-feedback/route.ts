@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
 
     // Extract feedback data
-    const feedback = formData.get('feedback') as string;
+    const feedback = formData.get('message') as string;  // Form field is 'message', not 'feedback'
     const rating = formData.get('rating') as string;
     const email = formData.get('email') as string;
     const feedbackType = formData.get('type') as string || 'general';

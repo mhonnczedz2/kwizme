@@ -87,16 +87,25 @@ export default function FeedbackDrawer({ isOpen, onClose, source = 'header', def
 
     // Validate message
     const messageInput = form.querySelector('textarea[name="message"]') as HTMLTextAreaElement
-    if (!message) {
+    if (!message || message.length < 5) {
       messageInput.classList.add('border-red-500', 'focus:border-red-500')
       messageInput.classList.remove('border-gray-300', 'focus:border-blue-500')
       hasValidationErrors = true
 
-      // Auto-clear after 2 seconds
+      if (!showError) {
+        setShowError(true)
+        setErrorMessage(message.length === 0 ? 'Please provide feedback.' : 'Feedback must be at least 5 characters long.')
+      }
+
+      // Auto-clear after 3 seconds
       setTimeout(() => {
         messageInput.classList.remove('border-red-500', 'focus:border-red-500')
         messageInput.classList.add('border-gray-300', 'focus:border-blue-500')
-      }, 2000)
+        if (errorMessage.includes('Feedback must be') || errorMessage.includes('Please provide feedback')) {
+          setShowError(false)
+          setErrorMessage('')
+        }
+      }, 3000)
     }
 
     if (hasValidationErrors) {
@@ -106,7 +115,7 @@ export default function FeedbackDrawer({ isOpen, onClose, source = 'header', def
     setIsSubmitting(true)
 
     // Add rating to form data
-    formData.set('rating', `${rating}/5 stars`)
+    formData.set('rating', `${rating}`)
 
     try {
       console.log('📧 Starting feedback submission...')
