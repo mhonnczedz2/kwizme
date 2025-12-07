@@ -1,4 +1,4 @@
--- Fix QuizMe Schema Issues
+-- Fix KwizMe Schema Issues
 -- Run this to add missing columns to profiles table
 -- Based on verification results
 

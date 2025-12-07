@@ -1,4 +1,4 @@
--- Rate Limiting System for QuizMe
+-- Rate Limiting System for KwizMe
 -- This adds daily quiz generation limits with user overrides
 
 -- 1. Track daily quiz generation attempts

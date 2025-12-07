@@ -1,6 +1,6 @@
 # Database Schema Files
 
-This folder contains all SQL scripts for setting up and verifying the QuizMe Supabase database.
+This folder contains all SQL scripts for setting up and verifying the KwizMe Supabase database.
 
 ## Setup Files
 

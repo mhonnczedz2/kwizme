@@ -1,5 +1,5 @@
 -- ============================================================================
--- CLEAR ALL DATA FROM QUIZME DATABASE (DEVELOPMENT ONLY)
+-- CLEAR ALL DATA FROM KWIZME DATABASE (DEVELOPMENT ONLY)
 -- ============================================================================
 --
 -- PURPOSE: Remove all data from the database while preserving the schema

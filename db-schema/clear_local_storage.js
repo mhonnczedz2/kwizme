@@ -1,5 +1,5 @@
 // ============================================================================
-// CLEAR BROWSER LOCAL STORAGE FOR QUIZME (DEVELOPMENT ONLY)
+// CLEAR BROWSER LOCAL STORAGE FOR KWIZME (DEVELOPMENT ONLY)
 // ============================================================================
 //
 // PURPOSE: Remove all cached authentication and app data from browser
@@ -9,14 +9,14 @@
 //
 // WHAT THIS DOES:
 // 1. Clears Supabase auth tokens (session, refresh tokens)
-// 2. Clears QuizMe theme preferences
+// 2. Clears KwizMe theme preferences
 // 3. Clears local SQLite database (anonymous user data)
-// 4. Clears all QuizMe-related localStorage items
+// 4. Clears all KwizMe-related localStorage items
 // 5. Clears sessionStorage
 // 6. Clears cookies (Supabase auth cookies)
 //
 // HOW TO USE:
-// 1. Open your QuizMe app in browser (http://localhost:XXXX)
+// 1. Open your KwizMe app in browser (http://localhost:XXXX)
 // 2. Open DevTools (F12 or Right Click → Inspect)
 // 3. Go to Console tab
 // 4. Copy and paste this ENTIRE script
@@ -27,7 +27,7 @@
 
 (function() {
     console.log('═══════════════════════════════════════════════════════════');
-    console.log('🧹 QuizMe Local Storage Cleanup Script');
+    console.log('🧹 KwizMe Local Storage Cleanup Script');
     console.log('═══════════════════════════════════════════════════════════');
     console.log('');
 
@@ -176,13 +176,13 @@
             supabaseItems.forEach(item => console.log(`   • ${item}`));
         }
 
-        // Show QuizMe app data
-        const quizmeItems = cleared.localStorage.filter(key =>
+        // Show KwizMe app data
+        const kwizmeItems = cleared.localStorage.filter(key =>
             key.includes('quizme')
         );
-        if (quizmeItems.length > 0) {
-            console.log('   QuizMe app data:');
-            quizmeItems.forEach(item => console.log(`   • ${item}`));
+        if (kwizmeItems.length > 0) {
+            console.log('   KwizMe app data:');
+            kwizmeItems.forEach(item => console.log(`   • ${item}`));
         }
 
         console.log('');
