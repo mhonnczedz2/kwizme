@@ -46,9 +46,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // TODO: Add admin role check here
-    // For now, anyone can set limits (you'll want to add proper role checking)
-    console.log(`🔧 User ${user.id} setting limits for user ${targetUserId}`)
+    // Admin authorization check
+    const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim().toLowerCase()) || []
+    const userEmail = user.email?.toLowerCase()
+
+    if (!userEmail || !adminEmails.includes(userEmail)) {
+      console.warn(`🚫 Unauthorized admin access attempt by ${userEmail || 'unknown'} for user ${targetUserId}`)
+      return NextResponse.json(
+        { error: 'Admin access required. Contact system administrator.' },
+        { status: 403 }
+      )
+    }
+
+    console.log(`🔧 Admin ${userEmail} setting limits for user ${targetUserId}`)
 
     // Check if target user exists
     const { data: targetProfile } = await supabase
@@ -130,6 +140,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
+      )
+    }
+
+    // Admin authorization check
+    const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim().toLowerCase()) || []
+    const userEmail = user.email?.toLowerCase()
+
+    if (!userEmail || !adminEmails.includes(userEmail)) {
+      console.warn(`🚫 Unauthorized admin access attempt by ${userEmail || 'unknown'} for user data`)
+      return NextResponse.json(
+        { error: 'Admin access required. Contact system administrator.' },
+        { status: 403 }
       )
     }
 
