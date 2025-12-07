@@ -1,4 +1,4 @@
-# QuizMe Error Monitoring & Performance Implementation
+# KwizMe Error Monitoring & Performance Implementation
 
 **Date:** December 6, 2024
 **Sentry DSN:** `https://c679b2e5b1f0733ab079eafdfdad66ef@o4510488656936960.ingest.us.sentry.io/4510488663556096`
@@ -6,7 +6,7 @@
 
 ## Overview
 
-This document outlines the comprehensive error monitoring and performance tracking implementation for QuizMe using Sentry for error tracking and Vercel Speed Insights for Core Web Vitals monitoring.
+This document outlines the comprehensive error monitoring and performance tracking implementation for KwizMe using Sentry for error tracking and Vercel Speed Insights for Core Web Vitals monitoring.
 
 ## Implementation Details
 
@@ -49,8 +49,8 @@ Sentry.init({
 const { withSentryConfig } = require('@sentry/nextjs');
 
 module.exports = withSentryConfig(nextConfig, {
-  org: "quizme-app",
-  project: "quizme-app",
+  org: "kwizme-app",
+  project: "kwizme-app",
   tunnelRoute: "/monitoring", // Bypasses ad-blockers
   hideSourceMaps: true,
   disableLogger: true, // Tree-shake in production

@@ -1,4 +1,4 @@
-# QuizMe Customer Support
+# KwizMe Customer Support
 
 ## Contact Information
 
@@ -12,19 +12,19 @@
 ### Alternative Contact Methods
 
 1. **In-App Support** (Recommended)
-   - Visit any page on QuizMe
+   - Visit any page on KwizMe
    - Click the "Help & Support" button (ℹ️ icon)
    - Fill out the feedback form for fastest response
 
 2. **Support Page**
-   - Visit: https://quizme-app.vercel.app/support
+   - Visit: https://kwizme-app.vercel.app/support
    - Browse FAQ for instant answers
    - Submit questions via contact form
 
 ## Support Team
 
 ### Support Lead
-**Name**: QuizMe Support Team
+**Name**: KwizMe Support Team
 **Email**: my.stationptot@gmail.com
 **Specialties**: General support, account issues, technical problems
 
@@ -40,7 +40,7 @@
 - File upload troubleshooting
 - Feature requests and suggestions
 - Bug reports
-- General questions about QuizMe
+- General questions about KwizMe
 - Educational institution inquiries
 - Privacy and security questions
 
@@ -214,7 +214,7 @@ For security vulnerabilities:
 ## Feedback & Improvement
 
 ### We Want to Hear From You
-- 💡 **Feature Ideas**: What would make QuizMe better?
+- 💡 **Feature Ideas**: What would make KwizMe better?
 - 🐛 **Bug Reports**: Help us find and fix issues
 - 📊 **User Experience**: How can we improve the interface?
 - 📚 **Content Suggestions**: What study materials should we support?
@@ -226,7 +226,7 @@ For security vulnerabilities:
 
 ## Success Stories
 
-*"QuizMe support helped me fix my account issue in under 30 minutes. The team was super responsive and friendly!"* - Sarah, University Student
+*"KwizMe support helped me fix my account issue in under 30 minutes. The team was super responsive and friendly!"* - Sarah, University Student
 
 *"I reported a bug and it was fixed the next day. Impressive turnaround time!"* - Mark, High School Teacher
 
@@ -236,11 +236,11 @@ For security vulnerabilities:
 
 ## Quick Links
 
-- 🏠 **QuizMe Home**: https://quizme-app.vercel.app
-- ❓ **FAQ & Support**: https://quizme-app.vercel.app/support
+- 🏠 **KwizMe Home**: https://kwizme-app.vercel.app
+- ❓ **FAQ & Support**: https://kwizme-app.vercel.app/support
 - 📧 **Email Support**: my.stationptot@gmail.com
-- 🔐 **Privacy Policy**: https://quizme-app.vercel.app/legal/privacy
-- 📋 **Terms of Service**: https://quizme-app.vercel.app/legal/terms
+- 🔐 **Privacy Policy**: https://kwizme-app.vercel.app/legal/privacy
+- 📋 **Terms of Service**: https://kwizme-app.vercel.app/legal/terms
 
 ---
 
