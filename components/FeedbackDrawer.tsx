@@ -33,99 +33,135 @@ export default function FeedbackDrawer({ isOpen, onClose, source = 'header', def
     setShowError(false)
     setErrorMessage('')
 
-    // Validate required rating
+    const form = e.currentTarget
+    const formData = new FormData(form)
+
+    // Custom validation
+    const name = formData.get('name')?.toString().trim() || ''
+    const email = formData.get('email')?.toString().trim() || ''
+    const message = formData.get('message')?.toString().trim() || ''
+
+    let hasValidationErrors = false
+
+    // Validate name
+    const nameInput = form.querySelector('input[name="name"]') as HTMLInputElement
+    if (!name) {
+      nameInput.classList.add('border-red-500', 'focus:border-red-500')
+      nameInput.classList.remove('border-gray-300', 'focus:border-blue-500')
+      hasValidationErrors = true
+
+      // Auto-clear after 2 seconds
+      setTimeout(() => {
+        nameInput.classList.remove('border-red-500', 'focus:border-red-500')
+        nameInput.classList.add('border-gray-300', 'focus:border-blue-500')
+      }, 2000)
+    }
+
+    // Validate email
+    const emailInput = form.querySelector('input[name="email"]') as HTMLInputElement
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!email || !emailRegex.test(email)) {
+      emailInput.classList.add('border-red-500', 'focus:border-red-500')
+      emailInput.classList.remove('border-gray-300', 'focus:border-blue-500')
+      hasValidationErrors = true
+
+      // Auto-clear after 2 seconds
+      setTimeout(() => {
+        emailInput.classList.remove('border-red-500', 'focus:border-red-500')
+        emailInput.classList.add('border-gray-300', 'focus:border-blue-500')
+      }, 2000)
+    }
+
+    // Validate rating
     if (rating === null || rating === 0) {
       setShowError(true)
       setErrorMessage('Please provide a rating before submitting your feedback.')
+      hasValidationErrors = true
+
+      // Auto-clear rating error after 2 seconds
+      setTimeout(() => {
+        setShowError(false)
+        setErrorMessage('')
+      }, 2000)
+    }
+
+    // Validate message
+    const messageInput = form.querySelector('textarea[name="message"]') as HTMLTextAreaElement
+    if (!message) {
+      messageInput.classList.add('border-red-500', 'focus:border-red-500')
+      messageInput.classList.remove('border-gray-300', 'focus:border-blue-500')
+      hasValidationErrors = true
+
+      // Auto-clear after 2 seconds
+      setTimeout(() => {
+        messageInput.classList.remove('border-red-500', 'focus:border-red-500')
+        messageInput.classList.add('border-gray-300', 'focus:border-blue-500')
+      }, 2000)
+    }
+
+    if (hasValidationErrors) {
       return
     }
 
     setIsSubmitting(true)
 
-    const form = e.currentTarget
-    const formData = new FormData(form)
-
-    // Get form values for FormSubmit
-    const name = formData.get('name')?.toString() || ''
-    const email = formData.get('email')?.toString() || ''
-    const message = formData.get('message')?.toString() || ''
-    const type = formData.get('type')?.toString() || ''
+    // Add rating to form data
+    formData.set('rating', `${rating}/5 stars`)
 
     try {
-      // Create FormSubmit URL with pre-filled data
-      const formSubmitUrl = new URL('https://formsubmit.co/my.stationptot@gmail.com')
+      console.log('📧 Starting feedback submission...')
 
-      // Create a temporary form to submit in new tab
-      const tempForm = document.createElement('form')
-      tempForm.method = 'POST'
-      tempForm.action = formSubmitUrl.toString()
-      tempForm.target = '_blank'
-      tempForm.style.display = 'none'
-
-      // Add form fields
-      const fields = {
-        '_subject': 'QuizMe Feedback',
-        '_captcha': 'false',
-        '_next': 'https://quizme-git-staging-mhonn-czedrick-ybanezs-projects.vercel.app/support?submitted=true',
-        'name': name,
-        'email': email,
-        'rating': `${rating}/5 stars`,
-        'type': type,
-        'message': message
-      }
-
-      Object.entries(fields).forEach(([key, value]) => {
-        const input = document.createElement('input')
-        input.type = 'hidden'
-        input.name = key
-        input.value = value.toString()
-        tempForm.appendChild(input)
+      const response = await fetch('/api/submit-feedback', {
+        method: 'POST',
+        body: formData,
       })
 
-      // Add to document and submit
-      document.body.appendChild(tempForm)
-      tempForm.submit()
-      document.body.removeChild(tempForm)
+      const data = await response.json()
 
-      // Show success message
-      setShowSuccess(true)
+      if (response.ok) {
+        console.log('✅ Feedback sent successfully')
+        setShowSuccess(true)
 
-      // Track feedback submission in analytics
-      trackFeedbackSubmitted({
-        rating: rating || undefined,
-        feedbackType: feedbackType as 'bug' | 'feature' | 'general' | 'rating',
-        source: source,
-        hasText: Boolean(message.trim())
-      });
+        // Track feedback submission in analytics
+        trackFeedbackSubmitted({
+          rating: rating || undefined,
+          feedbackType: feedbackType as 'bug' | 'feature' | 'general' | 'rating',
+          source: source,
+          hasText: Boolean(message)
+        });
 
-      // Close drawer after showing success message
-      setTimeout(() => {
-        setShowSuccess(false)
-        onClose()
-        // Reset form when closing
-        form.reset()
-        // Reset rating state
-        setRating(null)
-        setFeedbackType('bug') // Reset to default
-        // Reset feedback type to default (Bug Report)
-        const typeInput = form.querySelector('input[name="type"]') as HTMLInputElement
-        if (typeInput) typeInput.value = 'bug'
-        // Reset button styles
-        const buttons = form.querySelectorAll('button[type="button"]')
-        buttons.forEach((btn, index) => {
-          btn.classList.remove('bg-orange-500', 'bg-blue-600', 'bg-green-600', 'text-white', 'border-transparent')
-          btn.classList.add('border-2')
-          if (index === 0) { // Bug Report button
-            btn.classList.remove('bg-orange-50', 'border-orange-200', 'text-orange-700')
-            btn.classList.add('bg-orange-500', 'text-white', 'border-transparent')
-          } else if (index === 1) { // Feature Request button
-            btn.classList.add('bg-blue-50', 'text-blue-700', 'border-blue-200')
-          } else if (index === 2) { // General Feedback button
-            btn.classList.add('bg-green-50', 'text-green-700', 'border-green-200')
-          }
-        })
-      }, 3000) // Give user time to see they need to complete captcha in other tab
-
+        // Close drawer after showing success message
+        setTimeout(() => {
+          setShowSuccess(false)
+          onClose()
+          // Reset form when closing
+          form.reset()
+          // Reset rating state
+          setRating(null)
+          setFeedbackType('bug') // Reset to default
+          // Reset feedback type to default (Bug Report)
+          const typeInput = form.querySelector('input[name="type"]') as HTMLInputElement
+          if (typeInput) typeInput.value = 'bug'
+          // Reset button styles
+          const buttons = form.querySelectorAll('button[type="button"]')
+          buttons.forEach((btn, index) => {
+            btn.classList.remove('bg-orange-500', 'bg-blue-600', 'bg-green-600', 'text-white', 'border-transparent', 'font-bold')
+            btn.classList.add('border-2', 'font-medium', 'text-xs')
+            if (index === 0) { // Bug Report button
+              btn.classList.remove('bg-orange-50', 'border-orange-200', 'text-orange-700', 'font-medium')
+              btn.classList.add('bg-orange-500', 'text-white', 'border-transparent', 'font-bold', 'text-xs')
+            } else if (index === 1) { // Feature Request button
+              btn.classList.add('bg-blue-50', 'text-blue-700', 'border-blue-200')
+            } else if (index === 2) { // General Feedback button
+              btn.classList.add('bg-green-50', 'text-green-700', 'border-green-200')
+            }
+          })
+        }, 3000)
+      } else {
+        console.error('❌ Feedback submission failed:', data)
+        setShowError(true)
+        setErrorMessage(data.message || 'Failed to send feedback. Please try again or email us directly.')
+      }
     } catch (error) {
       console.error('Error submitting feedback:', error)
       setShowError(true)
@@ -180,11 +216,8 @@ export default function FeedbackDrawer({ isOpen, onClose, source = 'header', def
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                     Feedback Submitted!
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                    A new tab has opened for you to complete the feedback submission.
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-500">
-                    Please complete any security verification in the new tab to finish sending your feedback.
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Thank you for your feedback. We'll review it and get back to you if needed.
                   </p>
                 </div>
               </div>
@@ -225,10 +258,10 @@ export default function FeedbackDrawer({ isOpen, onClose, source = 'header', def
                   name="name"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:border-blue-500 dark:focus:border-blue-400"
                   placeholder="Juan Dela Cruz"
-                  required
                   onInput={(e) => {
                     // Remove error styling when user starts typing
-                    e.currentTarget.classList.remove('border-red-300');
+                    e.currentTarget.classList.remove('border-red-500', 'focus:border-red-500');
+                    e.currentTarget.classList.add('border-gray-300', 'focus:border-blue-500');
                     clearErrors();
                   }}
                 />
@@ -244,9 +277,9 @@ export default function FeedbackDrawer({ isOpen, onClose, source = 'header', def
                   name="email"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:border-blue-500 dark:focus:border-blue-400"
                   placeholder="jdc21@up.edu.ph"
-                  required
                   onInput={(e) => {
-                    e.currentTarget.classList.remove('border-red-300');
+                    e.currentTarget.classList.remove('border-red-500', 'focus:border-red-500');
+                    e.currentTarget.classList.add('border-gray-300', 'focus:border-blue-500');
                     clearErrors();
                   }}
                 />
@@ -257,8 +290,8 @@ export default function FeedbackDrawer({ isOpen, onClose, source = 'header', def
                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
                   How would you rate your experience? *
                 </label>
-                <div className={`flex gap-1 mb-3 ${
-                  showError && rating === null ? 'p-2 border-2 border-red-300 rounded-md bg-red-50 dark:bg-red-900/20' : ''
+                <div className={`flex gap-1 mb-3 justify-center ${
+                  showError && rating === null ? 'p-2 border border-red-500 rounded-md bg-red-50 dark:bg-red-900/20' : ''
                 }`}>
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
@@ -320,23 +353,23 @@ export default function FeedbackDrawer({ isOpen, onClose, source = 'header', def
                       setFeedbackType('bug');
                       const buttons = e.currentTarget.parentElement?.querySelectorAll('button');
                       buttons?.forEach(btn => {
-                        btn.classList.remove('bg-orange-500', 'bg-blue-600', 'bg-green-600', 'text-white', 'border-transparent');
-                        btn.classList.add('border-2');
+                        btn.classList.remove('bg-orange-500', 'bg-blue-600', 'bg-green-600', 'text-white', 'border-transparent', 'font-bold');
+                        btn.classList.add('border-2', 'font-medium', 'text-xs');
                       });
                       buttons?.forEach(btn => {
                         if (btn.textContent?.includes('Bug')) btn.classList.add('bg-orange-50', 'text-orange-700', 'border-orange-200');
                         if (btn.textContent?.includes('Feature')) btn.classList.add('bg-blue-50', 'text-blue-700', 'border-blue-200');
                         if (btn.textContent?.includes('General')) btn.classList.add('bg-green-50', 'text-green-700', 'border-green-200');
                       });
-                      e.currentTarget.classList.remove('bg-orange-50', 'border-orange-200', 'text-orange-700');
-                      e.currentTarget.classList.add('bg-orange-500', 'text-white', 'border-transparent');
+                      e.currentTarget.classList.remove('bg-orange-50', 'border-orange-200', 'text-orange-700', 'font-medium');
+                      e.currentTarget.classList.add('bg-orange-500', 'text-white', 'border-transparent', 'font-bold', 'text-xs');
                       const form = e.currentTarget.closest('form');
                       if (form) {
                         const typeInput = form.querySelector('input[name="type"]') as HTMLInputElement;
                         if (typeInput) typeInput.value = 'bug';
                       }
                     }}
-                    className="flex-1 px-3 py-2 rounded-full text-xs font-medium transition-all border-transparent bg-orange-500 text-white shadow-sm"
+                    className="flex-1 px-3 py-2 rounded-full text-xs font-bold transition-all border-transparent bg-orange-500 text-white shadow-sm"
                   >
                     Bug Report
                   </button>
@@ -347,16 +380,16 @@ export default function FeedbackDrawer({ isOpen, onClose, source = 'header', def
                       setFeedbackType('feature');
                       const buttons = e.currentTarget.parentElement?.querySelectorAll('button');
                       buttons?.forEach(btn => {
-                        btn.classList.remove('bg-orange-500', 'bg-blue-600', 'bg-green-600', 'text-white', 'border-transparent');
-                        btn.classList.add('border-2');
+                        btn.classList.remove('bg-orange-500', 'bg-blue-600', 'bg-green-600', 'text-white', 'border-transparent', 'font-bold');
+                        btn.classList.add('border-2', 'font-medium', 'text-xs');
                       });
                       buttons?.forEach(btn => {
                         if (btn.textContent?.includes('Bug')) btn.classList.add('bg-orange-50', 'text-orange-700', 'border-orange-200');
                         if (btn.textContent?.includes('Feature')) btn.classList.add('bg-blue-50', 'text-blue-700', 'border-blue-200');
                         if (btn.textContent?.includes('General')) btn.classList.add('bg-green-50', 'text-green-700', 'border-green-200');
                       });
-                      e.currentTarget.classList.remove('bg-blue-50', 'border-blue-200');
-                      e.currentTarget.classList.add('bg-blue-600', 'text-white', 'border-transparent');
+                      e.currentTarget.classList.remove('bg-blue-50', 'border-blue-200', 'font-medium');
+                      e.currentTarget.classList.add('bg-blue-600', 'text-white', 'border-transparent', 'font-bold', 'text-xs');
                       const form = e.currentTarget.closest('form');
                       if (form) {
                         const typeInput = form.querySelector('input[name="type"]') as HTMLInputElement;
@@ -374,16 +407,16 @@ export default function FeedbackDrawer({ isOpen, onClose, source = 'header', def
                       setFeedbackType('general');
                       const buttons = e.currentTarget.parentElement?.querySelectorAll('button');
                       buttons?.forEach(btn => {
-                        btn.classList.remove('bg-orange-500', 'bg-blue-600', 'bg-green-600', 'text-white', 'border-transparent');
-                        btn.classList.add('border-2');
+                        btn.classList.remove('bg-orange-500', 'bg-blue-600', 'bg-green-600', 'text-white', 'border-transparent', 'font-bold');
+                        btn.classList.add('border-2', 'font-medium', 'text-xs');
                       });
                       buttons?.forEach(btn => {
                         if (btn.textContent?.includes('Bug')) btn.classList.add('bg-orange-50', 'text-orange-700', 'border-orange-200');
                         if (btn.textContent?.includes('Feature')) btn.classList.add('bg-blue-50', 'text-blue-700', 'border-blue-200');
                         if (btn.textContent?.includes('General')) btn.classList.add('bg-green-50', 'text-green-700', 'border-green-200');
                       });
-                      e.currentTarget.classList.remove('bg-green-50', 'border-green-200');
-                      e.currentTarget.classList.add('bg-green-600', 'text-white', 'border-transparent');
+                      e.currentTarget.classList.remove('bg-green-50', 'border-green-200', 'font-medium');
+                      e.currentTarget.classList.add('bg-green-600', 'text-white', 'border-transparent', 'font-bold', 'text-xs');
                       const form = e.currentTarget.closest('form');
                       if (form) {
                         const typeInput = form.querySelector('input[name="type"]') as HTMLInputElement;
@@ -395,7 +428,7 @@ export default function FeedbackDrawer({ isOpen, onClose, source = 'header', def
                     General Feedback
                   </button>
                 </div>
-                <input type="hidden" name="type" value="bug" required />
+                <input type="hidden" name="type" value="bug" />
               </div>
 
               <div>
@@ -408,9 +441,9 @@ export default function FeedbackDrawer({ isOpen, onClose, source = 'header', def
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 resize-none"
                   placeholder="Describe the issue or your suggestion..."
-                  required
                   onInput={(e) => {
-                    e.currentTarget.classList.remove('border-red-300');
+                    e.currentTarget.classList.remove('border-red-500', 'focus:border-red-500');
+                    e.currentTarget.classList.add('border-gray-300', 'focus:border-blue-500');
                     clearErrors();
                   }}
                 ></textarea>
