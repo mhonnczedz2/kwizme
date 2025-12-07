@@ -17,7 +17,7 @@
    - Fill out the feedback form for fastest response
 
 2. **Support Page**
-   - Visit: https://kwizme-app.vercel.app/support
+   - Visit: https://kwizme.vercel.app/support
    - Browse FAQ for instant answers
    - Submit questions via contact form
 
@@ -236,11 +236,11 @@ For security vulnerabilities:
 
 ## Quick Links
 
-- 🏠 **KwizMe Home**: https://kwizme-app.vercel.app
-- ❓ **FAQ & Support**: https://kwizme-app.vercel.app/support
+- 🏠 **KwizMe Home**: https://kwizme.vercel.app
+- ❓ **FAQ & Support**: https://kwizme.vercel.app/support
 - 📧 **Email Support**: my.stationptot@gmail.com
-- 🔐 **Privacy Policy**: https://kwizme-app.vercel.app/legal/privacy
-- 📋 **Terms of Service**: https://kwizme-app.vercel.app/legal/terms
+- 🔐 **Privacy Policy**: https://kwizme.vercel.app/legal/privacy
+- 📋 **Terms of Service**: https://kwizme.vercel.app/legal/terms
 
 ---
 

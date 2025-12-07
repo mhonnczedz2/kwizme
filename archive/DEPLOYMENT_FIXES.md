@@ -3,7 +3,7 @@
 ## Overview
 This document outlines the issues identified during deployment testing and the plan to address them.
 
-**Deployment URL:** https://quizme-virid.vercel.app/
+**Deployment URL:** https://kwizme.vercel.app/
 
 ---
 
@@ -101,16 +101,16 @@ The application handles user-uploaded learning materials (PDFs, documents, image
 #### Solution
 **A. Configure Supabase Settings:**
 1. Go to Supabase Dashboard → Authentication → URL Configuration
-2. Set Site URL to: `https://quizme-virid.vercel.app`
+2. Set Site URL to: `https://kwizme.vercel.app`
 3. Add Redirect URLs:
-   - `https://quizme-virid.vercel.app/**`
-   - `https://quizme-virid.vercel.app/auth/callback`
+   - `https://kwizme.vercel.app/**`
+   - `https://kwizme.vercel.app/auth/callback`
    - `http://localhost:3000/**` (for local development)
 
 **B. Environment Variables:**
 1. Add to `.env.local`:
    ```
-   NEXT_PUBLIC_SITE_URL=https://quizme-virid.vercel.app
+   NEXT_PUBLIC_SITE_URL=https://kwizme.vercel.app
    ```
 2. Add to `.env.example`:
    ```
@@ -119,7 +119,7 @@ The application handles user-uploaded learning materials (PDFs, documents, image
    ```
 3. Add to Vercel environment variables:
    - Variable: `NEXT_PUBLIC_SITE_URL`
-   - Value: `https://quizme-virid.vercel.app`
+   - Value: `https://kwizme.vercel.app`
    - Environments: Production, Preview
 
 **C. Update Email Confirmation Flow:**
@@ -767,15 +767,15 @@ But FormSubmit.co should be sufficient for feedback collection.
 ## Environment Variables Checklist
 
 ### Required for Deployment
-- [ ] `NEXT_PUBLIC_SITE_URL=https://quizme-virid.vercel.app`
+- [ ] `NEXT_PUBLIC_SITE_URL=https://kwizme.vercel.app`
 - [x] `NEXT_PUBLIC_SUPABASE_URL=https://iswkywwhrngszlufptdz.supabase.co`
 - [x] `NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbG...` (already set)
 - [x] `GEMINI_API_KEY=AIza...` (already set)
 
 ### Supabase Dashboard Configuration
-- [ ] Site URL: `https://quizme-virid.vercel.app`
+- [ ] Site URL: `https://kwizme.vercel.app`
 - [ ] Redirect URLs:
-  - [ ] `https://quizme-virid.vercel.app/**`
+  - [ ] `https://kwizme.vercel.app/**`
   - [ ] `http://localhost:3000/**`
 - [ ] Email templates updated with correct URLs
 

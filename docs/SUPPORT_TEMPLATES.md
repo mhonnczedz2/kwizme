@@ -19,8 +19,8 @@ Best regards,
 KwizMe Support Team
 
 📧 Email: my.stationptot@gmail.com
-🌐 Website: https://kwizme-app.vercel.app
-💬 Support: https://kwizme-app.vercel.app/support
+🌐 Website: https://kwizme.vercel.app
+💬 Support: https://kwizme.vercel.app/support
 ```
 
 ---
@@ -146,7 +146,7 @@ Hi [Name],
 Thank you for contacting us about your account issue. We're here to help!
 
 **For Password Reset:**
-1. Go to https://kwizme-app.vercel.app/auth/login
+1. Go to https://kwizme.vercel.app/auth/login
 2. Click "Forgot Password"
 3. Enter your email address
 4. Check your email (and spam folder) for the reset link
@@ -192,13 +192,13 @@ KwizMe is a free AI-powered tool that helps students create practice quizzes fro
 - Completely free to use
 
 **Getting Started:**
-1. Visit https://kwizme-app.vercel.app
+1. Visit https://kwizme.vercel.app
 2. Upload your study material
 3. Choose your quiz preferences
 4. Start practicing!
 
 **Questions?**
-Check our FAQ at https://kwizme-app.vercel.app/support or reply to this email.
+Check our FAQ at https://kwizme.vercel.app/support or reply to this email.
 
 Happy studying!
 
@@ -253,7 +253,7 @@ Could you take 30 seconds to let us know how we did?
 **Share Your Experience:**
 If you're happy with KwizMe, we'd love if you could:
 - Share it with classmates or friends
-- Leave us feedback at https://kwizme-app.vercel.app/support
+- Leave us feedback at https://kwizme.vercel.app/support
 
 Your feedback helps us improve KwizMe for everyone.
 
@@ -324,7 +324,7 @@ Thank you for contacting KwizMe Support! We've received your message and will re
 
 **Quick Help:**
 While you wait, check our FAQ for common solutions:
-🔗 https://kwizme-app.vercel.app/support
+🔗 https://kwizme.vercel.app/support
 
 **Urgent Issue?**
 If this is a critical bug affecting many users, please mark your email as "URGENT" in the subject line.

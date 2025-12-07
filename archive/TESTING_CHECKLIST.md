@@ -26,7 +26,7 @@ This checklist covers all changes made in the recent deployment fixes. Test thes
 
 **Test Scenario 1.2: Environment Variable Configuration** ✅ PASSED
 1. Check `.env.local` file exists with `NEXT_PUBLIC_SITE_URL`
-2. In production/Vercel, verify environment variable is set to `https://quizme-virid.vercel.app`
+2. In production/Vercel, verify environment variable is set to `https://kwizme.vercel.app`
 3. **Expected:** All email links use production URL in production environment
 
 ---
@@ -628,7 +628,7 @@ Test all scenarios on:
 ### Production Test 1: Environment Variables
 After deploying to Vercel:
 1. Check that emails have production URLs
-2. **Expected:** Links point to `https://quizme-virid.vercel.app`, not localhost
+2. **Expected:** Links point to `https://kwizme.vercel.app`, not localhost
 3. Test feedback submission
 4. **Expected:** Uses production URL in headers
 
