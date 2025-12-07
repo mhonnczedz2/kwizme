@@ -38,8 +38,8 @@ const sentryWebpackPluginOptions = {
   // For all available options, see:
   // https://github.com/getsentry/sentry-webpack-plugin#options
 
-  org: process.env.SENTRY_ORG || "quizme-app",
-  project: process.env.SENTRY_PROJECT || "quizme-app",
+  org: process.env.SENTRY_ORG || "kwizme-app",
+  project: process.env.SENTRY_PROJECT || "kwizme-app",
 
   // Only run the Sentry webpack plugin in production builds
   silent: process.env.NODE_ENV !== 'production',
