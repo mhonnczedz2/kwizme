@@ -11,6 +11,7 @@ export async function POST(request: NextRequest) {
     const feedback = formData.get('message') as string;  // Form field is 'message', not 'feedback'
     const rating = formData.get('rating') as string;
     const email = formData.get('email') as string;
+    const name = formData.get('name') as string;
     const feedbackType = formData.get('type') as string || 'general';
 
     console.log('📝 Processing feedback:', { rating, feedbackType, hasEmail: !!email, feedback: feedback?.substring(0, 100) + '...' });
@@ -43,31 +44,15 @@ export async function POST(request: NextRequest) {
       embeds: [{
         title: `🎯 New QuizMe Feedback`,
         color: embedColor,
-        fields: [
-          {
-            name: `${starEmojis} Rating`,
-            value: `${rating}/5 stars`,
-            inline: true
-          },
-          {
-            name: '📂 Type',
-            value: feedbackType.charAt(0).toUpperCase() + feedbackType.slice(1),
-            inline: true
-          },
-          {
-            name: '👤 Contact',
-            value: email || 'Anonymous',
-            inline: true
-          },
-          {
-            name: '💬 Feedback',
-            value: feedback.length > 1000 ? feedback.substring(0, 1000) + '...' : feedback,
-            inline: false
-          }
-        ],
-        footer: {
-          text: `Submitted ${new Date().toLocaleString()} | QuizMe Feedback System`
-        }
+        description: `⭐ **Rating:** ${starEmojis}
+👤 **Name:** ${name || 'Anonymous'}
+📧 **Contact:** ${email || 'Anonymous'}
+📂 **Type:** ${feedbackType.charAt(0).toUpperCase() + feedbackType.slice(1)}
+💬 **Message:**
+
+*${feedback}*
+
+Submitted ${new Date().toLocaleString()} | QuizMe Feedback System`
       }]
     };
 
