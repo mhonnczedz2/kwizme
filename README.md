@@ -1,4 +1,4 @@
-# QuizMe - AI Quiz Generator
+# KwizMe - AI Quiz Generator
 
 Generate practice quizzes from your PDFs using AI.
 
@@ -43,7 +43,7 @@ quizme/
 
 ## 🗄️ Database Architecture
 
-QuizMe uses **Supabase** (PostgreSQL) for cloud data storage:
+KwizMe uses **Supabase** (PostgreSQL) for cloud data storage:
 
 - **Cloud-based** - Data syncs across all your devices
 - **Real-time sync** - Changes appear instantly on all devices
