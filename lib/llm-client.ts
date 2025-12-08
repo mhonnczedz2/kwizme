@@ -383,10 +383,11 @@ export function validateQuizResponse(response: any): boolean {
       return false;
     }
 
-    // Check difficulty
-    if (q.difficulty && !['easy', 'medium', 'hard', 'intermediate'].includes(q.difficulty)) {
-      console.error(`❌ Validation failed: question[${i}] has invalid difficulty "${q.difficulty}". Allowed: easy, medium, hard, intermediate`);
-      return false;
+    // Check difficulty - be lenient, just log warning for unexpected values
+    const validDifficulties = ['easy', 'medium', 'hard', 'intermediate', 'high', 'low'];
+    if (q.difficulty && !validDifficulties.includes(q.difficulty.toLowerCase())) {
+      console.warn(`⚠️ Question[${i}] has unexpected difficulty "${q.difficulty}", normalizing to "medium"`);
+      q.difficulty = 'medium'; // Normalize unexpected values instead of failing
     }
   }
 
