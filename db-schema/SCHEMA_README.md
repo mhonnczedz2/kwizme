@@ -3,9 +3,18 @@
 **Last Updated**: December 9, 2025
 **Live Schema Version**: 8 tables (PostgreSQL + SQLite hybrid architecture)
 
-This folder contains all SQL scripts for setting up and verifying the KwizMe database system, which uses a dual-database architecture:
+This folder contains all SQL scripts for setting up and verifying the KwizMe database system, organized into logical folders for easy navigation:
+
 - **Primary**: PostgreSQL via Supabase (authenticated users)
 - **Secondary**: SQLite via sql.js (anonymous users in browser)
+
+## 📁 **FOLDER ORGANIZATION**
+
+- **`setup/`** - Core setup files (run in numbered order)
+- **`maintenance/`** - Verification, fixes, and cleanup utilities
+- **`rate_limiting/`** - Rate limiting enhancements and alternatives
+- **`user_management/`** - User management and soft delete system
+- **`documentation/`** - Analysis, operational guides, and detailed docs
 
 ---
 
@@ -27,9 +36,9 @@ This folder contains all SQL scripts for setting up and verifying the KwizMe dat
 
 ---
 
-## 🚀 **SETUP FILES**
+## 🚀 **SETUP FILES** (in `setup/` folder)
 
-### **1. `supabase_complete_schema.sql`** ⭐ **MAIN SETUP**
+### **1. `setup/01_supabase_complete_schema.sql`** ⭐ **MAIN SETUP**
 **Run this first on a fresh Supabase project**
 
 Creates the complete database foundation:
@@ -39,7 +48,7 @@ Creates the complete database foundation:
 - **Triggers & Functions**: Auto-profile creation and timestamp updates
 - **Foreign Key Relationships**: Proper data integrity constraints
 
-### **2. `rate_limiting_schema.sql`**
+### **2. `setup/02_rate_limiting_schema.sql`**
 **Rate limiting system - Run after complete schema**
 
 Adds rate limiting capabilities:
@@ -49,15 +58,7 @@ Adds rate limiting capabilities:
 - **IP-based tracking**: Anonymous user rate limiting via IP address
 - **Admin controls**: Unlimited access grants and custom limits
 
-### **3. `quiz_usage_schema.sql`**
-**Alternative usage tracking - Timestamp-based approach**
-
-Provides additional usage logging:
-- **`quiz_usage` table**: Timestamp-based tracking with better granularity
-- **Mixed user/IP support**: Handles both authenticated and anonymous users
-- **Simplified logging**: Cleaner approach for basic usage analytics
-
-### **4. `supabase_enable_realtime.sql`**
+### **3. `setup/03_supabase_enable_realtime.sql`**
 **Enable real-time subscriptions - Run after schemas**
 
 Enables Supabase realtime publication on all tables:
@@ -67,16 +68,11 @@ Enables Supabase realtime publication on all tables:
 
 **Required for**: `useRealtimeSync` hook functionality
 
-### **5. `supabase_fix_schema.sql`**
-**Profile column fix - Run only if verification shows issues**
-
-Adds missing `institution` and `program` columns to profiles table if they're missing.
-
 ---
 
-## 🔍 **VERIFICATION & MAINTENANCE**
+## 🔍 **VERIFICATION & MAINTENANCE** (in `maintenance/` folder)
 
-### **6. `supabase_verify_schema_results.sql`**
+### **`maintenance/supabase_verify_schema_results.sql`** ⭐ **HEALTH CHECK**
 **Comprehensive schema health check**
 
 Returns detailed status table showing:
@@ -89,12 +85,20 @@ Returns detailed status table showing:
 
 **Usage**: Run in Supabase SQL Editor, view "Results" tab for health report.
 
-### **7. Rate Limiting Function Files**
-Additional rate limiting utilities and fixes:
-- `rate_limiting_functions.sql` - Core rate limiting logic
-- `rate_limiting_function_fix.sql` - Updates for enhanced functionality
-- `rate_limiting_ip_function.sql` - IP-based anonymous user support
-- `rate_limiting_examples.sql` - Usage examples and test cases
+### **`maintenance/supabase_fix_schema.sql`** 🩹 **FIXES**
+**Profile column fix - Run only if verification shows issues**
+
+Adds missing `institution` and `program` columns to profiles table if they're missing.
+
+### **`maintenance/clear_all_data.sql`** ⚠️ **DEVELOPMENT CLEANUP**
+**Comprehensive data cleanup for development environments**
+
+- **PERMANENTLY DELETES ALL DATA** from all 8 tables
+- Resets sequences and user authentication
+- **⚠️ NEVER run in production!**
+
+### **`maintenance/clear_local_storage.js`** 🧹 **BROWSER CLEANUP**
+**Clears browser localStorage for development reset**
 
 ---
 
@@ -103,31 +107,29 @@ Additional rate limiting utilities and fixes:
 ### **For Fresh Supabase Project:**
 ```sql
 -- 1. Core database setup
-\i supabase_complete_schema.sql
+\i setup/01_supabase_complete_schema.sql
 
--- 2. Add rate limiting (choose one approach)
-\i rate_limiting_schema.sql        -- Date-based (recommended)
--- OR
-\i quiz_usage_schema.sql           -- Timestamp-based (alternative)
+-- 2. Add rate limiting (primary system)
+\i setup/02_rate_limiting_schema.sql
 
 -- 3. Enable real-time features
-\i supabase_enable_realtime.sql
+\i setup/03_supabase_enable_realtime.sql
 
 -- 4. Verify everything works
-\i supabase_verify_schema_results.sql
+\i maintenance/supabase_verify_schema_results.sql
 ```
 
 ### **For Existing Projects:**
 ```sql
 -- 1. Check current status
-\i supabase_verify_schema_results.sql
+\i maintenance/supabase_verify_schema_results.sql
 
 -- 2. Fix any issues found
-\i supabase_fix_schema.sql         -- If profile columns missing
-\i rate_limiting_schema.sql        -- If rate limiting not set up
+\i maintenance/supabase_fix_schema.sql         -- If profile columns missing
+\i setup/02_rate_limiting_schema.sql           -- If rate limiting not set up
 
 -- 3. Re-verify
-\i supabase_verify_schema_results.sql
+\i maintenance/supabase_verify_schema_results.sql
 ```
 
 ---
@@ -166,6 +168,7 @@ SELECT * FROM get_user_daily_limit('user_id'::UUID);
 - Mixed user/IP support
 
 **Use Case**: Analytics, detailed usage patterns, backup tracking system.
+**Location**: `rate_limiting/quiz_usage_schema.sql`
 
 ### **Anonymous User Support**
 Both systems support IP-based rate limiting for anonymous users:
@@ -173,6 +176,21 @@ Both systems support IP-based rate limiting for anonymous users:
 -- Anonymous user tracking
 SELECT increment_quiz_count_ip('192.168.1.1'::INET, CURRENT_DATE);
 ```
+
+---
+
+## ⚡ **RATE LIMITING ENHANCEMENTS** (in `rate_limiting/` folder)
+
+### **Production Safety**
+- **`rate_limiting_function_fix.sql`** - Race-condition-free increment functions
+- **`rate_limiting_ip_function.sql`** - Anonymous user IP-based tracking
+- **`rate_limiting_functions.sql`** - Additional function definitions
+
+### **Development & Testing**
+- **`rate_limiting_examples.sql`** - Usage examples and test cases
+- **`quiz_usage_schema.sql`** - Alternative timestamp-based system
+
+**Recommendation**: Always apply the function fix for production environments to prevent race conditions in concurrent usage tracking.
 
 ---
 
