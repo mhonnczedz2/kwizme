@@ -372,11 +372,6 @@ export default function FeedbackDrawer({ isOpen, onClose, source = 'header', def
                       });
                       e.currentTarget.classList.remove('bg-orange-50', 'border-orange-200', 'text-orange-700', 'font-medium');
                       e.currentTarget.classList.add('bg-orange-500', 'text-white', 'border-transparent', 'font-bold', 'text-xs');
-                      const form = e.currentTarget.closest('form');
-                      if (form) {
-                        const typeInput = form.querySelector('input[name="type"]') as HTMLInputElement;
-                        if (typeInput) typeInput.value = 'bug';
-                      }
                     }}
                     className="flex-1 px-3 py-2 rounded-full text-xs font-bold transition-all border-transparent bg-orange-500 text-white shadow-sm"
                   >
@@ -399,11 +394,6 @@ export default function FeedbackDrawer({ isOpen, onClose, source = 'header', def
                       });
                       e.currentTarget.classList.remove('bg-blue-50', 'border-blue-200', 'font-medium');
                       e.currentTarget.classList.add('bg-blue-600', 'text-white', 'border-transparent', 'font-bold', 'text-xs');
-                      const form = e.currentTarget.closest('form');
-                      if (form) {
-                        const typeInput = form.querySelector('input[name="type"]') as HTMLInputElement;
-                        if (typeInput) typeInput.value = 'feature';
-                      }
                     }}
                     className="flex-1 px-3 py-2 rounded-full text-xs font-medium transition-all border-2 bg-blue-50 text-blue-700 border-blue-200"
                   >
@@ -426,18 +416,13 @@ export default function FeedbackDrawer({ isOpen, onClose, source = 'header', def
                       });
                       e.currentTarget.classList.remove('bg-green-50', 'border-green-200', 'font-medium');
                       e.currentTarget.classList.add('bg-green-600', 'text-white', 'border-transparent', 'font-bold', 'text-xs');
-                      const form = e.currentTarget.closest('form');
-                      if (form) {
-                        const typeInput = form.querySelector('input[name="type"]') as HTMLInputElement;
-                        if (typeInput) typeInput.value = 'feedback';
-                      }
                     }}
                     className="flex-1 px-3 py-2 rounded-full text-xs font-medium transition-all border-2 bg-green-50 text-green-700 border-green-200"
                   >
                     General Feedback
                   </button>
                 </div>
-                <input type="hidden" name="type" value="bug" />
+                <input type="hidden" name="type" value={feedbackType} />
               </div>
 
               <div>

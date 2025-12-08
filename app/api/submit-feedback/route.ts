@@ -11,6 +11,7 @@ export async function POST(request: NextRequest) {
     const feedback = formData.get('message') as string;  // Form field is 'message', not 'feedback'
     const rating = formData.get('rating') as string;
     const email = formData.get('email') as string;
+    const name = formData.get('name') as string;
     const feedbackType = formData.get('type') as string || 'general';
 
     console.log('📝 Processing feedback:', { rating, feedbackType, hasEmail: !!email, feedback: feedback?.substring(0, 100) + '...' });
@@ -31,13 +32,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare Discord webhook payload with rich embed
-    const embedColor = rating === '5' ? 0x00ff00 : // Green for 5 stars
-                      rating === '4' ? 0x90EE90 : // Light green for 4 stars
-                      rating === '3' ? 0xffff00 : // Yellow for 3 stars
-                      rating === '2' ? 0xff8000 : // Orange for 2 stars
-                      0xff0000;                   // Red for 1 star
+    const embedColor = feedbackType === 'bug' ? 0xff8000 : // Orange for Bug Report
+                      feedbackType === 'feature' ? 0x4285f4 : // Blue for Feature Request
+                      0x10b981; // Green for General Feedback
 
-    const starEmojis = '★'.repeat(parseInt(rating)) + '☆'.repeat(5 - parseInt(rating));
+    const starEmojis = '★'.repeat(parseInt(rating));
+
+    // Format type display
+    const typeDisplay = feedbackType === 'bug' ? 'Bug Report' :
+                       feedbackType === 'feature' ? 'Feature Request' :
+                       feedbackType === 'general' ? 'General Feedback' :
+                       'General Feedback'; // fallback
 
     const discordPayload = {
       embeds: [{
@@ -45,23 +50,38 @@ export async function POST(request: NextRequest) {
         color: embedColor,
         fields: [
           {
-            name: `${starEmojis} Rating`,
-            value: `${rating}/5 stars`,
+            name: '⭐ Rating',
+            value: starEmojis,
+            inline: true
+          },
+          {
+            name: '\u200B',
+            value: '\u200B',
             inline: true
           },
           {
             name: '📂 Type',
-            value: feedbackType.charAt(0).toUpperCase() + feedbackType.slice(1),
+            value: typeDisplay,
             inline: true
           },
           {
-            name: '👤 Contact',
+            name: '👤 Name',
+            value: name || 'Anonymous',
+            inline: true
+          },
+          {
+            name: '\u200B',
+            value: '\u200B',
+            inline: true
+          },
+          {
+            name: '📧 Email',
             value: email || 'Anonymous',
             inline: true
           },
           {
             name: '💬 Feedback',
-            value: feedback.length > 1000 ? feedback.substring(0, 1000) + '...' : feedback,
+            value: `---\n\n*${feedback.length > 1000 ? feedback.substring(0, 1000) + '...' : feedback}*\n\n---`,
             inline: false
           }
         ],
