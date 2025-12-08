@@ -2,8 +2,17 @@
 
 import { useState, useEffect } from 'react';
 
+interface ErrorDetails {
+  error: string;
+  code?: string;
+  reference?: string;
+  timestamp?: string;
+  details?: string;
+  suggestion?: string;
+}
+
 interface GeneratingQuizProps {
-  error?: string | null;
+  error?: string | ErrorDetails | null;
   onRetry?: () => void;
   onReportIssue?: () => void;
 }
@@ -21,9 +30,98 @@ const stages: Stage[] = [
   { emoji: '✨', message: 'Almost ready...', duration: 2000 },
 ];
 
+// Parse error prop into structured format
+function parseError(error: string | ErrorDetails | null | undefined): ErrorDetails | null {
+  if (!error) return null;
+
+  if (typeof error === 'object') {
+    return error;
+  }
+
+  // Handle legacy string errors
+  if (error.startsWith('RATE_LIMIT:')) {
+    return {
+      error: 'Daily limit reached',
+      code: 'RATE_LIMIT_EXCEEDED',
+      details: error.replace('RATE_LIMIT:', '').trim(),
+      suggestion: 'Wait until the limit resets or contact us!'
+    };
+  }
+
+  if (error === 'RATE_LIMIT') {
+    return {
+      error: 'Daily limit reached',
+      code: 'RATE_LIMIT_EXCEEDED',
+      suggestion: 'Wait until the limit resets or contact us!'
+    };
+  }
+
+  if (error === 'PDF_PARSE_ERROR') {
+    return {
+      error: "Couldn't read your file",
+      code: 'PDF_PARSE_ERROR',
+      suggestion: 'Try uploading a different file or a clearer scan.'
+    };
+  }
+
+  if (error === 'API_ERROR') {
+    return {
+      error: 'AI service unavailable',
+      code: 'AI_SERVICE_ERROR',
+      suggestion: 'Please wait a moment and try again.'
+    };
+  }
+
+  // Generic error
+  return {
+    error: error,
+    code: 'UNKNOWN_ERROR'
+  };
+}
+
+function getErrorIcon(code?: string): string {
+  switch (code) {
+    case 'RATE_LIMIT_EXCEEDED':
+      return '⏱️';
+    case 'FILE_TOO_LARGE':
+    case 'UNSUPPORTED_FILE_TYPE':
+    case 'NO_FILE_PROVIDED':
+    case 'PDF_PARSE_ERROR':
+      return '📄';
+    case 'AI_SERVICE_ERROR':
+    case 'API_KEY_ERROR':
+      return '🤖';
+    case 'QUIZ_VALIDATION_FAILED':
+      return '❌';
+    default:
+      return '⚠️';
+  }
+}
+
 export default function GeneratingQuiz({ error, onRetry, onReportIssue }: GeneratingQuizProps) {
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [copied, setCopied] = useState(false);
+
+  const parsedError = parseError(error);
+  const isRateLimitError = parsedError?.code === 'RATE_LIMIT_EXCEEDED';
+
+  const copyErrorDetails = () => {
+    if (!parsedError) return;
+
+    const details = [
+      `Error: ${parsedError.error}`,
+      parsedError.code ? `Code: ${parsedError.code}` : '',
+      parsedError.reference ? `Reference: ${parsedError.reference}` : '',
+      parsedError.details ? `Details: ${parsedError.details}` : '',
+      parsedError.timestamp ? `Time: ${parsedError.timestamp}` : '',
+    ].filter(Boolean).join('\n');
+
+    navigator.clipboard.writeText(details).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   useEffect(() => {
     if (error) return; // Don't run progress simulation if there's an error
@@ -105,41 +203,66 @@ export default function GeneratingQuiz({ error, onRetry, onReportIssue }: Genera
           {/* Error Icon */}
           <div className="flex justify-center mb-6">
             <div className="bg-red-100 rounded-full p-4">
-              <svg
-                className="w-16 h-16 text-red-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+              <span className="text-5xl" role="img" aria-label="error">
+                {getErrorIcon(parsedError?.code)}
+              </span>
             </div>
           </div>
 
           {/* Error Title */}
-          <h2 className="text-2xl font-bold text-gray-900 text-center mb-4">
-            Oops! Something went wrong
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">
+            {parsedError?.error || 'Something went wrong'}
           </h2>
 
-          {/* Error Message */}
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <p className="text-sm text-red-800 text-center">
-              {error === 'PDF_PARSE_ERROR' && "Couldn't read your file. Try another one?"}
-              {error === 'API_ERROR' && "AI service is unavailable. Try again in a moment."}
-              {error === 'RATE_LIMIT' && "Too many quizzes! Please wait before trying again."}
-              {error.startsWith('RATE_LIMIT:') && error.replace('RATE_LIMIT:', '').trim()}
-              {!['PDF_PARSE_ERROR', 'API_ERROR', 'RATE_LIMIT'].includes(error) && !error.startsWith('RATE_LIMIT:') && error}
-            </p>
+          {/* Error Code Badge */}
+          {parsedError?.code && (
+            <div className="flex justify-center mb-4">
+              <span className="text-xs font-mono bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                {parsedError.code}
+              </span>
+            </div>
+          )}
+
+          {/* Error Details */}
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            {parsedError?.details && (
+              <p className="text-sm text-gray-700 text-center mb-2">
+                {parsedError.details}
+              </p>
+            )}
+            {parsedError?.suggestion && (
+              <p className="text-sm text-gray-600 text-center italic">
+                {parsedError.suggestion}
+              </p>
+            )}
+            {!parsedError?.details && !parsedError?.suggestion && (
+              <p className="text-sm text-red-800 text-center">
+                An unexpected error occurred. Please try again.
+              </p>
+            )}
           </div>
+
+          {/* Reference Code for Reporting */}
+          {parsedError?.reference && (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
+              <p className="text-xs text-gray-500 text-center mb-1">Reference Code (for support)</p>
+              <div className="flex items-center justify-center gap-2">
+                <code className="text-sm font-mono text-gray-700 bg-white px-2 py-1 rounded border">
+                  {parsedError.reference}
+                </code>
+                <button
+                  onClick={copyErrorDetails}
+                  className="text-xs text-blue-600 hover:text-blue-700 underline"
+                >
+                  {copied ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex flex-col gap-3">
-            {onRetry && error !== 'RATE_LIMIT' && !error.startsWith('RATE_LIMIT:') && (
+            {onRetry && !isRateLimitError && (
               <button
                 onClick={onRetry}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors shadow-md hover:shadow-lg"

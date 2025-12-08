@@ -102,13 +102,13 @@ const faqData: FAQItem[] = [
   {
     id: 'is-it-free',
     question: 'Is KwizMe free to use?',
-    answer: 'Yes! KwizMe is completely free to use. We believe education should be accessible to everyone. There are no hidden fees or premium tiers.',
+    answer: 'We aspire to keep KwizMe free to use as much as we can. We believe that access to education tools is a right, not a privilege, and we\'re committed to making quality learning resources available to all students as much as we can.',
     category: 'billing'
   },
   {
     id: 'usage-limits',
     question: 'Are there any usage limits?',
-    answer: 'We have reasonable usage limits in place to ensure fair access for all users. If you need higher limits for institutional use, please contact us.',
+    answer: 'Currently, you have 5 daily quiz generation credits to ensure fair access for all users. There is no option to purchase additional credits at this time. However, once your quizzes are generated, you can take them unlimited times until you master your materials!',
     category: 'billing'
   }
 ]

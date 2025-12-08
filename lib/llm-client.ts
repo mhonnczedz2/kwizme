@@ -180,7 +180,7 @@ Each question must have:
 - Brief explanation of why the answer is correct
 - Citation showing where the answer can be found in the source (e.g., "Page 1, paragraph 2" or "Slide 5" or "Introduction section")
 - Optional hint (helpful clue without giving away the answer)
-- Difficulty rating based on cognitive complexity
+- Difficulty rating based on cognitive complexity (easy, medium, hard)
 
 IMPORTANT FORMATTING RULES:
 - Return ONLY valid JSON. Do not include any markdown formatting, code blocks, or extra text.
@@ -323,34 +323,74 @@ export async function generateQuizWithGemini(
 }
 
 /**
- * Validate quiz response schema
+ * Validate quiz response schema with detailed logging
  */
 export function validateQuizResponse(response: any): boolean {
-  if (!response.questions || !Array.isArray(response.questions)) {
+  if (!response) {
+    console.error('❌ Validation failed: response is null/undefined');
     return false;
   }
 
-  for (const q of response.questions) {
+  if (!response.questions) {
+    console.error('❌ Validation failed: response.questions is missing');
+    return false;
+  }
+
+  if (!Array.isArray(response.questions)) {
+    console.error('❌ Validation failed: response.questions is not an array, got:', typeof response.questions);
+    return false;
+  }
+
+  if (response.questions.length === 0) {
+    console.error('❌ Validation failed: response.questions is empty');
+    return false;
+  }
+
+  for (let i = 0; i < response.questions.length; i++) {
+    const q = response.questions[i];
+
     // Check required fields
-    if (!q.question || !q.options || !q.correct_answer || !q.explanation) {
+    if (!q.question) {
+      console.error(`❌ Validation failed: question[${i}] missing 'question' field`);
+      return false;
+    }
+    if (!q.options) {
+      console.error(`❌ Validation failed: question[${i}] missing 'options' field`);
+      return false;
+    }
+    if (!q.correct_answer) {
+      console.error(`❌ Validation failed: question[${i}] missing 'correct_answer' field`);
+      return false;
+    }
+    if (!q.explanation) {
+      console.error(`❌ Validation failed: question[${i}] missing 'explanation' field`);
       return false;
     }
 
     // Check options array
-    if (!Array.isArray(q.options) || q.options.length !== 4) {
+    if (!Array.isArray(q.options)) {
+      console.error(`❌ Validation failed: question[${i}] options is not an array, got:`, typeof q.options);
+      return false;
+    }
+    if (q.options.length !== 4) {
+      console.error(`❌ Validation failed: question[${i}] has ${q.options.length} options, expected 4. Options:`, q.options);
       return false;
     }
 
     // Check correct_answer is in options
     if (!q.options.includes(q.correct_answer)) {
+      console.error(`❌ Validation failed: question[${i}] correct_answer "${q.correct_answer}" not found in options:`, q.options);
       return false;
     }
 
-    // Check difficulty
-    if (q.difficulty && !['easy', 'medium', 'hard'].includes(q.difficulty)) {
-      return false;
+    // Check difficulty - be lenient, just log warning for unexpected values
+    const validDifficulties = ['easy', 'medium', 'hard', 'intermediate', 'high', 'low'];
+    if (q.difficulty && !validDifficulties.includes(q.difficulty.toLowerCase())) {
+      console.warn(`⚠️ Question[${i}] has unexpected difficulty "${q.difficulty}", normalizing to "medium"`);
+      q.difficulty = 'medium'; // Normalize unexpected values instead of failing
     }
   }
 
+  console.log(`✅ Quiz validation passed: ${response.questions.length} questions`);
   return true;
 }
