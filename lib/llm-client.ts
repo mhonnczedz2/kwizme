@@ -180,7 +180,7 @@ Each question must have:
 - Brief explanation of why the answer is correct
 - Citation showing where the answer can be found in the source (e.g., "Page 1, paragraph 2" or "Slide 5" or "Introduction section")
 - Optional hint (helpful clue without giving away the answer)
-- Difficulty rating based on cognitive complexity
+- Difficulty rating based on cognitive complexity (easy, medium, hard)
 
 IMPORTANT FORMATTING RULES:
 - Return ONLY valid JSON. Do not include any markdown formatting, code blocks, or extra text.

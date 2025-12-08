@@ -4,6 +4,51 @@ import { checkQuizGenerationLimit, recordQuizGeneration } from '@/lib/rate-limit
 import { createClient } from '@/lib/supabase/server';
 import { trackQuizGenerated, trackRateLimitHit, trackError } from '@/lib/analytics';
 
+// Error codes for easy reporting
+type ErrorCode =
+  | 'RATE_LIMIT_EXCEEDED'
+  | 'INVALID_QUESTION_COUNT'
+  | 'NO_FILE_PROVIDED'
+  | 'UNSUPPORTED_FILE_TYPE'
+  | 'FILE_TOO_LARGE'
+  | 'QUIZ_VALIDATION_FAILED'
+  | 'AI_SERVICE_ERROR'
+  | 'API_KEY_ERROR'
+  | 'UNKNOWN_ERROR';
+
+interface ErrorResponse {
+  error: string;
+  code: ErrorCode;
+  reference: string;
+  timestamp: string;
+  details?: string;
+  suggestion?: string;
+}
+
+function generateErrorReference(): string {
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `KWZ-${timestamp}-${random}`;
+}
+
+function createErrorResponse(
+  code: ErrorCode,
+  message: string,
+  details?: string,
+  suggestion?: string,
+  extraFields?: Record<string, any>
+): ErrorResponse {
+  return {
+    error: message,
+    code,
+    reference: generateErrorReference(),
+    timestamp: new Date().toISOString(),
+    details,
+    suggestion,
+    ...extraFields
+  };
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Step 1: Check rate limiting first (before processing file)
@@ -33,12 +78,16 @@ export async function POST(request: NextRequest) {
         planType: rateLimitResult.limits.isUnlimited ? 'unlimited' : 'free'
       });
 
-      return NextResponse.json({
-        error: 'Daily quiz generation limit reached',
-        message: rateLimitResult.reason || `You've reached your ${rateLimitResult.limits.dailyLimit}-quiz generation daily limit! Limits reset at 12:00 AM daily.`,
-        limits: rateLimitResult.limits,
-        resetTime: rateLimitResult.resetTime
-      }, { status: 429 }); // 429 Too Many Requests
+      return NextResponse.json(
+        createErrorResponse(
+          'RATE_LIMIT_EXCEEDED',
+          'Daily quiz generation limit reached',
+          rateLimitResult.reason || `You've used ${rateLimitResult.limits.currentUsage} of ${rateLimitResult.limits.dailyLimit} quizzes today.`,
+          'Wait until the limit resets or contact us!',
+          { limits: rateLimitResult.limits, resetTime: rateLimitResult.resetTime }
+        ),
+        { status: 429 }
+      );
     }
 
     console.log(`✅ Rate limit check passed. Remaining: ${rateLimitResult.limits.remainingQuizzes === -1 ? 'unlimited' : rateLimitResult.limits.remainingQuizzes}`);
@@ -52,7 +101,12 @@ export async function POST(request: NextRequest) {
     // Validate number of questions
     if (numQuestions < 10 || numQuestions > 50) {
       return NextResponse.json(
-        { error: 'Number of questions must be between 10 and 50' },
+        createErrorResponse(
+          'INVALID_QUESTION_COUNT',
+          'Invalid number of questions',
+          `You requested ${numQuestions} questions, but the allowed range is 10-50.`,
+          'Please select between 10 and 50 questions.'
+        ),
         { status: 400 }
       );
     }
@@ -69,7 +123,12 @@ export async function POST(request: NextRequest) {
     // Validate file
     if (!file) {
       return NextResponse.json(
-        { error: 'No file provided' },
+        createErrorResponse(
+          'NO_FILE_PROVIDED',
+          'No file provided',
+          'The request did not include a file to generate a quiz from.',
+          'Please upload a PDF, Word document, PowerPoint, or image file.'
+        ),
         { status: 400 }
       );
     }
@@ -92,17 +151,26 @@ export async function POST(request: NextRequest) {
 
     if (!supportedTypes.includes(file.type)) {
       return NextResponse.json(
-        {
-          error: 'Unsupported file type. Supported formats: PDF, Word (DOCX), PowerPoint (PPTX), Excel (XLSX), Images (PNG, JPEG, WebP, GIF), Text (TXT, MD, HTML, CSV)'
-        },
+        createErrorResponse(
+          'UNSUPPORTED_FILE_TYPE',
+          'Unsupported file type',
+          `The file type "${file.type || 'unknown'}" is not supported.`,
+          'Please upload a PDF, Word (DOCX), PowerPoint (PPTX), Excel (XLSX), Image (PNG, JPEG, WebP, GIF), or Text file (TXT, MD, HTML, CSV).'
+        ),
         { status: 400 }
       );
     }
 
     // Increased size limit to 20MB to accommodate presentations and images
     if (file.size > 20 * 1024 * 1024) {
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
       return NextResponse.json(
-        { error: 'File size must be less than 20MB' },
+        createErrorResponse(
+          'FILE_TOO_LARGE',
+          'File size too large',
+          `Your file is ${fileSizeMB}MB, but the maximum allowed size is 20MB.`,
+          'Please upload a smaller file or compress your document.'
+        ),
         { status: 400 }
       );
     }
@@ -121,7 +189,12 @@ export async function POST(request: NextRequest) {
     if (!validateQuizResponse(quizData)) {
       console.error('❌ Quiz validation failed');
       return NextResponse.json(
-        { error: 'Generated quiz failed validation. Please try again.' },
+        createErrorResponse(
+          'QUIZ_VALIDATION_FAILED',
+          'Quiz generation failed',
+          'The AI generated a quiz but it failed our quality checks. This can happen with complex or unusual content.',
+          'Please try again. If the problem persists, try with a different file or simpler content.'
+        ),
         { status: 500 }
       );
     }
@@ -174,20 +247,35 @@ export async function POST(request: NextRequest) {
     // Handle specific error types
     if (error.message?.includes('GEMINI_API_KEY')) {
       return NextResponse.json(
-        { error: 'API key not configured. Please add GEMINI_API_KEY to .env.local' },
+        createErrorResponse(
+          'API_KEY_ERROR',
+          'Service configuration error',
+          'The AI service is not properly configured.',
+          'Please contact support if this issue persists.'
+        ),
         { status: 500 }
       );
     }
 
-    if (error.message?.includes('Gemini API error')) {
+    if (error.message?.includes('Gemini API error') || error.message?.includes('fetch failed')) {
       return NextResponse.json(
-        { error: 'Failed to connect to AI service. Please try again.' },
+        createErrorResponse(
+          'AI_SERVICE_ERROR',
+          'AI service temporarily unavailable',
+          error.message || 'Failed to connect to the AI service.',
+          'Please wait a moment and try again.'
+        ),
         { status: 503 }
       );
     }
 
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      createErrorResponse(
+        'UNKNOWN_ERROR',
+        'Something went wrong',
+        error.message || 'An unexpected error occurred while generating your quiz.',
+        'Please try again. If the problem persists, report this error with the reference code below.'
+      ),
       { status: 500 }
     );
   }

@@ -34,7 +34,7 @@ export default function Home() {
   const [fileValidation, setFileValidation] = useState<FileValidationResult | null>(null);
   const [organizationMetadata, setOrganizationMetadata] = useState<OrganizationMetadata>({});
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generationError, setGenerationError] = useState<string | null>(null);
+  const [generationError, setGenerationError] = useState<string | Record<string, any> | null>(null);
   const [quizData, setQuizData] = useState<QuizGenerationResponse | null>(null);
   const [sessionConfig, setSessionConfig] = useState<SessionConfig | null>(null);
   const [finalScore, setFinalScore] = useState<{ score: number; total: number } | null>(null);
@@ -292,9 +292,13 @@ export default function Home() {
         // Go to review/approval state instead of saving immediately
         setAppState('reviewing-approval');
       } else {
-        // Handle different error types based on status and response
-        if (response.status === 429) {
-          // Rate limit error - use clean message from backend
+        // Pass the full structured error from the API
+        // The API now returns: { error, code, reference, timestamp, details, suggestion }
+        if (data.code) {
+          // New structured error format
+          setGenerationError(data);
+        } else if (response.status === 429) {
+          // Legacy rate limit error
           setGenerationError(`RATE_LIMIT: ${data.message || 'Daily limit reached'}`);
         } else if (data.error?.includes('parse') || data.error?.includes('read')) {
           setGenerationError('PDF_PARSE_ERROR');
