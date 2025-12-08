@@ -182,11 +182,16 @@ Each question must have:
 - Optional hint (helpful clue without giving away the answer)
 - Difficulty rating based on cognitive complexity (easy, medium, hard)
 
-IMPORTANT FORMATTING RULES:
+IMPORTANT RULES TO FOLLOW:
 - Return ONLY valid JSON. Do not include any markdown formatting, code blocks, or extra text.
 - All strings must be properly escaped. Use double quotes for all strings.
 - DO NOT prefix answers with letters like "A.", "B.", "C.", "D." - use plain text only
 - The correct_answer must exactly match one of the options (case-sensitive)
+- In the questions, DO NOT use phrases as "in the document", be specific with questions as if no external document is need to answer the question
+- In the citation, mention the name of the file
+- When too much questions is asked, feel free to repeat or reword questions that are already asked
+- DO NOT attempt to put questions outside of the material given
+- Ensure that the target number of questions is achieved. No more, no less.
 
 Expected JSON format:
 {
@@ -196,7 +201,7 @@ Expected JSON format:
       "options": ["Paris", "London", "Berlin", "Madrid"],
       "correct_answer": "Paris",
       "explanation": "Paris is the capital and largest city of France.",
-      "citation": "page 1, paragraph 3",
+      "citation": "Filename.pdf: page 1, paragraph 3",
       "hint": "Think about the most famous city in France.",
       "difficulty": "easy"
     }
