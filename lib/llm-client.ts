@@ -323,34 +323,73 @@ export async function generateQuizWithGemini(
 }
 
 /**
- * Validate quiz response schema
+ * Validate quiz response schema with detailed logging
  */
 export function validateQuizResponse(response: any): boolean {
-  if (!response.questions || !Array.isArray(response.questions)) {
+  if (!response) {
+    console.error('❌ Validation failed: response is null/undefined');
     return false;
   }
 
-  for (const q of response.questions) {
+  if (!response.questions) {
+    console.error('❌ Validation failed: response.questions is missing');
+    return false;
+  }
+
+  if (!Array.isArray(response.questions)) {
+    console.error('❌ Validation failed: response.questions is not an array, got:', typeof response.questions);
+    return false;
+  }
+
+  if (response.questions.length === 0) {
+    console.error('❌ Validation failed: response.questions is empty');
+    return false;
+  }
+
+  for (let i = 0; i < response.questions.length; i++) {
+    const q = response.questions[i];
+
     // Check required fields
-    if (!q.question || !q.options || !q.correct_answer || !q.explanation) {
+    if (!q.question) {
+      console.error(`❌ Validation failed: question[${i}] missing 'question' field`);
+      return false;
+    }
+    if (!q.options) {
+      console.error(`❌ Validation failed: question[${i}] missing 'options' field`);
+      return false;
+    }
+    if (!q.correct_answer) {
+      console.error(`❌ Validation failed: question[${i}] missing 'correct_answer' field`);
+      return false;
+    }
+    if (!q.explanation) {
+      console.error(`❌ Validation failed: question[${i}] missing 'explanation' field`);
       return false;
     }
 
     // Check options array
-    if (!Array.isArray(q.options) || q.options.length !== 4) {
+    if (!Array.isArray(q.options)) {
+      console.error(`❌ Validation failed: question[${i}] options is not an array, got:`, typeof q.options);
+      return false;
+    }
+    if (q.options.length !== 4) {
+      console.error(`❌ Validation failed: question[${i}] has ${q.options.length} options, expected 4. Options:`, q.options);
       return false;
     }
 
     // Check correct_answer is in options
     if (!q.options.includes(q.correct_answer)) {
+      console.error(`❌ Validation failed: question[${i}] correct_answer "${q.correct_answer}" not found in options:`, q.options);
       return false;
     }
 
     // Check difficulty
-    if (q.difficulty && !['easy', 'medium', 'hard'].includes(q.difficulty)) {
+    if (q.difficulty && !['easy', 'medium', 'hard', 'intermediate'].includes(q.difficulty)) {
+      console.error(`❌ Validation failed: question[${i}] has invalid difficulty "${q.difficulty}". Allowed: easy, medium, hard, intermediate`);
       return false;
     }
   }
 
+  console.log(`✅ Quiz validation passed: ${response.questions.length} questions`);
   return true;
 }

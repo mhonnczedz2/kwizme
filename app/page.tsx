@@ -298,10 +298,10 @@ export default function Home() {
           setGenerationError(`RATE_LIMIT: ${data.message || 'Daily limit reached'}`);
         } else if (data.error?.includes('parse') || data.error?.includes('read')) {
           setGenerationError('PDF_PARSE_ERROR');
-        } else if (data.error?.includes('rate') || data.error?.includes('limit')) {
-          // Fallback for other rate limit detection
-          setGenerationError('RATE_LIMIT');
+        } else if (response.status === 503 || data.error?.includes('AI service') || data.error?.includes('connect')) {
+          setGenerationError('API_ERROR');
         } else {
+          // Show the actual error message from the server
           setGenerationError(data.error || 'Failed to generate quiz');
         }
       }
