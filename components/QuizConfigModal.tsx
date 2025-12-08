@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Portal from './Portal';
 
 export interface SessionConfig {
   quick_submit: boolean;
@@ -89,8 +90,9 @@ export default function QuizConfigModal({ totalQuestions, onStart, onCancel }: Q
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <Portal>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-4 md:p-6">
           {/* Modal Header */}
           <div className="flex justify-between items-start mb-4 md:mb-6">
@@ -322,8 +324,9 @@ export default function QuizConfigModal({ totalQuestions, onStart, onCancel }: Q
               Start Quiz
             </button>
           </div>
+          </div>
         </div>
       </div>
-    </div>
+    </Portal>
   );
 }
