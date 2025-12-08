@@ -15,7 +15,7 @@ import QuizApprovedScreen from '@/components/QuizApprovedScreen';
 import SidePanel from '@/components/SidePanel';
 import FeedbackDrawer from '@/components/FeedbackDrawer';
 import TopBanner from '@/components/TopBanner';
-import GeneratingQuiz from '@/components/GeneratingQuiz';
+import GeneratingQuiz, { ErrorDetails } from '@/components/GeneratingQuiz';
 import { QuizGenerationResponse, AnswerRecord } from '@/lib/db/types';
 import { SessionConfig } from '@/components/QuizConfigModal';
 import { saveQuiz, getQuizById } from '@/lib/storage-router';
@@ -34,7 +34,7 @@ export default function Home() {
   const [fileValidation, setFileValidation] = useState<FileValidationResult | null>(null);
   const [organizationMetadata, setOrganizationMetadata] = useState<OrganizationMetadata>({});
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generationError, setGenerationError] = useState<string | Record<string, any> | null>(null);
+  const [generationError, setGenerationError] = useState<string | ErrorDetails | null>(null);
   const [quizData, setQuizData] = useState<QuizGenerationResponse | null>(null);
   const [sessionConfig, setSessionConfig] = useState<SessionConfig | null>(null);
   const [finalScore, setFinalScore] = useState<{ score: number; total: number } | null>(null);
