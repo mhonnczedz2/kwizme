@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-interface ErrorDetails {
+export interface ErrorDetails {
   error: string;
   code?: string;
   reference?: string;

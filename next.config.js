@@ -44,6 +44,10 @@ const sentryWebpackPluginOptions = {
   // Only run the Sentry webpack plugin in production builds
   silent: process.env.NODE_ENV !== 'production',
 
+  // Disable uploads in local development to avoid network issues
+  disableClientUploads: process.env.NODE_ENV !== 'production',
+  disableServerUploads: process.env.NODE_ENV !== 'production',
+
   // For all available options, see:
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 
@@ -63,4 +67,7 @@ const sentryWebpackPluginOptions = {
   automaticVercelMonitors: true,
 };
 
-module.exports = withSentryConfig(nextConfig, sentryWebpackPluginOptions);
+// Only apply Sentry configuration in production
+module.exports = process.env.NODE_ENV === 'production'
+  ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)
+  : nextConfig;
