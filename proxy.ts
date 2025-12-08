@@ -3,10 +3,10 @@ import { checkQuizGenerationLimit } from '@/lib/rate-limiting'
 import { type NextRequest, NextResponse } from 'next/server'
 
 /**
- * Middleware to handle authentication, session refresh, and rate limiting
+ * Proxy to handle authentication, session refresh, and rate limiting
  * This runs on every request to protected routes
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // First, handle Supabase session management
@@ -27,13 +27,13 @@ export async function middleware(request: NextRequest) {
         request.headers.get('cf-connecting-ip') ||
         'unknown'
 
-      // For now, we'll check rate limits without userId in middleware
+      // For now, we'll check rate limits without userId in proxy
       // The API route will do a more thorough check with proper user authentication
       const rateLimitResult = await checkQuizGenerationLimit(undefined, clientIP)
 
       if (!rateLimitResult.allowed) {
         return NextResponse.json({
-          error: 'Rate limit exceeded in middleware',
+          error: 'Rate limit exceeded in proxy',
           message: rateLimitResult.reason || `You've reached your ${rateLimitResult.limits.dailyLimit}-quiz generation daily limit! Limits reset at 12:00 AM daily.`,
           limits: rateLimitResult.limits,
           resetTime: rateLimitResult.resetTime
@@ -47,7 +47,7 @@ export async function middleware(request: NextRequest) {
         })
       }
     } catch (error) {
-      console.error('Middleware rate limit check failed:', error)
+      console.error('Proxy rate limit check failed:', error)
       // On error, let the request through but log the issue
       // The API route will perform another check
     }
