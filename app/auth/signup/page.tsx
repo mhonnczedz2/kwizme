@@ -128,12 +128,12 @@ export default function SignupPage() {
         // New user signup successful - show email confirmation screen
         setSuccess(true)
 
-        // Track successful user signup
+        // Track successful user signup (analytics only - Discord notification happens server-side)
         await trackUserSignup({
           source: 'direct',
           referrer: document.referrer,
-          hasExistingData: false, // New signups don't have existing data
-          email: email // Include email for Discord notification
+          hasExistingData: false // New signups don't have existing data
+          // Note: Discord notification moved to server-side auth callback
         });
       } else {
         // This shouldn't happen, but handle it gracefully

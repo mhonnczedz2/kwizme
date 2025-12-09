@@ -221,15 +221,41 @@ export async function POST(request: NextRequest) {
       // Don't fail the request if usage recording fails
     }
 
-    // Track successful quiz generation
-    await trackQuizGenerated({
+    // Track successful quiz generation (analytics only)
+    trackQuizGenerated({
       fileType: file.type,
       difficulty: difficulty as 'easy' | 'medium' | 'hard',
-      numQuestions: numQuestions, // Already parsed as number
+      numQuestions: numQuestions,
       userType: userId ? 'authenticated' : 'anonymous',
-      fileSize: file.size,
-      quizTitle: quizData.quiz_title // Include quiz title for Discord notification
+      fileSize: file.size
+      // Note: Discord notification handled separately via API
     });
+
+    // Send Discord notification via API route (copying feedback/signup pattern)
+    try {
+      const notificationResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/notify-quiz`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fileType: file.type,
+          difficulty: difficulty,
+          numQuestions: numQuestions,
+          userType: userId ? 'authenticated' : 'anonymous',
+          fileSize: file.size,
+          quizTitle: quizData.quiz_title
+        })
+      })
+
+      if (notificationResponse.ok) {
+        console.log('✅ Quiz notification API call successful')
+      } else {
+        console.warn('⚠️ Quiz notification API call failed:', notificationResponse.status)
+      }
+    } catch (apiError) {
+      console.warn('⚠️ Failed to call quiz notification API:', apiError)
+    }
 
     // Return quiz data
     return NextResponse.json(quizData);
@@ -237,13 +263,41 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('❌ Quiz generation error:', error);
 
-    // Track error event (now async for Discord alerts)
-    await trackError({
+    // Track error event (analytics only - Discord handled separately)
+    trackError({
       errorType: 'api_error',
       errorMessage: error.message || 'Unknown quiz generation error',
       context: 'quiz_generation',
       error: error // Pass the actual error object for Sentry
     });
+
+    // Send Discord error alert via API route (copying feedback pattern)
+    try {
+      const errorAlertResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/notify-error`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          errorType: 'critical',
+          title: 'Quiz Generation Failed',
+          message: error.message || 'Unknown quiz generation error',
+          errorCode: 'QUIZ_GEN_ERROR',
+          context: 'quiz_generation',
+          stack: error.stack,
+          userId: userId || undefined,
+          url: '/api/generate-quiz'
+        })
+      })
+
+      if (errorAlertResponse.ok) {
+        console.log('✅ Error alert API call successful')
+      } else {
+        console.warn('⚠️ Error alert API call failed:', errorAlertResponse.status)
+      }
+    } catch (apiError) {
+      console.warn('⚠️ Failed to call error alert API:', apiError)
+    }
 
     // Handle specific error types
     if (error.message?.includes('GEMINI_API_KEY')) {

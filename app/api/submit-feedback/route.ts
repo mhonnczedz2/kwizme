@@ -71,12 +71,12 @@ export async function POST(request: NextRequest) {
           },
           {
             name: '💬 Feedback',
-            value: `---\n\n*${feedback.length > 1000 ? feedback.substring(0, 1000) + '...' : feedback}*\n\n---`,
+            value: `\`\`\`\n${feedback.substring(0, 1000)}${feedback.length > 1000 ? '\n...' : ''}\n\`\`\``,
             inline: false
           }
         ],
         footer: {
-          text: `Submitted ${new Date().toLocaleString()} | KwizMe Feedback System`
+          text: `Submitted ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Singapore' })} | KwizMe Feedback System`
         }
       }]
     };

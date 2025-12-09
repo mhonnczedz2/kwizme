@@ -46,7 +46,9 @@ export async function sendUserSignupNotification(
   const finalConfig = { ...defaultConfig, ...config };
 
   // Only send notifications in production unless explicitly overridden
-  if (finalConfig.environment !== 'production' && !finalConfig.webhookUrl?.includes('test')) {
+  if (finalConfig.environment !== 'production' &&
+      !finalConfig.webhookUrl?.includes('test') &&
+      process.env.DISCORD_NOTIFICATIONS_TESTING !== 'true') {
     console.log('🔕 Discord signup notifications disabled in non-production environment');
     return { success: true };
   }
@@ -132,7 +134,9 @@ export async function sendQuizGenerationNotification(
   const finalConfig = { ...defaultConfig, ...config };
 
   // Only send notifications in production unless explicitly overridden
-  if (finalConfig.environment !== 'production' && !finalConfig.webhookUrl?.includes('test')) {
+  if (finalConfig.environment !== 'production' &&
+      !finalConfig.webhookUrl?.includes('test') &&
+      process.env.DISCORD_NOTIFICATIONS_TESTING !== 'true') {
     console.log('🔕 Discord quiz notifications disabled in non-production environment');
     return { success: true };
   }

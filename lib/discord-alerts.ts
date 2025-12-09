@@ -46,7 +46,9 @@ export async function sendDiscordErrorAlert(
   const finalConfig = { ...defaultConfig, ...config };
 
   // Only send alerts in production unless explicitly overridden
-  if (finalConfig.environment !== 'production' && !finalConfig.webhookUrl?.includes('test')) {
+  if (finalConfig.environment !== 'production' &&
+      !finalConfig.webhookUrl?.includes('test') &&
+      process.env.DISCORD_NOTIFICATIONS_TESTING !== 'true') {
     console.log('🔕 Discord error alerts disabled in non-production environment');
     return { success: true };
   }

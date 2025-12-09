@@ -96,13 +96,13 @@ export const trackQuizCompleted = (params: {
 };
 
 /**
- * User Registration Events - Enhanced with Discord notifications
+ * User Registration Events - Enhanced with Discord notifications (server-side only)
  */
 export const trackUserSignup = async (params: {
   source?: string;
   referrer?: string;
   hasExistingData?: boolean;
-  email?: string; // For Discord notifications
+  email?: string; // For Discord notifications (server-side only)
 }) => {
   // Track in GA4
   trackEvent('user_signup', {
@@ -112,18 +112,22 @@ export const trackUserSignup = async (params: {
     event_category: 'user_lifecycle',
   });
 
-  // Send Discord notification for new user signup
-  try {
-    await sendUserSignupNotification({
-      email: params.email, // Email for notification context (will be spoiler-tagged)
-      source: params.source || 'direct',
-      referrer: params.referrer,
-      hasExistingData: params.hasExistingData,
-      timestamp: new Date().toISOString()
-    });
-  } catch (discordError) {
-    // Don't fail the signup process if Discord fails
-    console.warn('Failed to send Discord signup notification:', discordError);
+  // Only send Discord notification if we have server-side environment
+  // (This prevents client-side calls from failing)
+  if (typeof window === 'undefined' && params.email) {
+    // Server-side environment - send Discord notification
+    try {
+      await sendUserSignupNotification({
+        email: params.email,
+        source: params.source || 'direct',
+        referrer: params.referrer,
+        hasExistingData: params.hasExistingData,
+        timestamp: new Date().toISOString()
+      });
+    } catch (discordError) {
+      // Don't fail the signup process if Discord fails
+      console.warn('Failed to send Discord signup notification:', discordError);
+    }
   }
 };
 

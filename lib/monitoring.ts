@@ -1,7 +1,5 @@
 // Monitoring and logging utilities for KwizMe application
 
-import { sendCriticalError, sendWarningError } from './discord-alerts';
-
 export interface LogEvent {
   level: 'info' | 'warn' | 'error' | 'debug'
   message: string
@@ -237,20 +235,31 @@ export class IncidentTracker {
 
     logger.error(`Incident tracked: ${error.message}`, incident)
 
-    // In production, send to incident management and Discord
+    // In production, send Discord alert for critical errors via API route
     if (process.env.NODE_ENV === 'production') {
-      // Send Discord alert for critical errors
       try {
-        await sendCriticalError(
-          `System Error: ${context}`,
-          error,
-          {
-            context: context,
+        const errorAlertResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/notify-error`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            errorType: 'critical',
+            title: `System Error: ${context}`,
+            message: error.message,
             errorCode: metadata?.errorCode,
+            context: context,
+            stack: error.stack,
             userId: metadata?.userId,
             sessionId: metadata?.sessionId
-          }
-        );
+          })
+        })
+
+        if (errorAlertResponse.ok) {
+          logger.info('Error alert sent successfully to Discord')
+        } else {
+          logger.warn('Error alert API call failed', { status: errorAlertResponse.status })
+        }
       } catch (discordError) {
         logger.warn('Failed to send Discord incident alert', { discordError: discordError instanceof Error ? discordError.message : discordError });
       }
@@ -274,19 +283,30 @@ export class IncidentTracker {
 
     logger.warn(`Warning tracked: ${message}`, incident)
 
-    // In production, send Discord alert for warnings
+    // In production, send Discord alert for warnings via API route
     if (process.env.NODE_ENV === 'production') {
       try {
-        await sendWarningError(
-          `System Warning: ${context}`,
-          message,
-          {
-            context: context,
+        const warningAlertResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/notify-error`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            errorType: 'warning',
+            title: `System Warning: ${context}`,
+            message: message,
             errorCode: metadata?.errorCode,
+            context: context,
             userId: metadata?.userId,
             sessionId: metadata?.sessionId
-          }
-        );
+          })
+        })
+
+        if (warningAlertResponse.ok) {
+          logger.info('Warning alert sent successfully to Discord')
+        } else {
+          logger.warn('Warning alert API call failed', { status: warningAlertResponse.status })
+        }
       } catch (discordError) {
         logger.warn('Failed to send Discord warning alert', { discordError: discordError instanceof Error ? discordError.message : discordError });
       }
