@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import FileUploadZone, { OrganizationMetadata } from '@/components/FileUploadZone';
 import QuizDisplay from '@/components/QuizDisplay';
 import QuizResults from '@/components/QuizResults';
@@ -519,9 +520,16 @@ export default function Home() {
           <div className="max-w-4xl mx-auto px-4">
             {/* Header */}
             <div className="text-center mb-12 md:mb-16">
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                KwizMe
-              </h1>
+              <div className="flex justify-center mb-4">
+                <Image
+                  src="/icon-512x512.png"
+                  alt="KwizMe"
+                  width={120}
+                  height={120}
+                  className="sm:w-32 sm:h-32 md:w-40 md:h-40"
+                  priority
+                />
+              </div>
               <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300">
                 Generate practice quizzes from your learning materials using AI
               </p>

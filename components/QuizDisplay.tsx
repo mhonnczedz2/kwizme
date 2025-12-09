@@ -853,6 +853,8 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack, user
       )}
 
       {/* Keyboard Shortcuts Hint - Fixed position */}
+      {/* Hidden per user request - users will discover shortcuts naturally */}
+      {/*
       <button
         onClick={() => setShowKeyboardHelp(true)}
         className="fixed bottom-6 right-6 w-10 h-10 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700 transition-colors flex items-center justify-center text-lg font-semibold z-40"
@@ -860,6 +862,7 @@ export default function QuizDisplay({ quizData, config, onComplete, onBack, user
       >
         ?
       </button>
+      */}
     </div>
   );
 }

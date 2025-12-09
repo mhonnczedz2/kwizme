@@ -41,31 +41,46 @@ END $$;
 
 DO $$
 BEGIN
-    RAISE NOTICE '📋 Step 1/4: Deleting answer_records...';
+    RAISE NOTICE '📋 Step 1/7: Deleting answer_records...';
 END $$;
 
 TRUNCATE TABLE public.answer_records RESTART IDENTITY CASCADE;
 
 DO $$
 BEGIN
-    RAISE NOTICE '📋 Step 2/4: Deleting review_sessions...';
+    RAISE NOTICE '📋 Step 2/7: Deleting review_sessions...';
 END $$;
 
 TRUNCATE TABLE public.review_sessions RESTART IDENTITY CASCADE;
 
 DO $$
 BEGIN
-    RAISE NOTICE '📋 Step 3/4: Deleting questions...';
+    RAISE NOTICE '📋 Step 3/7: Deleting questions...';
 END $$;
 
 TRUNCATE TABLE public.questions RESTART IDENTITY CASCADE;
 
 DO $$
 BEGIN
-    RAISE NOTICE '📋 Step 4/4: Deleting quizzes and profiles...';
+    RAISE NOTICE '📋 Step 4/7: Deleting quizzes...';
 END $$;
 
 TRUNCATE TABLE public.quizzes CASCADE;
+
+DO $$
+BEGIN
+    RAISE NOTICE '📋 Step 5/7: Deleting rate limiting data (daily_usage, user_limits, quiz_usage)...';
+END $$;
+
+TRUNCATE TABLE public.daily_usage RESTART IDENTITY CASCADE;
+TRUNCATE TABLE public.user_limits RESTART IDENTITY CASCADE;
+TRUNCATE TABLE public.quiz_usage RESTART IDENTITY CASCADE;
+
+DO $$
+BEGIN
+    RAISE NOTICE '📋 Step 6/7: Deleting profiles...';
+END $$;
+
 TRUNCATE TABLE public.profiles CASCADE;
 
 -- ============================================================================
@@ -88,7 +103,7 @@ BEGIN
 
     IF user_count > 0 THEN
         RAISE NOTICE '';
-        RAISE NOTICE '👥 Deleting % user(s) from auth.users...', user_count;
+        RAISE NOTICE '👥 Step 7/7: Deleting % user(s) from auth.users...', user_count;
 
         -- Delete all users (this cascades to profiles due to ON DELETE CASCADE)
         DELETE FROM auth.users;
@@ -118,6 +133,15 @@ ALTER SEQUENCE IF EXISTS public.questions_id_seq RESTART WITH 1;
 -- Reset answer_records ID sequence
 ALTER SEQUENCE IF EXISTS public.answer_records_record_id_seq RESTART WITH 1;
 
+-- Reset daily_usage ID sequence
+ALTER SEQUENCE IF EXISTS public.daily_usage_id_seq RESTART WITH 1;
+
+-- Reset user_limits ID sequence
+ALTER SEQUENCE IF EXISTS public.user_limits_id_seq RESTART WITH 1;
+
+-- Reset quiz_usage ID sequence
+ALTER SEQUENCE IF EXISTS public.quiz_usage_id_seq RESTART WITH 1;
+
 -- ============================================================================
 -- STEP 4: Verification and Summary
 -- ============================================================================
@@ -130,6 +154,9 @@ DECLARE
     sessions_count INTEGER;
     answers_count INTEGER;
     users_count INTEGER;
+    daily_usage_count INTEGER;
+    user_limits_count INTEGER;
+    quiz_usage_count INTEGER;
 BEGIN
     RAISE NOTICE '';
     RAISE NOTICE '═══════════════════════════════════════════════════════════';
@@ -142,6 +169,9 @@ BEGIN
     SELECT COUNT(*) INTO sessions_count FROM public.review_sessions;
     SELECT COUNT(*) INTO answers_count FROM public.answer_records;
     SELECT COUNT(*) INTO users_count FROM auth.users;
+    SELECT COUNT(*) INTO daily_usage_count FROM public.daily_usage;
+    SELECT COUNT(*) INTO user_limits_count FROM public.user_limits;
+    SELECT COUNT(*) INTO quiz_usage_count FROM public.quiz_usage;
 
     RAISE NOTICE '';
     RAISE NOTICE '📋 Remaining records:';
@@ -151,10 +181,14 @@ BEGIN
     RAISE NOTICE '   • questions:         % records', questions_count;
     RAISE NOTICE '   • review_sessions:   % records', sessions_count;
     RAISE NOTICE '   • answer_records:    % records', answers_count;
+    RAISE NOTICE '   • daily_usage:       % records', daily_usage_count;
+    RAISE NOTICE '   • user_limits:       % records', user_limits_count;
+    RAISE NOTICE '   • quiz_usage:        % records', quiz_usage_count;
     RAISE NOTICE '';
 
     IF users_count = 0 AND profiles_count = 0 AND quizzes_count = 0
-       AND questions_count = 0 AND sessions_count = 0 AND answers_count = 0 THEN
+       AND questions_count = 0 AND sessions_count = 0 AND answers_count = 0
+       AND daily_usage_count = 0 AND user_limits_count = 0 AND quiz_usage_count = 0 THEN
         RAISE NOTICE '✅ SUCCESS! All data has been cleared!';
         RAISE NOTICE '';
         RAISE NOTICE '🎯 What is preserved:';

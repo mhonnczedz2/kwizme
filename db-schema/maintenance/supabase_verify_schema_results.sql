@@ -25,114 +25,162 @@ WITH verification_checks AS (
     SELECT '1. Tables', 'answer_records',
         CASE WHEN EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'answer_records')
             THEN '✅ EXISTS' ELSE '❌ MISSING' END, 5
+    UNION ALL
+    SELECT '1. Tables', 'daily_usage',
+        CASE WHEN EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'daily_usage')
+            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 6
+    UNION ALL
+    SELECT '1. Tables', 'user_limits',
+        CASE WHEN EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'user_limits')
+            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 7
+    UNION ALL
+    SELECT '1. Tables', 'quiz_usage',
+        CASE WHEN EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'quiz_usage')
+            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 8
 
     -- Column checks
     UNION ALL
     SELECT '2. Columns', 'profiles.institution',
         CASE WHEN EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'institution')
-            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 6
+            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 9
     UNION ALL
     SELECT '2. Columns', 'profiles.program',
         CASE WHEN EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'program')
-            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 7
+            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 10
     UNION ALL
     SELECT '2. Columns', 'quizzes.quiz_id (TEXT type)',
         CASE WHEN (SELECT data_type FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'quizzes' AND column_name = 'quiz_id') = 'text'
-            THEN '✅ CORRECT TYPE' ELSE '❌ WRONG TYPE' END, 8
+            THEN '✅ CORRECT TYPE' ELSE '❌ WRONG TYPE' END, 11
     UNION ALL
     SELECT '2. Columns', 'quizzes.institution',
         CASE WHEN EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'quizzes' AND column_name = 'institution')
-            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 9
+            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 12
     UNION ALL
     SELECT '2. Columns', 'quizzes.program',
         CASE WHEN EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'quizzes' AND column_name = 'program')
-            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 10
+            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 13
     UNION ALL
     SELECT '2. Columns', 'quizzes.course',
         CASE WHEN EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'quizzes' AND column_name = 'course')
-            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 11
+            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 14
 
     -- RLS checks
     UNION ALL
     SELECT '3. Row Level Security', 'profiles',
         CASE WHEN EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'profiles' AND rowsecurity = true)
-            THEN '✅ ENABLED' ELSE '❌ DISABLED' END, 12
+            THEN '✅ ENABLED' ELSE '❌ DISABLED' END, 15
     UNION ALL
     SELECT '3. Row Level Security', 'quizzes',
         CASE WHEN EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'quizzes' AND rowsecurity = true)
-            THEN '✅ ENABLED' ELSE '❌ DISABLED' END, 13
+            THEN '✅ ENABLED' ELSE '❌ DISABLED' END, 16
     UNION ALL
     SELECT '3. Row Level Security', 'questions',
         CASE WHEN EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'questions' AND rowsecurity = true)
-            THEN '✅ ENABLED' ELSE '❌ DISABLED' END, 14
+            THEN '✅ ENABLED' ELSE '❌ DISABLED' END, 17
     UNION ALL
     SELECT '3. Row Level Security', 'review_sessions',
         CASE WHEN EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'review_sessions' AND rowsecurity = true)
-            THEN '✅ ENABLED' ELSE '❌ DISABLED' END, 15
+            THEN '✅ ENABLED' ELSE '❌ DISABLED' END, 18
     UNION ALL
     SELECT '3. Row Level Security', 'answer_records',
         CASE WHEN EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'answer_records' AND rowsecurity = true)
-            THEN '✅ ENABLED' ELSE '❌ DISABLED' END, 16
+            THEN '✅ ENABLED' ELSE '❌ DISABLED' END, 19
+    UNION ALL
+    SELECT '3. Row Level Security', 'daily_usage',
+        CASE WHEN EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'daily_usage' AND rowsecurity = true)
+            THEN '✅ ENABLED' ELSE '❌ DISABLED' END, 20
+    UNION ALL
+    SELECT '3. Row Level Security', 'user_limits',
+        CASE WHEN EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'user_limits' AND rowsecurity = true)
+            THEN '✅ ENABLED' ELSE '❌ DISABLED' END, 21
+    UNION ALL
+    SELECT '3. Row Level Security', 'quiz_usage',
+        CASE WHEN EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'quiz_usage' AND rowsecurity = true)
+            THEN '✅ ENABLED' ELSE '❌ DISABLED' END, 22
 
     -- Index checks
     UNION ALL
     SELECT '4. Indexes', 'idx_quizzes_user_id',
         CASE WHEN EXISTS (SELECT 1 FROM pg_indexes WHERE schemaname = 'public' AND indexname = 'idx_quizzes_user_id')
-            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 17
+            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 23
     UNION ALL
     SELECT '4. Indexes', 'idx_questions_quiz_id',
         CASE WHEN EXISTS (SELECT 1 FROM pg_indexes WHERE schemaname = 'public' AND indexname = 'idx_questions_quiz_id')
-            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 18
+            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 24
     UNION ALL
     SELECT '4. Indexes', 'idx_review_sessions_user_id',
         CASE WHEN EXISTS (SELECT 1 FROM pg_indexes WHERE schemaname = 'public' AND indexname = 'idx_review_sessions_user_id')
-            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 19
+            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 25
     UNION ALL
     SELECT '4. Indexes', 'idx_answer_records_session_id',
         CASE WHEN EXISTS (SELECT 1 FROM pg_indexes WHERE schemaname = 'public' AND indexname = 'idx_answer_records_session_id')
-            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 20
+            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 26
 
     -- Function checks
     UNION ALL
     SELECT '5. Functions', 'handle_new_user()',
         CASE WHEN EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'handle_new_user')
-            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 21
+            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 27
     UNION ALL
     SELECT '5. Functions', 'update_updated_at_column()',
         CASE WHEN EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_updated_at_column')
-            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 22
+            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 28
+    UNION ALL
+    SELECT '5. Functions', 'can_generate_quiz()',
+        CASE WHEN EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'can_generate_quiz')
+            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 29
+    UNION ALL
+    SELECT '5. Functions', 'increment_quiz_count()',
+        CASE WHEN EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'increment_quiz_count')
+            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 30
+    UNION ALL
+    SELECT '5. Functions', 'get_user_daily_limit()',
+        CASE WHEN EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'get_user_daily_limit')
+            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 31
 
     -- Trigger checks
     UNION ALL
     SELECT '6. Triggers', 'on_auth_user_created',
         CASE WHEN EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'on_auth_user_created')
-            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 23
+            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 32
     UNION ALL
     SELECT '6. Triggers', 'update_profiles_updated_at',
         CASE WHEN EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_profiles_updated_at')
-            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 24
+            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 33
     UNION ALL
     SELECT '6. Triggers', 'update_quizzes_updated_at',
         CASE WHEN EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_quizzes_updated_at')
-            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 25
+            THEN '✅ EXISTS' ELSE '❌ MISSING' END, 34
 
     -- Realtime checks
     UNION ALL
     SELECT '7. Realtime', 'quizzes',
         CASE WHEN EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'quizzes')
-            THEN '✅ ENABLED' ELSE '⚠️ DISABLED' END, 26
+            THEN '✅ ENABLED' ELSE '⚠️ DISABLED' END, 35
     UNION ALL
     SELECT '7. Realtime', 'questions',
         CASE WHEN EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'questions')
-            THEN '✅ ENABLED' ELSE '⚠️ DISABLED' END, 27
+            THEN '✅ ENABLED' ELSE '⚠️ DISABLED' END, 36
     UNION ALL
     SELECT '7. Realtime', 'review_sessions',
         CASE WHEN EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'review_sessions')
-            THEN '✅ ENABLED' ELSE '⚠️ DISABLED' END, 28
+            THEN '✅ ENABLED' ELSE '⚠️ DISABLED' END, 37
     UNION ALL
     SELECT '7. Realtime', 'answer_records',
         CASE WHEN EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'answer_records')
-            THEN '✅ ENABLED' ELSE '⚠️ DISABLED' END, 29
+            THEN '✅ ENABLED' ELSE '⚠️ DISABLED' END, 38
+    UNION ALL
+    SELECT '7. Realtime', 'daily_usage',
+        CASE WHEN EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'daily_usage')
+            THEN '✅ ENABLED' ELSE '⚠️ DISABLED' END, 39
+    UNION ALL
+    SELECT '7. Realtime', 'user_limits',
+        CASE WHEN EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'user_limits')
+            THEN '✅ ENABLED' ELSE '⚠️ DISABLED' END, 40
+    UNION ALL
+    SELECT '7. Realtime', 'quiz_usage',
+        CASE WHEN EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'quiz_usage')
+            THEN '✅ ENABLED' ELSE '⚠️ DISABLED' END, 41
 )
 SELECT
     category,

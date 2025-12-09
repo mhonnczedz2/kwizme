@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import ThemeToggle from '@/components/ThemeToggle'
 
 interface TopBannerProps {
@@ -48,12 +49,19 @@ export default function TopBanner({ onMenuClick, onInfoClick, onHome, isHomePage
           </button>
         </div>
 
-        {/* Center: KwizMe Title */}
+        {/* Center: KwizMe Logo */}
         <button
           onClick={handleKwizMeClick}
-          className="text-lg lg:text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent text-center cursor-pointer hover:opacity-80 transition-opacity"
+          className="flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
         >
-          KwizMe
+          <Image
+            src="/icon-192x192.png"
+            alt="KwizMe"
+            width={32}
+            height={32}
+            className="lg:w-10 lg:h-10"
+            priority
+          />
         </button>
 
         {/* Right: Theme Toggle + Info Button */}

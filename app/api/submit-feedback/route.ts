@@ -55,11 +55,6 @@ export async function POST(request: NextRequest) {
             inline: true
           },
           {
-            name: '\u200B',
-            value: '\u200B',
-            inline: true
-          },
-          {
             name: '📂 Type',
             value: typeDisplay,
             inline: true
@@ -67,11 +62,6 @@ export async function POST(request: NextRequest) {
           {
             name: '👤 Name',
             value: name || 'Anonymous',
-            inline: true
-          },
-          {
-            name: '\u200B',
-            value: '\u200B',
             inline: true
           },
           {

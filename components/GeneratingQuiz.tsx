@@ -363,7 +363,7 @@ export default function GeneratingQuiz({ error, onRetry, onReportIssue }: Genera
         {/* Helpful Tip */}
         <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
           <p className="text-xs text-gray-600 text-center">
-            💡 This can take up to 60 seconds. Hang tight!
+            💡 This can take up to 3 minutes. Hang tight!
           </p>
         </div>
       </div>
