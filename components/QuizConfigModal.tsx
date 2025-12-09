@@ -52,7 +52,6 @@ export default function QuizConfigModal({ totalQuestions, onStart, onCancel }: Q
     num_questions_selected: totalQuestions,
     preset_name: 'custom'
   });
-  const [numQuestionsError, setNumQuestionsError] = useState<string>('');
 
   // Load last selection from localStorage
   useEffect(() => {
@@ -61,10 +60,13 @@ export default function QuizConfigModal({ totalQuestions, onStart, onCancel }: Q
       const parsed = JSON.parse(saved);
       setSelectedPreset(parsed.preset_name);
       if (parsed.preset_name === 'custom') {
-        setCustomConfig(parsed);
+        setCustomConfig({
+          ...parsed,
+          num_questions_selected: totalQuestions // Always use all questions
+        });
       }
     }
-  }, []);
+  }, [totalQuestions]);
 
   const handlePresetClick = (preset: 'learn' | 'test' | 'fast_learn' | 'custom') => {
     setSelectedPreset(preset);
@@ -74,7 +76,10 @@ export default function QuizConfigModal({ totalQuestions, onStart, onCancel }: Q
     let config: SessionConfig;
 
     if (selectedPreset === 'custom') {
-      config = customConfig;
+      config = {
+        ...customConfig,
+        num_questions_selected: totalQuestions // Always use all questions in custom mode
+      };
     } else {
       config = {
         ...PRESETS[selectedPreset],
@@ -256,55 +261,6 @@ export default function QuizConfigModal({ totalQuestions, onStart, onCancel }: Q
                     }`}
                   />
                 </button>
-              </div>
-
-              {/* Number of Questions */}
-              <div className="p-3 bg-gray-100 dark:bg-gray-900 rounded-lg">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Number of Questions
-                </label>
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  value={customConfig.num_questions_selected}
-                  onChange={(e) => {
-                    const value = e.target.value;
-
-                    // Update the value regardless of what they type
-                    setCustomConfig({ ...customConfig, num_questions_selected: value as any });
-
-                    // Clear error if empty
-                    if (value === '') {
-                      setNumQuestionsError('');
-                      return;
-                    }
-
-                    // Check if it's a valid integer (no decimals, no letters mixed in)
-                    if (!/^\d+$/.test(value)) {
-                      setNumQuestionsError('Please enter a valid number');
-                      return;
-                    }
-
-                    // Validate range
-                    const numValue = parseInt(value);
-                    if (numValue < 1) {
-                      setNumQuestionsError('Number must be at least 1');
-                    } else if (numValue > totalQuestions) {
-                      setNumQuestionsError(`Number must be at most ${totalQuestions}`);
-                    } else {
-                      setNumQuestionsError('');
-                    }
-                  }}
-                  className={`w-full px-4 py-3 md:px-3 md:py-2 border rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-base ${
-                    numQuestionsError ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                  }`}
-                />
-                {numQuestionsError && (
-                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">{numQuestionsError}</p>
-                )}
-                {!numQuestionsError && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Maximum: {totalQuestions} questions</p>
-                )}
               </div>
             </div>
           )}

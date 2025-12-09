@@ -154,7 +154,8 @@ Keep it concise (2-4 sentences max).`;
 function buildPrompt(
   numQuestions: number,
   difficulty: string,
-  enhancedDescription?: string
+  enhancedDescription?: string,
+  fileName?: string
 ): string {
   const difficultyInstructions = {
     easy: 'Focus on recall and basic comprehension: simple definitions, key facts, direct information from the text.',
@@ -169,9 +170,14 @@ function buildPrompt(
     ? `\n\nCONTENT CONTEXT:\n${enhancedDescription}\n\nUse this context to guide your question generation - align questions with the content type and focus areas described above.\n`
     : '';
 
+  // Add filename reference if provided
+  const fileNameSection = fileName
+    ? `\n\nSOURCE DOCUMENT: ${fileName}\nWhen creating citations, reference this filename specifically.\n`
+    : '';
+
   return `You are an expert educator creating multiple choice questions for students.
-Generate ${numQuestions} multiple choice questions from the provided document.
-${contextSection}
+Generate ${numQuestions} multiple choice questions from the provided document${fileName ? ` ("${fileName}")` : ''}.
+${contextSection}${fileNameSection}
 ${instruction}
 
 Each question must have:
@@ -188,8 +194,9 @@ IMPORTANT RULES TO FOLLOW:
 - DO NOT prefix answers with letters like "A.", "B.", "C.", "D." - use plain text only
 - The correct_answer must exactly match one of the options (case-sensitive)
 - In the questions, DO NOT use phrases as "in the document", be specific with questions as if no external document is need to answer the question
-- In the citation, mention the name of the file
+- In the citation, always include the source filename${fileName ? ` ("${fileName}")` : ''}
 - When too much questions is asked, feel free to repeat or reword questions that are already asked
+- STRICTLY follow the number of questions asked to generate. If asked for a specific number of questions, generate that number of questions only.
 - DO NOT attempt to put questions outside of the material given
 - Ensure that the target number of questions is achieved. No more, no less.
 
@@ -201,7 +208,7 @@ Expected JSON format:
       "options": ["Paris", "London", "Berlin", "Madrid"],
       "correct_answer": "Paris",
       "explanation": "Paris is the capital and largest city of France.",
-      "citation": "Filename.pdf: page 1, paragraph 3",
+      "citation": "${fileName || 'source-file'}: page 1, paragraph 3",
       "hint": "Think about the most famous city in France.",
       "difficulty": "easy"
     }
@@ -242,7 +249,7 @@ export async function generateQuizWithGemini(
 
     console.log('📤 Uploaded file to Gemini for quiz generation:', uploadResult.file.uri);
 
-    const prompt = buildPrompt(numQuestions, difficulty, enhancedDescription);
+    const prompt = buildPrompt(numQuestions, difficulty, enhancedDescription, file.name);
 
     // Generate content using the SDK with file reference
     const result = await model.generateContent({
@@ -260,7 +267,7 @@ export async function generateQuizWithGemini(
       }],
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 30000,  // Significantly increased to prevent truncation
+        maxOutputTokens: 60000,  // Significantly increased to prevent truncation
         responseMimeType: 'application/json',
       }
     });
