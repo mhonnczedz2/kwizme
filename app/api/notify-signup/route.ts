@@ -6,9 +6,15 @@ export const maxDuration = 30; // 30 seconds max
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, name, institution } = body;
+    const { email, name, institution, program, source } = body;
 
-    console.log('🎉 Processing signup notification:', { hasEmail: !!email, hasName: !!name, hasInstitution: !!institution });
+    console.log('🎉 Processing signup notification:', {
+      hasEmail: !!email,
+      hasName: !!name,
+      hasInstitution: !!institution,
+      hasProgram: !!program,
+      source: source || 'unknown'
+    });
 
     // Prepare Discord webhook payload with rich embed (copying feedback pattern)
     const discordPayload = {
@@ -17,13 +23,15 @@ export async function POST(request: NextRequest) {
         color: 0x10b981, // Green color
         fields: [
           {
-            name: '👤 User Type',
-            value: email ? 'Registered User' : 'Anonymous',
+            name: '📧 Email',
+            value: email ? `||${email}||` : 'Anonymous', // Spoiler tags for privacy
             inline: true
           },
           {
-            name: '📧 Email',
-            value: email ? `||${email}||` : 'Anonymous', // Spoiler tags for privacy
+            name: '📝 Source',
+            value: source === 'signup_form' ? 'Direct Signup' :
+                   source === 'email_confirmation' ? 'Email Confirmation' :
+                   source || 'Unknown',
             inline: true
           },
           ...(name ? [{
@@ -34,6 +42,11 @@ export async function POST(request: NextRequest) {
           ...(institution ? [{
             name: '🏫 Institution',
             value: institution,
+            inline: true
+          }] : []),
+          ...(program ? [{
+            name: '🎓 Program',
+            value: program,
             inline: true
           }] : [])
         ],

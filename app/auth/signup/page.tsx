@@ -128,13 +128,42 @@ export default function SignupPage() {
         // New user signup successful - show email confirmation screen
         setSuccess(true)
 
-        // Track successful user signup (analytics only - Discord notification happens server-side)
+        // Track successful user signup (analytics only)
         await trackUserSignup({
           source: 'direct',
           referrer: document.referrer,
           hasExistingData: false // New signups don't have existing data
-          // Note: Discord notification moved to server-side auth callback
         });
+
+        // Send Discord notification immediately after signup (before email verification)
+        try {
+          console.log('🎉 Sending Discord notification for new signup...')
+          const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || window.location.origin).replace(/\/$/, '')
+
+          const notificationResponse = await fetch(`${siteUrl}/api/notify-signup`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: email,
+              name: fullName,
+              institution: institution || null,
+              program: program || null,
+              source: 'signup_form',
+              referrer: document.referrer || undefined
+            })
+          })
+
+          if (notificationResponse.ok) {
+            console.log('✅ Signup notification sent successfully')
+          } else {
+            console.warn('⚠️ Signup notification failed:', notificationResponse.status)
+          }
+        } catch (notificationError) {
+          // Don't fail signup flow if Discord notification fails
+          console.warn('⚠️ Failed to send signup notification:', notificationError)
+        }
       } else {
         // This shouldn't happen, but handle it gracefully
         throw new Error('Signup succeeded but no user data returned')

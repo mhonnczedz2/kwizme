@@ -50,14 +50,14 @@ function createErrorResponse(
 }
 
 export async function POST(request: NextRequest) {
+  // Get user ID from session if available (declare at function level for scope access)
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id;
+
   try {
     // Step 1: Check rate limiting first (before processing file)
     console.log('🔒 Checking quiz generation limits...');
-
-    // Get user ID from session if available
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id;
 
     // Get client IP address for rate limiting anonymous users
     const clientIP =
