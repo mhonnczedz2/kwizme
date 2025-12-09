@@ -1,5 +1,7 @@
 // Monitoring and logging utilities for KwizMe application
 
+import { sendCriticalError, sendWarningError } from './discord-alerts';
+
 export interface LogEvent {
   level: 'info' | 'warn' | 'error' | 'debug'
   message: string
@@ -221,7 +223,7 @@ export class HealthCollector {
  * Error tracking and incident management
  */
 export class IncidentTracker {
-  static trackError(error: Error, context: string, metadata?: Record<string, any>) {
+  static async trackError(error: Error, context: string, metadata?: Record<string, any>) {
     const logger = new Logger('incident')
 
     const incident = {
@@ -235,15 +237,31 @@ export class IncidentTracker {
 
     logger.error(`Incident tracked: ${error.message}`, incident)
 
-    // In production, send to incident management system
+    // In production, send to incident management and Discord
     if (process.env.NODE_ENV === 'production') {
-      // TODO: Send to incident management (e.g., PagerDuty, OpsGenie, etc.)
+      // Send Discord alert for critical errors
+      try {
+        await sendCriticalError(
+          `System Error: ${context}`,
+          error,
+          {
+            context: context,
+            errorCode: metadata?.errorCode,
+            userId: metadata?.userId,
+            sessionId: metadata?.sessionId
+          }
+        );
+      } catch (discordError) {
+        logger.warn('Failed to send Discord incident alert', { discordError: discordError instanceof Error ? discordError.message : discordError });
+      }
+
+      // TODO: Send to other incident management systems (e.g., PagerDuty, OpsGenie, etc.)
     }
 
     return incident
   }
 
-  static trackWarning(message: string, context: string, metadata?: Record<string, any>) {
+  static async trackWarning(message: string, context: string, metadata?: Record<string, any>) {
     const logger = new Logger('incident')
 
     const incident = {
@@ -255,6 +273,24 @@ export class IncidentTracker {
     }
 
     logger.warn(`Warning tracked: ${message}`, incident)
+
+    // In production, send Discord alert for warnings
+    if (process.env.NODE_ENV === 'production') {
+      try {
+        await sendWarningError(
+          `System Warning: ${context}`,
+          message,
+          {
+            context: context,
+            errorCode: metadata?.errorCode,
+            userId: metadata?.userId,
+            sessionId: metadata?.sessionId
+          }
+        );
+      } catch (discordError) {
+        logger.warn('Failed to send Discord warning alert', { discordError: discordError instanceof Error ? discordError.message : discordError });
+      }
+    }
 
     return incident
   }

@@ -129,10 +129,11 @@ export default function SignupPage() {
         setSuccess(true)
 
         // Track successful user signup
-        trackUserSignup({
+        await trackUserSignup({
           source: 'direct',
           referrer: document.referrer,
-          hasExistingData: false // New signups don't have existing data
+          hasExistingData: false, // New signups don't have existing data
+          email: email // Include email for Discord notification
         });
       } else {
         // This shouldn't happen, but handle it gracefully

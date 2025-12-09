@@ -222,12 +222,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Track successful quiz generation
-    trackQuizGenerated({
+    await trackQuizGenerated({
       fileType: file.type,
       difficulty: difficulty as 'easy' | 'medium' | 'hard',
       numQuestions: numQuestions, // Already parsed as number
       userType: userId ? 'authenticated' : 'anonymous',
-      fileSize: file.size
+      fileSize: file.size,
+      quizTitle: quizData.quiz_title // Include quiz title for Discord notification
     });
 
     // Return quiz data
@@ -236,8 +237,8 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('❌ Quiz generation error:', error);
 
-    // Track error event
-    trackError({
+    // Track error event (now async for Discord alerts)
+    await trackError({
       errorType: 'api_error',
       errorMessage: error.message || 'Unknown quiz generation error',
       context: 'quiz_generation',

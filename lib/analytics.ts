@@ -1,9 +1,11 @@
 /**
  * Analytics utility functions for KwizMe
- * Provides type-safe event tracking for Google Analytics 4 and Sentry error monitoring
+ * Provides type-safe event tracking for Google Analytics 4, Sentry error monitoring, and Discord alerts
  */
 
 import * as Sentry from '@sentry/nextjs';
+import { sendDiscordErrorAlert } from './discord-alerts';
+import { sendUserSignupNotification, sendQuizGenerationNotification } from './discord-notifications';
 
 // Extend the Window interface to include gtag
 declare global {
@@ -31,16 +33,18 @@ export const trackEvent = (eventName: string, parameters?: Record<string, any>) 
 };
 
 /**
- * Quiz Generation Events
+ * Quiz Generation Events - Enhanced with Discord notifications
  */
-export const trackQuizGenerated = (params: {
+export const trackQuizGenerated = async (params: {
   fileType: string;
   difficulty: 'easy' | 'medium' | 'hard';
   numQuestions: number;
   userType: 'anonymous' | 'authenticated';
   pageCount?: number;
   fileSize?: number;
+  quizTitle?: string; // For Discord notifications
 }) => {
+  // Track in GA4
   trackEvent('quiz_generated', {
     file_type: params.fileType,
     difficulty: params.difficulty,
@@ -50,6 +54,22 @@ export const trackQuizGenerated = (params: {
     file_size_mb: params.fileSize ? Math.round(params.fileSize / (1024 * 1024) * 100) / 100 : undefined,
     event_category: 'quiz_generation',
   });
+
+  // Send Discord notification for successful quiz generation
+  try {
+    await sendQuizGenerationNotification({
+      fileType: params.fileType,
+      difficulty: params.difficulty,
+      numQuestions: params.numQuestions,
+      userType: params.userType,
+      fileSize: params.fileSize,
+      quizTitle: params.quizTitle,
+      timestamp: new Date().toISOString()
+    });
+  } catch (discordError) {
+    // Don't fail the quiz generation process if Discord fails
+    console.warn('Failed to send Discord quiz generation notification:', discordError);
+  }
 };
 
 /**
@@ -76,19 +96,35 @@ export const trackQuizCompleted = (params: {
 };
 
 /**
- * User Registration Events
+ * User Registration Events - Enhanced with Discord notifications
  */
-export const trackUserSignup = (params: {
+export const trackUserSignup = async (params: {
   source?: string;
   referrer?: string;
   hasExistingData?: boolean;
+  email?: string; // For Discord notifications
 }) => {
+  // Track in GA4
   trackEvent('user_signup', {
     source: params.source || 'direct',
     referrer: params.referrer,
     has_existing_data: params.hasExistingData,
     event_category: 'user_lifecycle',
   });
+
+  // Send Discord notification for new user signup
+  try {
+    await sendUserSignupNotification({
+      email: params.email, // Email for notification context (will be spoiler-tagged)
+      source: params.source || 'direct',
+      referrer: params.referrer,
+      hasExistingData: params.hasExistingData,
+      timestamp: new Date().toISOString()
+    });
+  } catch (discordError) {
+    // Don't fail the signup process if Discord fails
+    console.warn('Failed to send Discord signup notification:', discordError);
+  }
 };
 
 /**
@@ -215,14 +251,18 @@ export const trackPageView = (pageName: string, additionalParams?: Record<string
 };
 
 /**
- * Error Events - Enhanced with Sentry integration
+ * Error Events - Enhanced with Sentry integration and Discord alerts
  */
-export const trackError = (params: {
+export const trackError = async (params: {
   errorType: 'api_error' | 'client_error' | 'network_error' | 'validation_error';
   errorMessage: string;
   errorCode?: string | number;
   context?: string;
   error?: Error; // Actual error object for Sentry
+  userId?: string; // For Discord context
+  sessionId?: string; // For Discord context
+  url?: string; // For Discord context
+  userAgent?: string; // For Discord context
 }) => {
   // Track in GA4
   trackEvent('error_occurred', {
@@ -250,5 +290,54 @@ export const trackError = (params: {
         Sentry.captureMessage(params.errorMessage, 'error');
       }
     });
+  }
+
+  // Send Discord alerts for critical errors
+  // Determine severity based on error type
+  let shouldAlert = false;
+  let alertType: 'critical' | 'warning' | 'info' = 'info';
+
+  switch (params.errorType) {
+    case 'api_error':
+      // API errors are critical as they affect core functionality
+      shouldAlert = true;
+      alertType = 'critical';
+      break;
+    case 'network_error':
+      // Network errors might indicate service issues
+      shouldAlert = true;
+      alertType = 'warning';
+      break;
+    case 'client_error':
+      // Client errors are warnings (could be browser/user environment issues)
+      shouldAlert = true;
+      alertType = 'warning';
+      break;
+    case 'validation_error':
+      // Validation errors are typically user input issues, don't alert
+      shouldAlert = false;
+      break;
+  }
+
+  // Send Discord alert if appropriate
+  if (shouldAlert) {
+    try {
+      await sendDiscordErrorAlert({
+        errorType: alertType,
+        title: `${params.errorType.toUpperCase()}: ${params.context || 'Unknown Context'}`,
+        message: params.errorMessage,
+        errorCode: params.errorCode?.toString(),
+        userId: params.userId,
+        sessionId: params.sessionId,
+        context: params.context,
+        stack: params.error?.stack,
+        userAgent: params.userAgent,
+        url: params.url,
+        timestamp: new Date().toISOString()
+      });
+    } catch (discordError) {
+      // Don't fail the original error handling if Discord fails
+      console.warn('Failed to send Discord error alert:', discordError);
+    }
   }
 };
