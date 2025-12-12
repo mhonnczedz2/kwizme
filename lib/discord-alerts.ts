@@ -3,6 +3,23 @@
  * Sends critical application errors to Discord for immediate notification
  */
 
+/**
+ * Format timestamp in Singapore timezone
+ */
+function formatSingaporeTime(timestamp?: string): string {
+  const date = timestamp ? new Date(timestamp) : new Date();
+  return date.toLocaleString('en-US', {
+    timeZone: 'Asia/Singapore',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
+}
+
 export interface ErrorAlert {
   errorType: 'critical' | 'warning' | 'info';
   title: string;
@@ -149,11 +166,6 @@ function createErrorEmbed(alert: ErrorAlert, config: DiscordAlertConfig) {
     });
   }
 
-  fields.push({
-    name: '🌍 Environment',
-    value: config.environment,
-    inline: true
-  });
 
   // User context if available
   if (alert.userId || alert.sessionId) {
@@ -213,7 +225,7 @@ function createErrorEmbed(alert: ErrorAlert, config: DiscordAlertConfig) {
     color: embedColor,
     fields,
     footer: {
-      text: `${alert.timestamp || new Date().toISOString()} | KwizMe Error Monitoring`
+      text: `Singapore timezone | KwizMe Error Monitoring`
     },
     timestamp: alert.timestamp || new Date().toISOString()
   };

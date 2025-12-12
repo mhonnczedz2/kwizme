@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { sendFeedbackNotification } from '../../../lib/discord-notifications';
 
 // Set runtime timeout to prevent hanging requests
 export const maxDuration = 30; // 30 seconds max
@@ -31,103 +32,26 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Prepare Discord webhook payload with rich embed
-    const embedColor = feedbackType === 'bug' ? 0xff8000 : // Orange for Bug Report
-                      feedbackType === 'feature' ? 0x4285f4 : // Blue for Feature Request
-                      0x10b981; // Green for General Feedback
+    // Send notification using centralized Discord service
+    console.log('🔄 Sending feedback to Discord...');
 
-    const starEmojis = '★'.repeat(parseInt(rating));
+    const feedbackResult = await sendFeedbackNotification({
+      rating: parseInt(rating),
+      type: feedbackType as 'bug' | 'feature' | 'general',
+      name: name || undefined,
+      email: email || undefined,
+      feedback,
+      timestamp: new Date().toISOString()
+    });
 
-    // Format type display
-    const typeDisplay = feedbackType === 'bug' ? 'Bug Report' :
-                       feedbackType === 'feature' ? 'Feature Request' :
-                       feedbackType === 'general' ? 'General Feedback' :
-                       'General Feedback'; // fallback
-
-    const discordPayload = {
-      embeds: [{
-        title: `🎯 New KwizMe Feedback`,
-        color: embedColor,
-        fields: [
-          {
-            name: '⭐ Rating',
-            value: starEmojis,
-            inline: true
-          },
-          {
-            name: '📂 Type',
-            value: typeDisplay,
-            inline: true
-          },
-          {
-            name: '👤 Name',
-            value: name || 'Anonymous',
-            inline: true
-          },
-          {
-            name: '📧 Email',
-            value: email || 'Anonymous',
-            inline: true
-          },
-          {
-            name: '💬 Feedback',
-            value: `\`\`\`\n${feedback.substring(0, 1000)}${feedback.length > 1000 ? '\n...' : ''}\n\`\`\``,
-            inline: false
-          }
-        ],
-        footer: {
-          text: `Submitted ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Singapore' })} | KwizMe Feedback System`
-        }
-      }]
-    };
-
-    // Add timeout to the Discord webhook request
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-
-    try {
-      console.log('🔄 Sending feedback to Discord...');
-
-      if (!process.env.DISCORD_WEBHOOK_URL) {
-        throw new Error('DISCORD_WEBHOOK_URL not configured');
-      }
-
-      const response = await fetch(process.env.DISCORD_WEBHOOK_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(discordPayload),
-        signal: controller.signal,
+    if (feedbackResult.success) {
+      console.log('✅ Feedback sent successfully to Discord');
+      return NextResponse.json({
+        success: true,
+        message: 'Thank you for your feedback! We appreciate you helping us improve KwizMe.'
       });
-
-      console.log('✅ Discord webhook request completed with status:', response.status);
-
-      clearTimeout(timeoutId);
-
-      if (response.ok) {
-        console.log('✅ Feedback sent successfully to Discord');
-        return NextResponse.json({
-          success: true,
-          message: 'Thank you for your feedback! We appreciate you helping us improve KwizMe.'
-        });
-      } else {
-        const errorText = await response.text();
-        console.error('❌ Discord webhook error:', response.status, errorText);
-
-        // Try database fallback if Discord fails
-        return await handleFallback(feedback, rating, email, feedbackType);
-      }
-
-    } catch (fetchError) {
-      clearTimeout(timeoutId);
-
-      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
-        console.error('⏰ Discord webhook request timed out');
-      } else {
-        console.error('❌ Discord webhook failed:', fetchError);
-      }
-
+    } else {
+      console.error('❌ Discord feedback notification failed:', feedbackResult.error);
       // Try database fallback if Discord fails
       return await handleFallback(feedback, rating, email, feedbackType);
     }
