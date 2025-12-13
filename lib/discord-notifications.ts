@@ -52,7 +52,6 @@ export interface FeedbackNotification {
 
 export interface DiscordNotificationConfig {
   webhookUrl?: string;
-  environment: string;
   rateLimitMs: number;
 }
 
@@ -68,19 +67,10 @@ export async function sendUserSignupNotification(
 ): Promise<{ success: boolean; error?: string }> {
   const defaultConfig: DiscordNotificationConfig = {
     webhookUrl: process.env.DISCORD_NOTIFICATIONS_WEBHOOK_URL,
-    environment: process.env.NODE_ENV || 'development',
     rateLimitMs: 30000, // 30 seconds rate limiting
   };
 
   const finalConfig = { ...defaultConfig, ...config };
-
-  // Only send notifications in production unless explicitly overridden
-  if (finalConfig.environment !== 'production' &&
-      !finalConfig.webhookUrl?.includes('test') &&
-      process.env.DISCORD_NOTIFICATIONS_TESTING !== 'true') {
-    console.log('🔕 Discord signup notifications disabled in non-production environment');
-    return { success: true };
-  }
 
   if (!finalConfig.webhookUrl) {
     console.warn('⚠️ DISCORD_NOTIFICATIONS_WEBHOOK_URL not configured - skipping signup notification');
@@ -156,19 +146,10 @@ export async function sendQuizGenerationNotification(
 ): Promise<{ success: boolean; error?: string }> {
   const defaultConfig: DiscordNotificationConfig = {
     webhookUrl: process.env.DISCORD_NOTIFICATIONS_WEBHOOK_URL,
-    environment: process.env.NODE_ENV || 'development',
     rateLimitMs: 10000, // 10 seconds rate limiting
   };
 
   const finalConfig = { ...defaultConfig, ...config };
-
-  // Only send notifications in production unless explicitly overridden
-  if (finalConfig.environment !== 'production' &&
-      !finalConfig.webhookUrl?.includes('test') &&
-      process.env.DISCORD_NOTIFICATIONS_TESTING !== 'true') {
-    console.log('🔕 Discord quiz notifications disabled in non-production environment');
-    return { success: true };
-  }
 
   if (!finalConfig.webhookUrl) {
     console.warn('⚠️ DISCORD_NOTIFICATIONS_WEBHOOK_URL not configured - skipping quiz notification');
@@ -337,19 +318,10 @@ export async function sendFeedbackNotification(
 ): Promise<{ success: boolean; error?: string }> {
   const defaultConfig: DiscordNotificationConfig = {
     webhookUrl: process.env.DISCORD_WEBHOOK_URL, // Use the original feedback webhook URL
-    environment: process.env.NODE_ENV || 'development',
     rateLimitMs: 30000, // 30 seconds rate limiting
   };
 
   const finalConfig = { ...defaultConfig, ...config };
-
-  // Only send notifications in production unless explicitly overridden
-  if (finalConfig.environment !== 'production' &&
-      !finalConfig.webhookUrl?.includes('test') &&
-      process.env.DISCORD_NOTIFICATIONS_TESTING !== 'true') {
-    console.log('🔕 Discord feedback notifications disabled in non-production environment');
-    return { success: true };
-  }
 
   if (!finalConfig.webhookUrl) {
     console.warn('⚠️ DISCORD_WEBHOOK_URL not configured - skipping feedback notification');

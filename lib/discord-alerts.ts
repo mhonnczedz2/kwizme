@@ -36,7 +36,6 @@ export interface ErrorAlert {
 
 export interface DiscordAlertConfig {
   webhookUrl?: string;
-  environment: string;
   rateLimitMs: number;
   maxStackLines: number;
 }
@@ -55,20 +54,11 @@ export async function sendDiscordErrorAlert(
 ): Promise<{ success: boolean; error?: string }> {
   const defaultConfig: DiscordAlertConfig = {
     webhookUrl: process.env.DISCORD_ERROR_WEBHOOK_URL,
-    environment: process.env.NODE_ENV || 'development',
     rateLimitMs: 60000, // 1 minute rate limiting per error type
     maxStackLines: 10,
   };
 
   const finalConfig = { ...defaultConfig, ...config };
-
-  // Only send alerts in production unless explicitly overridden
-  if (finalConfig.environment !== 'production' &&
-      !finalConfig.webhookUrl?.includes('test') &&
-      process.env.DISCORD_NOTIFICATIONS_TESTING !== 'true') {
-    console.log('🔕 Discord error alerts disabled in non-production environment');
-    return { success: true };
-  }
 
   if (!finalConfig.webhookUrl) {
     console.warn('⚠️ DISCORD_ERROR_WEBHOOK_URL not configured - skipping error alert');
