@@ -3,6 +3,23 @@ import { NextRequest, NextResponse } from 'next/server';
 // Set runtime timeout to prevent hanging requests
 export const maxDuration = 30; // 30 seconds max
 
+/**
+ * Format timestamp in Singapore timezone to match Discord specification
+ */
+function formatSingaporeTime(timestamp?: string): string {
+  const date = timestamp ? new Date(timestamp) : new Date();
+  return date.toLocaleString('en-US', {
+    timeZone: 'Asia/Singapore',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  });
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -114,7 +131,7 @@ export async function POST(request: NextRequest) {
         color: embedColor,
         fields,
         footer: {
-          text: `${new Date().toLocaleString('en-US', { timeZone: 'Asia/Singapore' })} | KwizMe Error Monitoring`
+          text: `${formatSingaporeTime()} | KwizMe Error Monitoring`
         }
       }]
     };

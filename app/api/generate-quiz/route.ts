@@ -55,6 +55,9 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   const userId = user?.id;
 
+  // Declare file at function level for scope access in catch block
+  let file: File | null = null;
+
   try {
     // Step 1: Check rate limiting first (before processing file)
     console.log('🔒 Checking quiz generation limits...');
@@ -94,7 +97,7 @@ export async function POST(request: NextRequest) {
 
     // Parse form data
     const formData = await request.formData();
-    const file = formData.get('pdf_file') as File;
+    file = formData.get('pdf_file') as File;
     const numQuestions = parseInt(formData.get('num_questions') as string) || 15;
     const difficulty = (formData.get('difficulty') as string) || 'medium';
 
@@ -292,41 +295,13 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('❌ Quiz generation error:', error);
 
-    // Track error event (analytics only - Discord handled separately)
+    // Track error event (analytics only - Discord handled by specific error handlers above)
     trackError({
       errorType: 'api_error',
       errorMessage: error.message || 'Unknown quiz generation error',
       context: 'quiz_generation',
       error: error // Pass the actual error object for Sentry
     });
-
-    // Send Discord error alert via API route (copying feedback pattern)
-    try {
-      const errorAlertResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/notify-error`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          errorType: 'critical',
-          title: 'Quiz Generation Failed',
-          message: error.message || 'Unknown quiz generation error',
-          errorCode: 'QUIZ_GEN_ERROR',
-          context: 'quiz_generation',
-          stack: error.stack,
-          userId: userId || undefined,
-          url: '/api/generate-quiz'
-        })
-      })
-
-      if (errorAlertResponse.ok) {
-        console.log('✅ Error alert API call successful')
-      } else {
-        console.warn('⚠️ Error alert API call failed:', errorAlertResponse.status)
-      }
-    } catch (apiError) {
-      console.warn('⚠️ Failed to call error alert API:', apiError)
-    }
 
     // Handle specific error types
     if (error.message?.includes('GEMINI_API_KEY')) {
@@ -343,6 +318,8 @@ export async function POST(request: NextRequest) {
 
     // Handle quota/rate limit errors from Google Generative AI
     if (error.message?.includes('429 Too Many Requests') || error.message?.includes('exceeded your current quota')) {
+      console.log('🎯 Quota error detected, sending Discord alert...');
+
       // Send Discord alert for quota errors (helps monitor API usage)
       try {
         const quotaAlertResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/notify-error`, {
