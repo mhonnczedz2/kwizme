@@ -86,20 +86,23 @@ export async function POST(request: NextRequest) {
 
     // Request context if available
     if (url || userAgent) {
+      const contextValue = [
+        url ? `URL: ${url}` : null,
+        userAgent ? `User Agent: \`${userAgent.substring(0, 100)}${userAgent.length > 100 ? '...' : ''}\`` : null
+      ].filter(Boolean).join('\n');
+
       fields.push({
         name: '🔗 Request Context',
-        value: [
-          url ? `URL: ${url}` : null,
-          userAgent ? `User Agent: \`${userAgent.substring(0, 100)}${userAgent.length > 100 ? '...' : ''}\`` : null
-        ].filter(Boolean).join('\n'),
+        value: contextValue.substring(0, 1024), // Discord limit: 1024 chars per field
         inline: true
       });
     }
 
     // Error message
+    const errorMessageValue = `\`\`\`\n${(message || '').substring(0, 950)}${message && message.length > 950 ? '\n...' : ''}\n\`\`\``;
     fields.push({
       name: '💥 Error Message',
-      value: `\`\`\`\n${(message || '').substring(0, 1000)}${message && message.length > 1000 ? '\n...' : ''}\n\`\`\``,
+      value: errorMessageValue.substring(0, 1024), // Discord limit: 1024 chars per field
       inline: false
     });
 
@@ -107,7 +110,7 @@ export async function POST(request: NextRequest) {
     if (context) {
       fields.push({
         name: '📝 Context',
-        value: (context || '').substring(0, 500) + (context && context.length > 500 ? '...' : ''),
+        value: (context || '').substring(0, 1024), // Discord limit: 1024 chars per field
         inline: true
       });
     }
@@ -115,29 +118,40 @@ export async function POST(request: NextRequest) {
     // Stack trace (truncated)
     if (stack) {
       const stackLines = (stack || '').split('\n');
-      const truncatedStack = stackLines.slice(0, 10).join('\n'); // Max 10 lines
-      const hasMore = stackLines.length > 10;
+      let truncatedStack = stackLines.slice(0, 8).join('\n'); // Fewer lines to stay under limit
+
+      // Ensure we stay under Discord's 1024 character limit for field values
+      if (truncatedStack.length > 950) {
+        truncatedStack = truncatedStack.substring(0, 950);
+      }
+
+      const stackValue = `\`\`\`\n${truncatedStack}\n... (truncated for Discord limits)\n\`\`\``;
 
       fields.push({
         name: '🔍 Stack Trace',
-        value: `\`\`\`\n${truncatedStack}${hasMore ? '\n... (truncated)' : ''}\n\`\`\``,
+        value: stackValue.substring(0, 1024), // Discord limit: 1024 chars per field
         inline: false
       });
     }
 
     const discordPayload = {
       embeds: [{
-        title: `🚨 KwizMe Error Alert: ${(title || 'Unknown Error').substring(0, 256)}`,
+        title: `🚨 KwizMe Error Alert: ${(title || 'Unknown Error').substring(0, 200)}`, // Conservative title limit
         color: embedColor,
-        fields,
+        fields: fields.slice(0, 25), // Discord limit: max 25 fields per embed
         footer: {
-          text: `${formatSingaporeTime()} | KwizMe Error Monitoring`
+          text: `${formatSingaporeTime()} | KwizMe Error Monitoring`.substring(0, 2048) // Discord footer limit
         }
       }]
     };
 
-    // Debug: Log the exact payload being sent to Discord
-    console.log('📤 Discord payload:', JSON.stringify(discordPayload, null, 2));
+    // Debug: Log payload size and field info
+    const payloadSize = JSON.stringify(discordPayload).length;
+    console.log('📊 Discord payload stats:', {
+      totalSize: payloadSize,
+      fieldsCount: fields.length,
+      titleLength: (title || '').length
+    });
 
     // Add timeout to the Discord webhook request (copying feedback pattern)
     const controller = new AbortController();
