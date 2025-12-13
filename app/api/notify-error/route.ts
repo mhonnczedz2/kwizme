@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
     // Error message
     fields.push({
       name: '💥 Error Message',
-      value: `\`\`\`\n${message.substring(0, 1000)}${message.length > 1000 ? '\n...' : ''}\n\`\`\``,
+      value: `\`\`\`\n${(message || '').substring(0, 1000)}${message && message.length > 1000 ? '\n...' : ''}\n\`\`\``,
       inline: false
     });
 
@@ -107,14 +107,14 @@ export async function POST(request: NextRequest) {
     if (context) {
       fields.push({
         name: '📝 Context',
-        value: context.substring(0, 500) + (context.length > 500 ? '...' : ''),
+        value: (context || '').substring(0, 500) + (context && context.length > 500 ? '...' : ''),
         inline: true
       });
     }
 
     // Stack trace (truncated)
     if (stack) {
-      const stackLines = stack.split('\n');
+      const stackLines = (stack || '').split('\n');
       const truncatedStack = stackLines.slice(0, 10).join('\n'); // Max 10 lines
       const hasMore = stackLines.length > 10;
 
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
 
     const discordPayload = {
       embeds: [{
-        title: `🚨 KwizMe Error Alert: ${title}`,
+        title: `🚨 KwizMe Error Alert: ${(title || 'Unknown Error').substring(0, 256)}`,
         color: embedColor,
         fields,
         footer: {
@@ -135,6 +135,9 @@ export async function POST(request: NextRequest) {
         }
       }]
     };
+
+    // Debug: Log the exact payload being sent to Discord
+    console.log('📤 Discord payload:', JSON.stringify(discordPayload, null, 2));
 
     // Add timeout to the Discord webhook request (copying feedback pattern)
     const controller = new AbortController();
@@ -169,11 +172,14 @@ export async function POST(request: NextRequest) {
       } else {
         const errorText = await response.text();
         console.error('❌ Discord webhook error:', response.status, errorText);
+        console.error('❌ Failed payload fields count:', fields.length);
+        console.error('❌ Failed payload title length:', (title || '').length);
 
         return NextResponse.json({
           success: false,
           message: 'Discord webhook failed',
-          error: `Discord API error: ${response.status}`
+          error: `Discord API error: ${response.status}`,
+          details: errorText
         }, { status: 500 });
       }
 
