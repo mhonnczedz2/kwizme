@@ -188,6 +188,35 @@ export async function POST(request: NextRequest) {
     // Step 3: Validate response (check if AI generated sufficient questions)
     if (!validateQuizResponse(quizData, numQuestions)) {
       console.error('❌ Quiz validation failed');
+
+      // Send Discord alert for validation failure (helps monitor AI performance)
+      try {
+        const validationAlertResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/notify-error`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            errorType: 'warning',
+            title: 'Quiz Validation Failed - Insufficient Questions',
+            message: `AI generated ${quizData.questions.length} questions but ${numQuestions} were requested`,
+            errorCode: 'QUIZ_VALIDATION_FAILED',
+            userId: userId || 'anonymous',
+            context: `File: ${file.name} (${file.type}), Difficulty: ${difficulty}, Enhanced Description: ${enhancedDescription?.substring(0, 200)}...`,
+            url: request.url,
+            userAgent: request.headers.get('user-agent')
+          })
+        });
+
+        if (validationAlertResponse.ok) {
+          console.log('✅ Validation failure alert sent to Discord')
+        } else {
+          console.warn('⚠️ Validation alert failed:', validationAlertResponse.status)
+        }
+      } catch (alertError) {
+        console.warn('⚠️ Failed to send validation alert to Discord:', alertError)
+      }
+
       return NextResponse.json(
         createErrorResponse(
           'QUIZ_VALIDATION_FAILED',
