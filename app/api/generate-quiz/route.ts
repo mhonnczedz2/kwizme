@@ -341,23 +341,133 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (error.message?.includes('Gemini API error') || error.message?.includes('fetch failed')) {
+    // Handle quota/rate limit errors from Google Generative AI
+    if (error.message?.includes('429 Too Many Requests') || error.message?.includes('exceeded your current quota')) {
+      // Send Discord alert for quota errors (helps monitor API usage)
+      try {
+        const quotaAlertResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/notify-error`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            errorType: 'warning',
+            title: 'Gemini API Quota/Rate Limit Exceeded',
+            message: 'Google Generative AI quota or rate limit exceeded during quiz generation',
+            errorCode: 'GEMINI_QUOTA_EXCEEDED',
+            userId: userId || 'anonymous',
+            context: `File: ${file?.name || 'unknown'} (${file?.type || 'unknown'}), Error: ${error.message?.substring(0, 200)}...`,
+            url: request.url,
+            userAgent: request.headers.get('user-agent'),
+            stack: error.stack
+          })
+        });
+
+        if (quotaAlertResponse.ok) {
+          console.log('✅ Quota error alert sent to Discord')
+        } else {
+          console.warn('⚠️ Quota alert failed:', quotaAlertResponse.status)
+        }
+      } catch (alertError) {
+        console.warn('⚠️ Failed to send quota alert to Discord:', alertError)
+      }
+
       return NextResponse.json(
         createErrorResponse(
           'AI_SERVICE_ERROR',
           'AI service temporarily unavailable',
-          error.message || 'Failed to connect to the AI service.',
+          'The AI service is experiencing high demand. Please wait a moment and try again.',
+          'Our AI provider is temporarily rate-limited. Please try again in a few minutes.'
+        ),
+        { status: 503 }
+      );
+    }
+
+    if (error.message?.includes('Gemini API error') || error.message?.includes('fetch failed')) {
+      // Send Discord alert for general AI service errors
+      try {
+        const serviceAlertResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/notify-error`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            errorType: 'critical',
+            title: 'Gemini AI Service Error',
+            message: error.message?.substring(0, 300) || 'Unknown Gemini API error',
+            errorCode: 'GEMINI_SERVICE_ERROR',
+            userId: userId || 'anonymous',
+            context: `File: ${file?.name || 'unknown'} (${file?.type || 'unknown'})`,
+            url: request.url,
+            userAgent: request.headers.get('user-agent'),
+            stack: error.stack
+          })
+        });
+
+        if (serviceAlertResponse.ok) {
+          console.log('✅ AI service error alert sent to Discord')
+        } else {
+          console.warn('⚠️ AI service alert failed:', serviceAlertResponse.status)
+        }
+      } catch (alertError) {
+        console.warn('⚠️ Failed to send AI service alert to Discord:', alertError)
+      }
+
+      // Cap error message length to prevent UI breaking
+      const cappedMessage = error.message && error.message.length > 200
+        ? error.message.substring(0, 200) + '...'
+        : error.message || 'Failed to connect to the AI service.';
+
+      return NextResponse.json(
+        createErrorResponse(
+          'AI_SERVICE_ERROR',
+          'AI service temporarily unavailable',
+          cappedMessage,
           'Please wait a moment and try again.'
         ),
         { status: 503 }
       );
     }
 
+    // Cap error message length for unknown errors
+    const cappedMessage = error.message && error.message.length > 200
+      ? error.message.substring(0, 200) + '...'
+      : error.message || 'An unexpected error occurred while generating your quiz.';
+
+    // Send Discord alert for unknown critical errors
+    try {
+      const unknownAlertResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/notify-error`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          errorType: 'critical',
+          title: 'Unknown Quiz Generation Error',
+          message: error.message || 'Unknown error during quiz generation',
+          errorCode: 'UNKNOWN_QUIZ_ERROR',
+          userId: userId || 'anonymous',
+          context: `File: ${file?.name || 'unknown'} (${file?.type || 'unknown'})`,
+          url: request.url,
+          userAgent: request.headers.get('user-agent'),
+          stack: error.stack
+        })
+      });
+
+      if (unknownAlertResponse.ok) {
+        console.log('✅ Unknown error alert sent to Discord')
+      } else {
+        console.warn('⚠️ Unknown error alert failed:', unknownAlertResponse.status)
+      }
+    } catch (alertError) {
+      console.warn('⚠️ Failed to send unknown error alert to Discord:', alertError)
+    }
+
     return NextResponse.json(
       createErrorResponse(
         'UNKNOWN_ERROR',
         'Something went wrong',
-        error.message || 'An unexpected error occurred while generating your quiz.',
+        cappedMessage,
         'Please try again. If the problem persists, report this error with the reference code below.'
       ),
       { status: 500 }
