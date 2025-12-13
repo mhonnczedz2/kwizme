@@ -4,19 +4,19 @@
  */
 
 /**
- * Format timestamp in Singapore timezone
+ * Format timestamp in Singapore timezone to match Discord specification
  */
 function formatSingaporeTime(timestamp?: string): string {
   const date = timestamp ? new Date(timestamp) : new Date();
   return date.toLocaleString('en-US', {
     timeZone: 'Asia/Singapore',
     year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
     minute: '2-digit',
     second: '2-digit',
-    hour12: false
+    hour12: true
   });
 }
 
@@ -215,7 +215,7 @@ function createErrorEmbed(alert: ErrorAlert, config: DiscordAlertConfig) {
     color: embedColor,
     fields,
     footer: {
-      text: `Singapore timezone | KwizMe Error Monitoring`
+      text: `${formatSingaporeTime(alert.timestamp)} | KwizMe Error Monitoring`
     },
     timestamp: alert.timestamp || new Date().toISOString()
   };
