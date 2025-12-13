@@ -185,8 +185,8 @@ export async function POST(request: NextRequest) {
     console.log('🤖 Generating quiz with Gemini Flash...');
     const quizData = await generateQuizWithGemini(file, numQuestions, difficulty, enhancedDescription);
 
-    // Step 3: Validate response
-    if (!validateQuizResponse(quizData)) {
+    // Step 3: Validate response (check if AI generated sufficient questions)
+    if (!validateQuizResponse(quizData, numQuestions)) {
       console.error('❌ Quiz validation failed');
       return NextResponse.json(
         createErrorResponse(

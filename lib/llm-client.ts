@@ -336,8 +336,9 @@ export async function generateQuizWithGemini(
 
 /**
  * Validate quiz response schema with detailed logging
+ * Only fails if AI generated fewer questions than requested (bonus questions are OK)
  */
-export function validateQuizResponse(response: any): boolean {
+export function validateQuizResponse(response: any, expectedQuestions: number): boolean {
   if (!response) {
     console.error('❌ Validation failed: response is null/undefined');
     return false;
@@ -356,6 +357,18 @@ export function validateQuizResponse(response: any): boolean {
   if (response.questions.length === 0) {
     console.error('❌ Validation failed: response.questions is empty');
     return false;
+  }
+
+  // Check if AI generated fewer questions than requested (bonus questions are OK)
+  if (response.questions.length < expectedQuestions) {
+    console.error(`❌ Validation failed: AI generated ${response.questions.length} questions but ${expectedQuestions} were requested`);
+    console.error('This usually happens with complex content - the AI couldn\'t extract enough material for questions');
+    return false;
+  }
+
+  // Log if we got bonus questions
+  if (response.questions.length > expectedQuestions) {
+    console.log(`🎁 Bonus questions: AI generated ${response.questions.length} questions (${expectedQuestions} requested)`);
   }
 
   for (let i = 0; i < response.questions.length; i++) {
