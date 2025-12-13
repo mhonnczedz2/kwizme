@@ -336,7 +336,7 @@ export async function sendFeedbackNotification(
   config?: Partial<DiscordNotificationConfig>
 ): Promise<{ success: boolean; error?: string }> {
   const defaultConfig: DiscordNotificationConfig = {
-    webhookUrl: process.env.DISCORD_NOTIFICATIONS_WEBHOOK_URL,
+    webhookUrl: process.env.DISCORD_WEBHOOK_URL, // Use the original feedback webhook URL
     environment: process.env.NODE_ENV || 'development',
     rateLimitMs: 30000, // 30 seconds rate limiting
   };
@@ -352,7 +352,7 @@ export async function sendFeedbackNotification(
   }
 
   if (!finalConfig.webhookUrl) {
-    console.warn('⚠️ DISCORD_NOTIFICATIONS_WEBHOOK_URL not configured - skipping feedback notification');
+    console.warn('⚠️ DISCORD_WEBHOOK_URL not configured - skipping feedback notification');
     return { success: false, error: 'Webhook URL not configured' };
   }
 
