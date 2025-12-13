@@ -243,6 +243,40 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Quiz generated successfully:', quizData.questions.length, 'questions');
 
+    // Check for bonus questions and send Discord alert (informational only)
+    if (quizData.questions.length > numQuestions) {
+      const bonusCount = quizData.questions.length - numQuestions;
+      console.log(`🎁 Bonus questions detected: ${bonusCount} extra questions generated`);
+
+      // Send Discord alert for bonus questions (helps monitor AI performance)
+      try {
+        const bonusAlertResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/notify-error`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            errorType: 'info',
+            title: 'AI Generated Bonus Questions',
+            message: `AI generated ${quizData.questions.length} questions when ${numQuestions} were requested (+${bonusCount} bonus)`,
+            errorCode: 'BONUS_QUESTIONS_GENERATED',
+            userId: userId || 'anonymous',
+            context: `File: ${file.name} (${file.type}), Difficulty: ${difficulty}, Requested: ${numQuestions}, Generated: ${quizData.questions.length}`,
+            url: request.url,
+            userAgent: request.headers.get('user-agent')
+          })
+        });
+
+        if (bonusAlertResponse.ok) {
+          console.log('✅ Bonus questions alert sent to Discord')
+        } else {
+          console.warn('⚠️ Bonus questions alert failed:', bonusAlertResponse.status)
+        }
+      } catch (alertError) {
+        console.warn('⚠️ Failed to send bonus questions alert to Discord:', alertError)
+      }
+    }
+
     // Step 4: Record quiz generation (increment usage counter)
     console.log('📊 Recording quiz generation...');
     try {
