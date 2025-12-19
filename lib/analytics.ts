@@ -43,6 +43,7 @@ export const trackQuizGenerated = async (params: {
   pageCount?: number;
   fileSize?: number;
   quizTitle?: string; // For Discord notifications
+  userEmail?: string; // For Discord notifications
 }) => {
   // Track in GA4
   trackEvent('quiz_generated', {
@@ -64,6 +65,7 @@ export const trackQuizGenerated = async (params: {
       userType: params.userType,
       fileSize: params.fileSize,
       quizTitle: params.quizTitle,
+      userEmail: params.userEmail,
       timestamp: new Date().toISOString()
     });
   } catch (discordError) {
@@ -264,6 +266,7 @@ export const trackError = async (params: {
   context?: string;
   error?: Error; // Actual error object for Sentry
   userId?: string; // For Discord context
+  userEmail?: string; // For Discord context
   sessionId?: string; // For Discord context
   url?: string; // For Discord context
   userAgent?: string; // For Discord context
@@ -332,6 +335,7 @@ export const trackError = async (params: {
         message: params.errorMessage,
         errorCode: params.errorCode?.toString(),
         userId: params.userId,
+        userEmail: params.userEmail,
         sessionId: params.sessionId,
         context: params.context,
         stack: params.error?.stack,

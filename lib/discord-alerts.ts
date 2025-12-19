@@ -26,6 +26,7 @@ export interface ErrorAlert {
   message: string;
   errorCode?: string;
   userId?: string;
+  userEmail?: string;
   sessionId?: string;
   context?: string;
   stack?: string;
@@ -158,11 +159,12 @@ function createErrorEmbed(alert: ErrorAlert, config: DiscordAlertConfig) {
 
 
   // User context if available
-  if (alert.userId || alert.sessionId) {
+  if (alert.userId || alert.userEmail || alert.sessionId) {
     fields.push({
       name: '👤 User Context',
       value: [
-        alert.userId ? `User: \`${alert.userId}\`` : null,
+        alert.userId ? `User ID: \`${alert.userId}\`` : null,
+        alert.userEmail ? `Email: \`${alert.userEmail}\`` : null,
         alert.sessionId ? `Session: \`${alert.sessionId}\`` : null
       ].filter(Boolean).join('\n'),
       inline: false

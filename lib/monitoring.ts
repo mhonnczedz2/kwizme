@@ -251,6 +251,7 @@ export class IncidentTracker {
             context: context,
             stack: error.stack,
             userId: metadata?.userId,
+            userEmail: metadata?.userEmail,
             sessionId: metadata?.sessionId
           })
         })

@@ -261,6 +261,7 @@ export async function POST(request: NextRequest) {
             message: `AI generated ${quizData.questions.length} questions when ${numQuestions} were requested (+${bonusCount} bonus)`,
             errorCode: 'BONUS_QUESTIONS_GENERATED',
             userId: userId || 'anonymous',
+            userEmail: user?.email,
             context: `File: ${file.name} (${file.type}), Difficulty: ${difficulty}, Requested: ${numQuestions}, Generated: ${quizData.questions.length}`,
             url: request.url,
             userAgent: request.headers.get('user-agent')
@@ -293,7 +294,8 @@ export async function POST(request: NextRequest) {
       difficulty: difficulty as 'easy' | 'medium' | 'hard',
       numQuestions: numQuestions,
       userType: userId ? 'authenticated' : 'anonymous',
-      fileSize: file.size
+      fileSize: file.size,
+      userEmail: user?.email
       // Note: Discord notification handled separately via API
     });
 
@@ -310,7 +312,8 @@ export async function POST(request: NextRequest) {
           numQuestions: numQuestions,
           userType: userId ? 'authenticated' : 'anonymous',
           fileSize: file.size,
-          quizTitle: quizData.quiz_title
+          quizTitle: quizData.quiz_title,
+          userEmail: user?.email
         })
       })
 
@@ -334,7 +337,8 @@ export async function POST(request: NextRequest) {
       errorType: 'api_error',
       errorMessage: error.message || 'Unknown quiz generation error',
       context: 'quiz_generation',
-      error: error // Pass the actual error object for Sentry
+      error: error, // Pass the actual error object for Sentry
+      userEmail: user?.email
     });
 
     // Handle specific error types
@@ -458,6 +462,7 @@ export async function POST(request: NextRequest) {
           message: error.message || 'Unknown error during quiz generation',
           errorCode: 'UNKNOWN_QUIZ_ERROR',
           userId: userId || 'anonymous',
+          userEmail: user?.email,
           context: `File: ${file?.name || 'unknown'} (${file?.type || 'unknown'})`,
           url: request.url,
           userAgent: request.headers.get('user-agent'),

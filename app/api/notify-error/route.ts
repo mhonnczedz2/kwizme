@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
       message,
       errorCode,
       userId,
+      userEmail,
       sessionId,
       context,
       stack,
@@ -41,6 +42,7 @@ export async function POST(request: NextRequest) {
       title,
       errorCode,
       hasUserId: !!userId,
+      hasUserEmail: !!userEmail,
       context
     });
 
@@ -73,11 +75,12 @@ export async function POST(request: NextRequest) {
     }
 
     // User context if available
-    if (userId || sessionId) {
+    if (userId || userEmail || sessionId) {
       fields.push({
         name: '👤 User Context',
         value: [
-          userId ? `User: \`${userId}\`` : null,
+          userId ? `User ID: \`${userId}\`` : null,
+          userEmail ? `Email: \`${userEmail}\`` : null,
           sessionId ? `Session: \`${sessionId}\`` : null
         ].filter(Boolean).join('\n'),
         inline: true

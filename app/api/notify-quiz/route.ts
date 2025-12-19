@@ -6,55 +6,71 @@ export const maxDuration = 30; // 30 seconds max
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { fileType, difficulty, numQuestions, userType, fileSize, quizTitle } = body;
+    const { fileType, difficulty, numQuestions, userType, fileSize, quizTitle, userEmail } = body;
 
     console.log('🧠 Processing quiz generation notification:', {
       fileType,
       difficulty,
       numQuestions,
       userType,
-      hasTitle: !!quizTitle
+      hasTitle: !!quizTitle,
+      hasUserEmail: !!userEmail
     });
 
     // Prepare Discord webhook payload with rich embed (copying feedback pattern)
     const fileSizeMB = fileSize ? Math.round(fileSize / (1024 * 1024) * 100) / 100 : undefined;
 
+    const fields = [
+      {
+        name: '📄 File Type',
+        value: fileType || 'Unknown',
+        inline: true
+      },
+      {
+        name: '⚡ Difficulty',
+        value: difficulty ? difficulty.toUpperCase() : 'Unknown',
+        inline: true
+      },
+      {
+        name: '❓ Questions',
+        value: numQuestions ? numQuestions.toString() : 'Unknown',
+        inline: true
+      },
+      {
+        name: '👤 User Type',
+        value: userType === 'authenticated' ? 'Authenticated' : 'Anonymous',
+        inline: true
+      },
+      {
+        name: '📁 File Size',
+        value: fileSizeMB ? `${fileSizeMB} MB` : 'Unknown',
+        inline: true
+      }
+    ];
+
+    // Add email field if available (for authenticated users)
+    if (userEmail) {
+      fields.push({
+        name: '📧 User Email',
+        value: `||${userEmail}||`, // Spoiler tags for privacy
+        inline: true
+      });
+    }
+
+    // Add quiz title if available
+    if (quizTitle) {
+      fields.push({
+        name: '📚 Quiz Title',
+        value: quizTitle,
+        inline: false
+      });
+    }
+
     const discordPayload = {
       embeds: [{
         title: `🧠 New KwizMe Quiz Generated`,
         color: 0x3b82f6, // Blue color
-        fields: [
-          {
-            name: '📄 File Type',
-            value: fileType || 'Unknown',
-            inline: true
-          },
-          {
-            name: '⚡ Difficulty',
-            value: difficulty ? difficulty.toUpperCase() : 'Unknown',
-            inline: true
-          },
-          {
-            name: '❓ Questions',
-            value: numQuestions ? numQuestions.toString() : 'Unknown',
-            inline: true
-          },
-          {
-            name: '👤 User Type',
-            value: userType === 'authenticated' ? 'Authenticated' : 'Anonymous',
-            inline: true
-          },
-          {
-            name: '📁 File Size',
-            value: fileSizeMB ? `${fileSizeMB} MB` : 'Unknown',
-            inline: true
-          },
-          ...(quizTitle ? [{
-            name: '📚 Quiz Title',
-            value: quizTitle,
-            inline: true
-          }] : [])
-        ],
+        fields,
         footer: {
           text: `${new Date().toLocaleString('en-US', { timeZone: 'Asia/Singapore' })} | KwizMe Usage Analytics`
         }

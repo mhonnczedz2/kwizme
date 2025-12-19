@@ -36,6 +36,7 @@ export interface QuizGenerationNotification {
   difficulty: 'easy' | 'medium' | 'hard';
   numQuestions: number;
   userType: 'anonymous' | 'authenticated';
+  userEmail?: string;
   fileSize?: number;
   quizTitle?: string;
   timestamp?: string;
@@ -270,41 +271,56 @@ function createSignupEmbed(notification: UserSignupNotification) {
 function createQuizEmbed(notification: QuizGenerationNotification) {
   const fileSizeMB = notification.fileSize ? Math.round(notification.fileSize / (1024 * 1024) * 100) / 100 : undefined;
 
+  const fields = [
+    {
+      name: '📄 File Type',
+      value: notification.fileType || 'Unknown',
+      inline: true
+    },
+    {
+      name: '⚡ Difficulty',
+      value: notification.difficulty.toUpperCase(),
+      inline: true
+    },
+    {
+      name: '❓ Questions',
+      value: notification.numQuestions.toString(),
+      inline: true
+    },
+    {
+      name: '👤 User Type',
+      value: notification.userType === 'authenticated' ? 'Authenticated' : 'Anonymous',
+      inline: true
+    },
+    {
+      name: '📁 File Size (MB)',
+      value: fileSizeMB ? `${fileSizeMB}` : 'Unknown',
+      inline: true
+    }
+  ];
+
+  // Add email field if available (for authenticated users)
+  if (notification.userEmail) {
+    fields.push({
+      name: '📧 User Email',
+      value: `||${notification.userEmail}||`, // Spoiler tags for privacy
+      inline: true
+    });
+  }
+
+  // Add quiz title if available
+  if (notification.quizTitle) {
+    fields.push({
+      name: '📚 Quiz Title',
+      value: notification.quizTitle,
+      inline: false
+    });
+  }
+
   return {
     title: '🧠 New KwizMe Quiz Generated',
     color: 0x3b82f6, // Blue color
-    fields: [
-      {
-        name: '📄 File Type',
-        value: notification.fileType || 'Unknown',
-        inline: true
-      },
-      {
-        name: '⚡ Difficulty',
-        value: notification.difficulty.toUpperCase(),
-        inline: true
-      },
-      {
-        name: '❓ Questions',
-        value: notification.numQuestions.toString(),
-        inline: true
-      },
-      {
-        name: '👤 User Type',
-        value: notification.userType === 'authenticated' ? 'Authenticated' : 'Anonymous',
-        inline: true
-      },
-      {
-        name: '📁 File Size (MB)',
-        value: fileSizeMB ? `${fileSizeMB}` : 'Unknown',
-        inline: true
-      },
-      ...(notification.quizTitle ? [{
-        name: '📚 Quiz Title',
-        value: notification.quizTitle,
-        inline: false
-      }] : [])
-    ],
+    fields,
     footer: {
       text: `${formatSingaporeTime(notification.timestamp)} | KwizMe Usage Analytics`
     },
