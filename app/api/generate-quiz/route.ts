@@ -288,43 +288,16 @@ export async function POST(request: NextRequest) {
       // Don't fail the request if usage recording fails
     }
 
-    // Track successful quiz generation (analytics only)
+    // Track successful quiz generation (includes Discord notification)
     trackQuizGenerated({
       fileType: file.type,
       difficulty: difficulty as 'easy' | 'medium' | 'hard',
       numQuestions: numQuestions,
       userType: userId ? 'authenticated' : 'anonymous',
       fileSize: file.size,
+      quizTitle: quizData.quiz_title,
       userEmail: user?.email
-      // Note: Discord notification handled separately via API
     });
-
-    // Send Discord notification via API route (copying feedback/signup pattern)
-    try {
-      const notificationResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/notify-quiz`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fileType: file.type,
-          difficulty: difficulty,
-          numQuestions: numQuestions,
-          userType: userId ? 'authenticated' : 'anonymous',
-          fileSize: file.size,
-          quizTitle: quizData.quiz_title,
-          userEmail: user?.email
-        })
-      })
-
-      if (notificationResponse.ok) {
-        console.log('✅ Quiz notification API call successful')
-      } else {
-        console.warn('⚠️ Quiz notification API call failed:', notificationResponse.status)
-      }
-    } catch (apiError) {
-      console.warn('⚠️ Failed to call quiz notification API:', apiError)
-    }
 
     // Return quiz data
     return NextResponse.json(quizData);
