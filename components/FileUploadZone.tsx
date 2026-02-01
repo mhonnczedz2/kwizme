@@ -81,12 +81,9 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, onValid
     setValidationResult(null);
     setIsValidating(true);
 
-    // Supported file types for Gemini 2.5 Flash
+    // Supported file types for Gemini 2.5 Flash (only native formats)
     const supportedTypes = [
       'application/pdf',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation', // PPTX
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // XLSX
       'text/plain',
       'text/markdown',
       'text/html',
@@ -100,7 +97,7 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, onValid
     // Validate file type
     if (!supportedTypes.includes(file.type)) {
       setIsValidating(false);
-      alert('Unsupported file type. Supported formats:\n• PDF\n• Word (DOCX)\n• PowerPoint (PPTX)\n• Excel (XLSX)\n• Images (PNG, JPEG, WebP, GIF)\n• Text (TXT, MD, HTML, CSV)');
+      alert('Unsupported file type. Supported formats:\n• PDF\n• Images (PNG, JPEG, WebP, GIF)\n• Text (TXT, MD, HTML, CSV)\n\nFor Word/PowerPoint/Excel files, please convert to PDF first.');
       return;
     }
 
@@ -184,7 +181,7 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, onValid
         <input
           ref={fileInputRef}
           type="file"
-          accept=".pdf,.docx,.pptx,.xlsx,.txt,.md,.html,.csv,.png,.jpg,.jpeg,.webp,.gif"
+          accept=".pdf,.txt,.md,.html,.csv,.png,.jpg,.jpeg,.webp,.gif"
           onChange={handleFileInput}
           className="hidden"
         />
@@ -220,7 +217,7 @@ export default function FileUploadZone({ onFileSelect, onMetadataChange, onValid
             <p className="text-sm sm:text-base md:text-lg text-gray-700 dark:text-gray-300 mb-2">
               Drop your file here or click to browse
             </p>
-            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Max 20MB or 10 Pages • PDF, Word, PowerPoint, Excel, Images, Text</p>
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Max 20MB or 10 Pages • PDF, Images, Text • For Word/PowerPoint/Excel, convert to PDF first</p>
           </div>
         )}
       </div>

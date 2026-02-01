@@ -36,7 +36,7 @@ const faqData: FAQItem[] = [
   {
     id: 'supported-file-types',
     question: 'What file types are supported?',
-    answer: 'KwizMe supports PDF documents, Word documents (.docx), PowerPoint presentations (.pptx), and plain text files (.txt). We\'re working on adding support for more file types.',
+    answer: 'KwizMe supports PDF documents, images (PNG, JPEG, WebP, GIF), and text files (TXT, MD, HTML, CSV). For Word, PowerPoint, or Excel files, please convert them to PDF first.',
     category: 'general'
   },
   {

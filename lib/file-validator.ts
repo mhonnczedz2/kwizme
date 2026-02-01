@@ -71,80 +71,6 @@ async function validatePDF(file: File): Promise<FileValidationResult> {
 }
 
 /**
- * Estimate page count for DOCX files by analyzing content
- */
-async function validateDOCX(file: File): Promise<FileValidationResult> {
-  try {
-    // For DOCX, we'll estimate based on file size and content
-    // This is an approximation since true page count requires rendering
-    const arrayBuffer = await file.arrayBuffer();
-
-    // Simple heuristic: extract text content and estimate pages
-    // Average: ~500 words per page, ~5 characters per word = ~2500 chars per page
-    const uint8Array = new Uint8Array(arrayBuffer);
-
-    // Look for text content in the DOCX (simplified approach)
-    const decoder = new TextDecoder('utf-8', { fatal: false });
-    const content = decoder.decode(uint8Array);
-
-    // Rough estimation based on content length
-    const estimatedChars = content.length;
-    const estimatedPages = Math.max(1, Math.ceil(estimatedChars / 3000)); // Conservative estimate
-
-    // Also consider file size as a factor (typical DOCX: 20-100KB per page with images)
-    const sizeBasedPages = Math.max(1, Math.ceil(file.size / (50 * 1024))); // 50KB per page average
-
-    // Take the higher estimate to be conservative
-    const pageCount = Math.max(estimatedPages, sizeBasedPages);
-
-    return {
-      isValid: pageCount <= 10,
-      pageCount,
-      error: pageCount > 10 ? `This document appears to have about ${pageCount} pages. Please choose a document with 10 pages or fewer.` : undefined,
-      fileInfo: {
-        name: file.name,
-        size: formatFileSize(file.size),
-        type: 'Word Document'
-      }
-    };
-  } catch (error) {
-    console.error('DOCX validation error:', error);
-    return {
-      isValid: false,
-      error: 'Unable to analyze this Word document. Please try a different file or save it in a newer format.'
-    };
-  }
-}
-
-/**
- * Estimate slide count for PPTX files
- */
-async function validatePPTX(file: File): Promise<FileValidationResult> {
-  try {
-    // For PPTX, we'll estimate based on file structure
-    // Similar approach to DOCX but with different heuristics for slides
-    const sizeBasedSlides = Math.max(1, Math.ceil(file.size / (100 * 1024))); // ~100KB per slide average
-
-    return {
-      isValid: sizeBasedSlides <= 10,
-      pageCount: sizeBasedSlides,
-      error: sizeBasedSlides > 10 ? `This presentation appears to have about ${sizeBasedSlides} slides. Please choose a presentation with 10 slides or fewer.` : undefined,
-      fileInfo: {
-        name: file.name,
-        size: formatFileSize(file.size),
-        type: 'PowerPoint Presentation'
-      }
-    };
-  } catch (error) {
-    console.error('PPTX validation error:', error);
-    return {
-      isValid: false,
-      error: 'Unable to analyze this PowerPoint presentation. Please try a different file.'
-    };
-  }
-}
-
-/**
  * Validate other file types (images, text files, etc.)
  */
 function validateOtherFile(file: File): FileValidationResult {
@@ -182,10 +108,6 @@ export async function validateFilePages(file: File): Promise<FileValidationResul
   // Validate by file type
   if (file.type === 'application/pdf') {
     return await validatePDF(file);
-  } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-    return await validateDOCX(file);
-  } else if (file.type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
-    return await validatePPTX(file);
   } else {
     // For other supported file types (images, text files, etc.)
     return validateOtherFile(file);
@@ -212,6 +134,5 @@ function getFileTypeDescription(mimeType: string, filename: string): string {
   if (filename.endsWith('.md')) return 'Markdown';
   if (filename.endsWith('.csv')) return 'CSV';
   if (filename.endsWith('.html')) return 'HTML';
-  if (mimeType.includes('excel') || filename.endsWith('.xlsx')) return 'Excel Spreadsheet';
   return 'Document';
 }

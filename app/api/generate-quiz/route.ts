@@ -136,12 +136,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Supported file types for Gemini 2.5 Flash
+    // Supported file types for Gemini 2.5 Flash (only native formats)
     const supportedTypes = [
       'application/pdf',                                                          // PDF
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation', // PPTX
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',       // XLSX
       'text/plain',                                                               // TXT
       'text/markdown',                                                            // MD
       'text/html',                                                                // HTML
@@ -158,7 +155,7 @@ export async function POST(request: NextRequest) {
           'UNSUPPORTED_FILE_TYPE',
           'Unsupported file type',
           `The file type "${file.type || 'unknown'}" is not supported.`,
-          'Please upload a PDF, Word (DOCX), PowerPoint (PPTX), Excel (XLSX), Image (PNG, JPEG, WebP, GIF), or Text file (TXT, MD, HTML, CSV).'
+          'Please upload a PDF, Image (PNG, JPEG, WebP, GIF), or Text file (TXT, MD, HTML, CSV). For Word/PowerPoint/Excel files, please convert to PDF first.'
         ),
         { status: 400 }
       );
