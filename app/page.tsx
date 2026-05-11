@@ -17,6 +17,7 @@ import SidePanel from '@/components/SidePanel';
 import FeedbackDrawer from '@/components/FeedbackDrawer';
 import TopBanner from '@/components/TopBanner';
 import GeneratingQuiz, { ErrorDetails } from '@/components/GeneratingQuiz';
+import DecommissionBanner from '@/components/DecommissionBanner';
 import { QuizGenerationResponse, AnswerRecord } from '@/lib/db/types';
 import { SessionConfig } from '@/components/QuizConfigModal';
 import { saveQuiz, getQuizById } from '@/lib/storage-router';
@@ -804,6 +805,8 @@ export default function Home() {
         />
       )}
       </div>
+
+      <DecommissionBanner />
     </main>
   );
 }
