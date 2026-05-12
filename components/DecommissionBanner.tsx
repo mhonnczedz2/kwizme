@@ -58,6 +58,17 @@ export default function DecommissionBanner() {
               github.com/mhonnczedz2/kwizme
             </a>
 
+            <p>
+              Feel free to reach out anytime:
+            </p>
+
+            <a
+              href="mailto:my.stationptot@gmail.com"
+              className="inline-block px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-blue-600 dark:text-blue-400 text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            >
+              my.stationptot@gmail.com
+            </a>
+
             <p className="italic text-gray-500 dark:text-gray-400">
               Good luck on your studies — we&apos;re rooting for you, always.
             </p>
