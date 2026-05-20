@@ -9,6 +9,16 @@ import { type NextRequest, NextResponse } from 'next/server'
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  // Decommission takeover: only allow the shutdown notice and legal pages.
+  // Everything else is rewritten to / so old links serve the notice in place.
+  const decommissionAllowlist = new Set(['/', '/legal/privacy', '/legal/terms'])
+  if (!decommissionAllowlist.has(pathname)) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/'
+    url.search = ''
+    return NextResponse.rewrite(url)
+  }
+
   // First, handle Supabase session management
   const supabaseResponse = await updateSession(request)
 
@@ -65,6 +75,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|monitoring|favicon.ico|manifest.json|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|otf|eot|css|js|map)$).*)',
   ],
 }
